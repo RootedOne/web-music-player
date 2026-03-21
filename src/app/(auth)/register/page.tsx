@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 
 export default function Register() {
   const router = useRouter();
@@ -22,7 +23,19 @@ export default function Register() {
       });
 
       if (res.ok) {
-        router.push("/login");
+        // Auto-login after successful registration
+        const loginRes = await signIn("credentials", {
+          redirect: false,
+          username,
+          password,
+        });
+
+        if (loginRes?.error) {
+          setError(loginRes.error);
+        } else {
+          router.push("/");
+          router.refresh();
+        }
       } else {
         const data = await res.json();
         setError(data.error || "An error occurred");

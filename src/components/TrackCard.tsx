@@ -7,7 +7,7 @@ import TrackOptions from "./TrackOptions";
 import { useState } from "react";
 import EditModal from "./EditModal";
 
-export default function TrackCard({ track, onUpdate }: { track: Track & { userId?: string }, onUpdate?: () => void }) {
+export default function TrackCard({ track, onUpdate, onDelete }: { track: Track & { userId?: string }, onUpdate?: () => void, onDelete?: () => void }) {
   const { play } = usePlayerStore();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -39,7 +39,12 @@ export default function TrackCard({ track, onUpdate }: { track: Track & { userId
           <p className="text-gray-400 text-sm truncate" title={track.artist || "Unknown Artist"}>{track.artist || "Unknown Artist"}</p>
         </div>
         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-           <TrackOptions trackId={track.id} trackOwnerId={track.userId || ""} onEdit={() => setIsEditing(true)} />
+           <TrackOptions
+             trackId={track.id}
+             trackOwnerId={track.userId || ""}
+             onEdit={() => setIsEditing(true)}
+             onDelete={onDelete}
+           />
         </div>
       </div>
 
@@ -53,6 +58,9 @@ export default function TrackCard({ track, onUpdate }: { track: Track & { userId
            initialName={track.title}
            nameFieldLabel="Track Title"
            nameFieldKey="title"
+           initialSecondaryName={track.artist || ""}
+           secondaryNameFieldLabel="Track Artist"
+           secondaryNameFieldKey="artist"
          />
       )}
     </div>

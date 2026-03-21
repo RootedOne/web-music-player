@@ -140,9 +140,6 @@ export function PlayerBar() {
 
           {/* Right: Controls */}
           <div className="flex items-center gap-2 shrink-0 mr-1">
-             <button onClick={prev} className="text-gray-400 hover:text-white p-2 focus:outline-none active:scale-95 transition-transform">
-               <SkipBack className="w-5 h-5 fill-current" />
-             </button>
              <button onClick={togglePlayPause} className="text-white p-2 focus:outline-none active:scale-95 transition-transform">
                {isPlaying ? (
                  <Pause className="w-7 h-7 fill-current" />
@@ -151,7 +148,7 @@ export function PlayerBar() {
                )}
              </button>
              <button onClick={next} className="text-gray-400 hover:text-white p-2 focus:outline-none active:scale-95 transition-transform">
-               <SkipForward className="w-5 h-5 fill-current" />
+               <SkipForward className="w-6 h-6 fill-current" />
              </button>
           </div>
         </div>

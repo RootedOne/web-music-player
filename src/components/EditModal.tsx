@@ -13,6 +13,9 @@ type EditModalProps = {
   initialName: string;
   nameFieldLabel: string;
   nameFieldKey: string;
+  initialSecondaryName?: string;
+  secondaryNameFieldLabel?: string;
+  secondaryNameFieldKey?: string;
 };
 
 export default function EditModal({
@@ -24,8 +27,12 @@ export default function EditModal({
   initialName,
   nameFieldLabel,
   nameFieldKey,
+  initialSecondaryName,
+  secondaryNameFieldLabel,
+  secondaryNameFieldKey,
 }: EditModalProps) {
   const [name, setName] = useState(initialName);
+  const [secondaryName, setSecondaryName] = useState(initialSecondaryName || "");
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -37,6 +44,9 @@ export default function EditModal({
 
     const formData = new FormData();
     formData.append(nameFieldKey, name);
+    if (secondaryNameFieldKey) {
+      formData.append(secondaryNameFieldKey, secondaryName);
+    }
     if (coverFile) {
       formData.append("coverFile", coverFile);
     }
@@ -106,6 +116,18 @@ export default function EditModal({
                       required
                     />
                   </div>
+
+                  {secondaryNameFieldLabel && secondaryNameFieldKey && (
+                    <div>
+                      <label className="block text-sm font-bold text-white mb-2 uppercase tracking-wide">{secondaryNameFieldLabel}</label>
+                      <input
+                        type="text"
+                        value={secondaryName}
+                        onChange={(e) => setSecondaryName(e.target.value)}
+                        className="w-full px-4 py-3 bg-[#242424] text-white rounded-md border border-transparent focus:outline-none focus:ring-2 focus:ring-white transition-all placeholder-gray-500"
+                      />
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-bold text-white mb-2 uppercase tracking-wide">Custom Cover Image (Optional)</label>

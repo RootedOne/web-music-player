@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useEffect } from "react";
 import { Menu, Transition, Dialog } from "@headlessui/react";
-import { MoreHorizontal, Plus, Share2, Edit2, Loader2, Music } from "lucide-react";
+import { MoreHorizontal, Plus, Share2, Edit2, Loader2, Music, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 
@@ -10,11 +10,12 @@ type TrackOptionsProps = {
   trackId: string;
   trackOwnerId: string;
   onEdit?: () => void;
+  onDelete?: () => void;
 };
 
 type Playlist = { id: string; name: string };
 
-export default function TrackOptions({ trackId, trackOwnerId, onEdit }: TrackOptionsProps) {
+export default function TrackOptions({ trackId, trackOwnerId, onEdit, onDelete }: TrackOptionsProps) {
   const { data: session } = useSession();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
@@ -86,6 +87,27 @@ export default function TrackOptions({ trackId, trackOwnerId, onEdit }: TrackOpt
     }
   };
 
+  const deleteTrack = async () => {
+    if (!window.confirm("Are you sure you want to delete this track? This action cannot be undone.")) return;
+
+    try {
+      const res = await fetch(`/api/tracks/${trackId}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        toast.success("Track deleted successfully.");
+        if (onDelete) onDelete();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to delete track");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An unexpected error occurred.");
+    }
+  };
+
   return (
     <>
       <Menu as="div" className="relative inline-block text-left">
@@ -133,8 +155,9 @@ export default function TrackOptions({ trackId, trackOwnerId, onEdit }: TrackOpt
               </Menu.Item>
             </div>
 
-            {isOwner && onEdit && (
+            {isOwner && (
               <div className="py-1">
+                {onEdit && (
                 <Menu.Item>
                   {({ active }) => (
                     <button
@@ -143,6 +166,18 @@ export default function TrackOptions({ trackId, trackOwnerId, onEdit }: TrackOpt
                     >
                       <Edit2 className="mr-3 h-4 w-4" />
                       Edit Details
+                    </button>
+                  )}
+                </Menu.Item>
+                )}
+                <Menu.Item>
+                  {({ active }) => (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); deleteTrack(); }}
+                      className={`${active ? "bg-red-900/50 text-red-400" : "text-red-500"} group flex w-full items-center px-4 py-2.5 text-sm font-medium transition-colors`}
+                    >
+                      <Trash2 className="mr-3 h-4 w-4" />
+                      Delete Track
                     </button>
                   )}
                 </Menu.Item>
