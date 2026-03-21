@@ -8,8 +8,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       <div className="flex-1 flex flex-col relative w-full h-full overflow-hidden">
         {/* pt-0 on mobile since we removed top-bar */}
         <main className="flex-1 overflow-y-auto bg-gradient-to-b from-[#181818] to-black w-full pt-0 md:pt-0">
-          <div className="p-4 pt-12 md:p-8 w-full min-h-full pb-48 md:pb-32">
-            {/* pb-48 ensures content doesn't get hidden behind new floating Nav + Player on mobile */}
+          <div className="p-4 pt-8 md:p-8 w-full min-h-full pb-[140px] md:pb-32">
+            {/* pb-[140px] ensures content doesn't get hidden behind Spotify-style Mobile Nav + PlayerBar */}
             {children}
           </div>
         </main>

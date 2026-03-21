@@ -141,19 +141,29 @@ export function PlayerBar() {
         />
       )}
 
-      {/* --- Mobile View (Apple Music Style Floating Pill) --- */}
-      <div className="md:hidden fixed bottom-[88px] inset-x-0 z-[60] flex items-center justify-center pointer-events-none px-4">
-        <div className="w-full max-w-md h-[60px] bg-neutral-900/90 backdrop-blur-xl saturate-[180%] rounded-full shadow-2xl border border-white/10 flex items-center justify-between px-2 relative overflow-hidden pointer-events-auto transition-transform duration-300">
+      {/* --- Mobile View (Spotify Style Docked Pill) --- */}
+      <div className="md:hidden fixed bottom-[64px] inset-x-0 z-[60] flex flex-col items-center pointer-events-none px-2 mb-2">
+        <div className="w-full h-[56px] bg-[#282828] rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.5)] flex items-center justify-between px-3 relative overflow-hidden pointer-events-auto">
 
-          {/* Subtle Background Progress Bar */}
+          {/* Thin Progress Bar at bottom edge */}
           <div
-            className="absolute bottom-0 left-0 h-[3px] bg-white/20 pointer-events-none"
+            className="absolute bottom-0 left-0 h-[2px] bg-white pointer-events-none transition-all duration-100 ease-linear"
             style={{ width: `${(progress / (duration || 1)) * 100}%` }}
           />
 
+          {/* Increased invisible touch target for progress scrubbing */}
+          <input
+            type="range"
+            min={0}
+            max={duration || 100}
+            value={progress}
+            onChange={handleSeek}
+            className="absolute bottom-[-14px] left-0 w-full h-8 opacity-0 cursor-pointer z-20 touch-none"
+          />
+
           {/* Left: Track Info */}
-          <div className="flex items-center gap-3 min-w-0 flex-1 z-10 pl-1">
-            <div className="w-11 h-11 bg-[#181818] rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden relative shadow-sm border border-white/5">
+          <div className="flex items-center gap-3 min-w-0 flex-1 z-10">
+            <div className="w-10 h-10 bg-[#181818] rounded-md flex-shrink-0 flex items-center justify-center overflow-hidden relative">
               {currentTrack.coverUrl ? (
                  <img src={currentTrack.coverUrl} alt="Cover" className="w-full h-full object-cover" />
               ) : (
@@ -161,21 +171,21 @@ export function PlayerBar() {
               )}
             </div>
             <div className="flex flex-col min-w-0 pr-2">
-              <p className="text-white text-sm font-bold truncate leading-tight tracking-wide">{currentTrack.title || "Unknown Title"}</p>
-              <p className="text-[#a0a0a0] text-xs font-medium truncate leading-tight mt-0.5">{currentTrack.artist || "Unknown Artist"}</p>
+              <p className="text-white text-sm font-semibold truncate leading-tight tracking-wide">{currentTrack.title || "Unknown Title"}</p>
+              <p className="text-[#a0a0a0] text-xs truncate leading-tight mt-0.5">{currentTrack.artist || "Unknown Artist"}</p>
             </div>
           </div>
 
           {/* Right: Controls */}
-          <div className="flex items-center gap-1 shrink-0 z-10 mr-1">
-             <button onClick={togglePlayPause} className="text-white p-2 rounded-full hover:bg-white/10 focus:outline-none active:scale-95 transition-all">
+          <div className="flex items-center gap-1 shrink-0 z-10">
+             <button onClick={togglePlayPause} className="text-white p-2 focus:outline-none active:scale-95 transition-transform">
                {isPlaying ? (
                  <Pause className="w-6 h-6 fill-current" />
                ) : (
                  <Play className="w-6 h-6 fill-current ml-0.5" />
                )}
              </button>
-             <button onClick={next} className="text-white p-2 rounded-full hover:bg-white/10 focus:outline-none active:scale-95 transition-all">
+             <button onClick={next} className="text-white p-2 focus:outline-none active:scale-95 transition-transform">
                <SkipForward className="w-6 h-6 fill-current" />
              </button>
           </div>

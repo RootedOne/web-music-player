@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Home, Library, Plus, LogOut, Music, Compass, Search, ListMusic, Mic } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Library, Search, Plus, LogOut, Music, Compass, ListMusic } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 
@@ -10,12 +10,9 @@ type Playlist = { id: string; name: string };
 
 export function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
-  const [searchMode, setSearchMode] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchPlaylists();
@@ -52,12 +49,6 @@ export function Sidebar() {
     } catch (error) {
       console.error("Failed to create playlist", error);
     }
-  };
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setSearchQuery(val);
-    router.push(`/?q=${encodeURIComponent(val)}`);
   };
 
   return (
@@ -142,62 +133,28 @@ export function Sidebar() {
         </div>
       </aside>
 
-      {/* --- Mobile Floating Bottom Nav (Apple Music Inspired) --- */}
-      <div className="md:hidden fixed bottom-2 inset-x-0 z-[60] flex items-center justify-center pointer-events-none px-4">
-        {/* Pointer-events-auto re-enabled on the inner container so clicks work, but clicks outside pass through */}
-        <div className="w-full max-w-md flex items-center justify-between gap-2 h-[60px] pointer-events-auto relative">
+      {/* --- Mobile Bottom Nav (Spotify Inspired) --- */}
+      <div className="md:hidden fixed bottom-0 w-full bg-black/95 backdrop-blur-md border-t border-neutral-800 z-[60] pb-safe">
+        <div className="flex items-center justify-between w-full h-[64px]">
+            <Link href="/" className={`flex flex-col items-center justify-center w-1/4 h-full cursor-pointer gap-1 transition-colors ${pathname === '/' ? 'text-white' : 'text-gray-400 hover:text-gray-300'}`}>
+                <Compass className="w-6 h-6" />
+                <span className="text-[10px] font-medium tracking-wide">Discover</span>
+            </Link>
 
-           {/* STATE A: Normal Nav Pill */}
-           <div
-             className={`flex items-center justify-around h-full bg-neutral-900/80 backdrop-blur-md saturate-[180%] rounded-full px-2 overflow-hidden transition-all duration-300 ease-out border border-white/10 shadow-2xl flex-grow ${searchMode ? 'opacity-0 scale-95 pointer-events-none absolute w-[80%]' : 'opacity-100 scale-100 relative'}`}
-           >
-              <Link href="/" onClick={() => setSearchMode(false)} className="flex flex-col items-center justify-center gap-1 w-16 h-full cursor-pointer">
-                 <Compass className={`w-5 h-5 transition-colors ${pathname === '/' ? 'text-white' : 'text-gray-400'}`} />
-                 <span className={`text-[10px] font-medium transition-colors ${pathname === '/' ? 'text-white' : 'text-gray-400'}`}>Discover</span>
-              </Link>
+            <Link href="/search" className={`flex flex-col items-center justify-center w-1/4 h-full cursor-pointer gap-1 transition-colors ${pathname === '/search' ? 'text-white' : 'text-gray-400 hover:text-gray-300'}`}>
+                <Search className="w-6 h-6" />
+                <span className="text-[10px] font-medium tracking-wide">Search</span>
+            </Link>
 
-              <Link href="/library" onClick={() => setSearchMode(false)} className="flex flex-col items-center justify-center gap-1 w-16 h-full cursor-pointer">
-                 <Library className={`w-5 h-5 transition-colors ${pathname === '/library' ? 'text-white' : 'text-gray-400'}`} />
-                 <span className={`text-[10px] font-medium transition-colors ${pathname === '/library' ? 'text-white' : 'text-gray-400'}`}>Library</span>
-              </Link>
+            <Link href="/library" className={`flex flex-col items-center justify-center w-1/4 h-full cursor-pointer gap-1 transition-colors ${pathname === '/library' ? 'text-white' : 'text-gray-400 hover:text-gray-300'}`}>
+                <Library className="w-6 h-6" />
+                <span className="text-[10px] font-medium tracking-wide">Library</span>
+            </Link>
 
-              <Link href="/playlists" onClick={() => setSearchMode(false)} className="flex flex-col items-center justify-center gap-1 w-16 h-full cursor-pointer">
-                 <ListMusic className={`w-5 h-5 transition-colors ${pathname.includes('/playlists') ? 'text-white' : 'text-gray-400'}`} />
-                 <span className={`text-[10px] font-medium transition-colors ${pathname.includes('/playlists') ? 'text-white' : 'text-gray-400'}`}>Playlists</span>
-              </Link>
-           </div>
-
-           {/* STATE B: Home Button (Replaces Nav Pill when searching) */}
-           <button
-             onClick={() => { setSearchMode(false); setSearchQuery(""); router.push("/"); }}
-             className={`flex items-center justify-center h-full bg-neutral-900/80 backdrop-blur-md saturate-[180%] rounded-full shrink-0 transition-all duration-300 ease-out border border-white/10 shadow-2xl ${searchMode ? 'w-[60px] opacity-100 scale-100 relative' : 'opacity-0 scale-95 pointer-events-none absolute w-[60px]'}`}
-           >
-              <Home className="w-5 h-5 text-white" />
-           </button>
-
-           {/* STATE B: Search Bar (Expands) */}
-           <div
-             className={`flex items-center h-full bg-neutral-900/80 backdrop-blur-md saturate-[180%] rounded-full px-4 overflow-hidden transition-all duration-300 ease-out border border-white/10 shadow-2xl flex-grow ${searchMode ? 'opacity-100 scale-100 relative' : 'opacity-0 scale-95 pointer-events-none absolute right-16 w-[80%]'}`}
-           >
-              <Search className="w-5 h-5 text-gray-400 shrink-0" />
-              <input
-                 type="text"
-                 value={searchQuery}
-                 onChange={handleSearch}
-                 placeholder="Search..."
-                 className="w-full bg-transparent border-none text-white text-sm focus:outline-none px-3"
-                 autoFocus={searchMode}
-              />
-              <Mic className="w-5 h-5 text-white shrink-0" />
-           </div>
-
-           {/* STATE A: Search Trigger Button (Right) */}
-           <button
-             onClick={() => { setSearchMode(true); router.push("/"); }}
-             className={`flex items-center justify-center h-full bg-neutral-900/80 backdrop-blur-md saturate-[180%] rounded-full shrink-0 transition-all duration-300 ease-out border border-white/10 shadow-2xl ${!searchMode ? 'w-[60px] opacity-100 scale-100 relative' : 'opacity-0 scale-95 pointer-events-none absolute right-0 w-[60px]'}`}
-           >
-              <Search className="w-5 h-5 text-white" />
-           </button>
+            <Link href="/playlists" className={`flex flex-col items-center justify-center w-1/4 h-full cursor-pointer gap-1 transition-colors ${pathname.includes('/playlists') ? 'text-white' : 'text-gray-400 hover:text-gray-300'}`}>
+                <ListMusic className="w-6 h-6" />
+                <span className="text-[10px] font-medium tracking-wide">Playlists</span>
+            </Link>
         </div>
       </div>
     </>
