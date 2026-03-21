@@ -142,8 +142,8 @@ export function PlayerBar() {
       )}
 
       {/* --- Mobile View (Apple Music Style Floating Glass Pill) --- */}
-      <div className="md:hidden fixed bottom-[84px] inset-x-0 z-[60] flex items-center justify-center pointer-events-none px-4">
-        <div className="w-full max-w-md h-[56px] bg-neutral-900/80 backdrop-blur-2xl saturate-[180%] border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] rounded-full flex items-center justify-between px-2 relative overflow-hidden pointer-events-auto">
+      <div className="md:hidden fixed bottom-[104px] w-full z-[60] flex items-center justify-center pointer-events-none px-4">
+        <div className="w-full max-w-md h-[60px] bg-neutral-900/80 backdrop-blur-2xl saturate-[180%] border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] rounded-full flex items-center justify-between px-2 relative overflow-hidden pointer-events-auto">
 
           {/* Thin Progress Bar at bottom edge */}
           <div

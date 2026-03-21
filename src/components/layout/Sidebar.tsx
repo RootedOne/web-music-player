@@ -152,7 +152,7 @@ export function Sidebar() {
       </aside>
 
       {/* --- Mobile Floating Bottom Nav (Glassmorphism + Morphing Search) --- */}
-      <div className="md:hidden fixed bottom-6 inset-x-0 z-[60] flex items-center justify-center pointer-events-none px-4">
+      <div className="md:hidden fixed bottom-0 w-full z-[60] flex items-end justify-center pointer-events-none px-4 pb-6 pt-12 bg-gradient-to-t from-black via-black/80 to-transparent">
         <div className="w-full max-w-md flex items-center justify-between gap-2 h-[64px] pointer-events-auto relative">
 
            {/* STATE A: Normal Nav Pill */}
