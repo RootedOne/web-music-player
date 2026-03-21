@@ -124,8 +124,12 @@ export function PlayerBar() {
         <div className="flex items-center justify-between mt-[2px]">
           {/* Left: Track Info */}
           <div className="flex items-center gap-2 min-w-0 max-w-[65%]">
-            <div className="w-10 h-10 bg-gray-800 rounded-md flex-shrink-0 flex items-center justify-center overflow-hidden">
-              <span className="text-gray-500 text-[10px] text-center font-bold">MP3</span>
+            <div className="w-10 h-10 bg-gray-800 rounded-md flex-shrink-0 flex items-center justify-center overflow-hidden relative">
+              {currentTrack.coverUrl ? (
+                 <img src={currentTrack.coverUrl} alt="Cover" className="w-full h-full object-cover" />
+              ) : (
+                 <span className="text-gray-500 text-[10px] text-center font-bold">MP3</span>
+              )}
             </div>
             <div className="flex flex-col min-w-0 pr-2">
               <p className="text-white text-sm font-semibold truncate leading-tight">{currentTrack.title || "Unknown Title"}</p>
@@ -156,8 +160,12 @@ export function PlayerBar() {
       <div className="hidden md:flex h-full items-center justify-between px-6">
         {/* Track Info */}
         <div className="flex items-center gap-4 w-1/3 min-w-0">
-          <div className="w-14 h-14 bg-gray-800 rounded-md flex-shrink-0 flex items-center justify-center overflow-hidden">
-            <span className="text-gray-500 text-xs text-center p-1 font-bold">MP3</span>
+          <div className="w-14 h-14 bg-gray-800 rounded-md flex-shrink-0 flex items-center justify-center overflow-hidden relative shadow-md">
+            {currentTrack.coverUrl ? (
+               <img src={currentTrack.coverUrl} alt="Cover" className="w-full h-full object-cover" />
+            ) : (
+               <span className="text-gray-500 text-xs text-center p-1 font-bold">MP3</span>
+            )}
           </div>
           <div className="truncate pr-4">
             <p className="text-white text-base font-medium truncate">{currentTrack.title || "Unknown Title"}</p>

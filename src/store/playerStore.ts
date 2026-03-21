@@ -6,6 +6,7 @@ export type Track = {
   artist: string | null;
   album: string | null;
   fileUrl: string;
+  coverUrl: string | null;
   duration: number | null;
 };
 

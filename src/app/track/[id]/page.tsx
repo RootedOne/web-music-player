@@ -5,10 +5,11 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Play } from "lucide-react";
 import { useParams } from "next/navigation";
 import { usePlayerStore, Track } from "@/store/playerStore";
+import TrackOptions from "@/components/TrackOptions";
 
 export default function SharedTrackPage() {
   const params = useParams();
-  const [track, setTrack] = useState<(Track & { user: { username: string } }) | null>(null);
+  const [track, setTrack] = useState<(Track & { userId: string, user: { username: string } }) | null>(null);
   const { play } = usePlayerStore();
 
   const trackId = params.id as string;
@@ -30,8 +31,12 @@ export default function SharedTrackPage() {
   return (
     <MainLayout>
       <header className="flex flex-col md:flex-row items-center md:items-end gap-6 mb-8 mt-12 text-center md:text-left">
-        <div className="w-48 h-48 bg-gray-800 shadow-2xl flex items-center justify-center rounded-md shrink-0">
-           <span className="text-gray-500 font-bold text-3xl">MP3</span>
+        <div className="w-48 h-48 bg-gray-800 shadow-2xl flex items-center justify-center rounded-md shrink-0 relative overflow-hidden">
+           {track.coverUrl ? (
+             <img src={track.coverUrl} alt="Cover" className="w-full h-full object-cover" />
+           ) : (
+             <span className="text-gray-500 font-bold text-3xl">MP3</span>
+           )}
         </div>
         <div className="flex flex-col gap-2 flex-1">
           <span className="text-sm font-bold uppercase tracking-widest text-gray-300">Single Track</span>
@@ -48,6 +53,9 @@ export default function SharedTrackPage() {
         >
           <Play className="w-8 h-8 ml-1 fill-current" />
         </button>
+        <div className="bg-gray-800 rounded-full p-2">
+           <TrackOptions trackId={track.id} trackOwnerId={track.userId || ""} />
+        </div>
       </div>
     </MainLayout>
   );

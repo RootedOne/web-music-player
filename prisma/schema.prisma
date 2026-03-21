@@ -15,7 +15,8 @@ model User {
   updatedAt DateTime @updatedAt
 
   tracks    Track[]
-  playlists Playlist[]
+  playlists Playlist[] // Playlists created by the user
+  savedPlaylists SavedPlaylist[] // Playlists saved by the user
 }
 
 model Track {
@@ -25,6 +26,7 @@ model Track {
   album     String?
   duration  Float?
   fileUrl   String
+  coverUrl  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -37,6 +39,7 @@ model Track {
 model Playlist {
   id        String   @id @default(cuid())
   name      String
+  coverUrl  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -44,6 +47,19 @@ model Playlist {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   tracks    PlaylistTrack[]
+  savedBy   SavedPlaylist[]
+}
+
+model SavedPlaylist {
+  id         String   @id @default(cuid())
+  userId     String
+  playlistId String
+  savedAt    DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, playlistId])
 }
 
 model PlaylistTrack {

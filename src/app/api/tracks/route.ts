@@ -47,6 +47,7 @@ export async function POST(req: Request) {
     let artist = "Unknown Artist";
     let album = "Unknown Album";
     let duration = 0;
+    let coverUrl = null;
 
     try {
       const metadata = await mm.parseBuffer(buffer, file.type);
@@ -54,6 +55,18 @@ export async function POST(req: Request) {
       if (metadata.common.artist) artist = metadata.common.artist;
       if (metadata.common.album) album = metadata.common.album;
       if (metadata.format.duration) duration = metadata.format.duration;
+
+      // Extract Cover Art
+      if (metadata.common.picture && metadata.common.picture.length > 0) {
+        const picture = metadata.common.picture[0];
+        const picUniqueId = crypto.randomBytes(16).toString("hex");
+        const picExt = picture.format === 'image/png' ? '.png' : '.jpg';
+        const picFilename = `cover_${picUniqueId}${picExt}`;
+        const picFilepath = path.join(uploadDir, picFilename);
+
+        await fs.writeFile(picFilepath, picture.data);
+        coverUrl = `/uploads/${picFilename}`;
+      }
     } catch (metaErr) {
       console.warn("Could not parse ID3 tags:", metaErr);
     }
@@ -65,6 +78,7 @@ export async function POST(req: Request) {
         album,
         duration,
         fileUrl: `/uploads/${filename}`,
+        coverUrl,
         userId: session.user.id as string,
       },
     });

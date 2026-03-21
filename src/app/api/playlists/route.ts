@@ -38,17 +38,37 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const playlists = await prisma.playlist.findMany({
-      where: { userId: session.user.id },
+    const userId = session.user.id;
+
+    // Fetch playlists created by user
+    const createdPlaylists = await prisma.playlist.findMany({
+      where: { userId },
       include: {
-        _count: {
-          select: { tracks: true }
-        }
+        _count: { select: { tracks: true } }
       },
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(playlists, { status: 200 });
+    // Fetch playlists saved by user
+    const savedPlaylistsRaw = await prisma.savedPlaylist.findMany({
+      where: { userId },
+      include: {
+        playlist: {
+          include: {
+            _count: { select: { tracks: true } }
+          }
+        }
+      },
+      orderBy: { savedAt: "desc" },
+    });
+
+    const savedPlaylists = savedPlaylistsRaw.map(sp => sp.playlist);
+
+    // Combine and remove exact duplicates just in case
+    const allPlaylists = [...createdPlaylists, ...savedPlaylists];
+    const uniquePlaylists = Array.from(new Map(allPlaylists.map(item => [item.id, item])).values());
+
+    return NextResponse.json(uniquePlaylists, { status: 200 });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Failed to fetch playlists" }, { status: 500 });

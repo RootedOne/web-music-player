@@ -2,14 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Trash2, Play, Pause, Share2 } from "lucide-react";
+import { Trash2, Play, Pause, Share2, Edit2, Heart } from "lucide-react";
 import { useParams } from "next/navigation";
 import { usePlayerStore } from "@/store/playerStore";
 import { useSession } from "next-auth/react";
+import TrackOptions from "@/components/TrackOptions";
+import EditModal from "@/components/EditModal";
 
-type TrackType = { id: string; title: string; artist: string | null; album: string | null; duration: number };
+type TrackType = { id: string; title: string; artist: string | null; album: string | null; duration: number; coverUrl: string | null; userId: string };
 type PlaylistTrackType = { id: string; trackId: string; track: TrackType };
-type PlaylistType = { id: string; name: string; tracks: PlaylistTrackType[], userId: string, user: { username: string } };
+type PlaylistType = { id: string; name: string; coverUrl: string | null, tracks: PlaylistTrackType[], userId: string, user: { username: string }, savedBy?: { id: string }[] };
 
 export default function PlaylistPage() {
   const params = useParams();
@@ -17,6 +19,7 @@ export default function PlaylistPage() {
   const [allTracks, setAllTracks] = useState<TrackType[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
   const { playQueue, currentTrackIndex, queue, isPlaying, pause, resume } = usePlayerStore();
   const { data: session } = useSession();
 
@@ -51,6 +54,7 @@ export default function PlaylistPage() {
       }, 300);
       return () => clearTimeout(delayDebounceFn);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, isAdding]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -100,6 +104,22 @@ export default function PlaylistPage() {
     playQueue(tracksToPlay as any, startIndex);
   };
 
+  const toggleSavePlaylist = async () => {
+    if (!playlist) return;
+    const isSaved = playlist.savedBy && playlist.savedBy.length > 0;
+
+    try {
+        const res = await fetch(`/api/playlists/${playlistId}/save`, {
+            method: isSaved ? "DELETE" : "POST"
+        });
+        if(res.ok) {
+            fetchPlaylist();
+        }
+    } catch(err) {
+        console.error(err);
+    }
+  };
+
   const copyShareLink = () => {
     const url = `${window.location.origin}/playlists/${playlistId}`;
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -140,29 +160,59 @@ export default function PlaylistPage() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isOwner = session?.user && (session.user as any).id === playlist.userId;
+  const isSaved = playlist.savedBy && playlist.savedBy.length > 0;
 
   return (
     <MainLayout>
       <header className="flex items-end gap-6 mb-8 mt-12">
-        <div className="w-48 h-48 bg-gray-800 shadow-2xl flex items-center justify-center rounded-md">
-           <span className="text-gray-500 font-bold text-xl">Playlist</span>
+        <div className="w-48 h-48 bg-gray-800 shadow-2xl flex items-center justify-center rounded-md shrink-0 overflow-hidden relative">
+          {playlist.coverUrl ? (
+            <img src={playlist.coverUrl} alt="Cover" className="w-full h-full object-cover" />
+          ) : playlist.tracks.length > 0 && playlist.tracks[0].track.coverUrl ? (
+            <img src={playlist.tracks[0].track.coverUrl} alt="Cover" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-gray-500 font-bold text-xl">Playlist</span>
+          )}
         </div>
         <div className="flex flex-col gap-2 flex-1">
           <span className="text-sm font-bold uppercase tracking-widest text-gray-300">Playlist</span>
           <h1 className="text-6xl font-black text-white tracking-tighter truncate">{playlist.name}</h1>
           <p className="text-gray-400 mt-2">Created by {playlist.user.username} • {playlist.tracks.length} songs</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+            {session?.user && !isOwner && (
+                <button onClick={toggleSavePlaylist} title={isSaved ? "Unsave Playlist" : "Save to Library"} className="mb-2 text-red-500 hover:text-red-400 transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
+                   <Heart className={`w-5 h-5 ${isSaved ? "fill-current" : ""}`} />
+                </button>
+            )}
             <button onClick={copyShareLink} title="Share Playlist" className="mb-2 text-gray-400 hover:text-white transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
                 <Share2 className="w-5 h-5" />
             </button>
             {isOwner && (
+              <>
+                <button onClick={() => setIsEditing(true)} title="Edit Playlist" className="mb-2 text-blue-400 hover:text-blue-300 transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
+                   <Edit2 className="w-5 h-5" />
+                </button>
                 <button onClick={deletePlaylist} title="Delete Playlist" className="mb-2 text-red-400 hover:text-red-300 transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
                    <Trash2 className="w-5 h-5" />
                 </button>
+              </>
             )}
         </div>
       </header>
+
+      {isEditing && (
+         <EditModal
+            isOpen={isEditing}
+            onClose={() => setIsEditing(false)}
+            onSuccess={fetchPlaylist}
+            title="Edit Playlist Details"
+            endpoint={`/api/playlists/${playlistId}`}
+            initialName={playlist.name}
+            nameFieldLabel="Playlist Name"
+            nameFieldKey="name"
+         />
+      )}
 
       <div className="flex items-center gap-4 mb-8">
         <button
@@ -204,19 +254,26 @@ export default function PlaylistPage() {
             <div
               key={pt.id}
               onDoubleClick={() => handlePlayTrack(index)}
-              className="grid grid-cols-[16px_minmax(0,1fr)_minmax(0,1fr)_50px] items-center gap-4 px-4 py-3 hover:bg-gray-800 rounded-md group text-gray-300 text-sm transition-colors cursor-pointer"
+              className="grid grid-cols-[30px_minmax(0,1fr)_minmax(0,1fr)_50px] md:grid-cols-[16px_minmax(0,1fr)_minmax(0,1fr)_50px] items-center gap-2 md:gap-4 px-2 md:px-4 py-2 md:py-3 hover:bg-gray-800 rounded-md group text-gray-300 text-sm transition-colors cursor-pointer"
             >
-              <div className={`text-gray-500 group-hover:hidden ${isThisTrackPlaying ? 'text-green-500' : ''}`}>{index + 1}</div>
-              <div
-                className="hidden group-hover:block text-white"
-                onClick={(e) => { e.stopPropagation(); handlePlayTrack(index); }}
-              >
-                {isThisTrackPlaying ? <Pause className="w-4 h-4 fill-current text-green-500" /> : <Play className="w-4 h-4 fill-current" />}
+              <div className="relative flex items-center justify-center w-6 h-6 md:w-auto md:h-auto">
+                  <div className={`text-gray-500 group-hover:hidden ${isThisTrackPlaying ? 'text-green-500' : ''}`}>{index + 1}</div>
+                  <div
+                    className="hidden group-hover:block text-white absolute inset-0 flex items-center justify-center bg-gray-800/80 rounded"
+                    onClick={(e) => { e.stopPropagation(); handlePlayTrack(index); }}
+                  >
+                    {isThisTrackPlaying ? <Pause className="w-3 h-3 md:w-4 md:h-4 fill-current text-green-500" /> : <Play className="w-3 h-3 md:w-4 md:h-4 fill-current" />}
+                  </div>
               </div>
 
-              <div className="flex flex-col min-w-0">
-                <span className={`font-medium truncate ${isThisTrackPlaying ? 'text-green-500' : 'text-white'}`}>{pt.track.title}</span>
-                <span className="text-gray-500 truncate">{pt.track.artist}</span>
+              <div className="flex items-center gap-3 min-w-0">
+                {pt.track.coverUrl && (
+                  <img src={pt.track.coverUrl} alt="Cover" className="w-10 h-10 object-cover rounded hidden sm:block" />
+                )}
+                <div className="flex flex-col min-w-0">
+                  <span className={`font-medium truncate ${isThisTrackPlaying ? 'text-green-500' : 'text-white'}`}>{pt.track.title}</span>
+                  <span className="text-gray-500 truncate">{pt.track.artist}</span>
+                </div>
               </div>
               <div className="truncate text-gray-400">{pt.track.album}</div>
 
@@ -227,6 +284,9 @@ export default function PlaylistPage() {
                   </button>
                 )}
                 <span>{Math.floor(pt.track.duration / 60)}:{(Math.floor(pt.track.duration % 60)).toString().padStart(2, '0')}</span>
+                <div className="opacity-0 group-hover:opacity-100 transition pl-2">
+                   <TrackOptions trackId={pt.track.id} trackOwnerId={pt.track.userId} />
+                </div>
               </div>
             </div>
             );
@@ -252,6 +312,7 @@ export default function PlaylistPage() {
                  placeholder="Search globally for songs to add..."
                  value={searchQuery}
                  onChange={(e) => setSearchQuery(e.target.value)}
+                 autoFocus
                  className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-4 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
                />
             )}
@@ -266,9 +327,16 @@ export default function PlaylistPage() {
                         const isInPlaylist = playlist.tracks.some((pt: PlaylistTrackType) => pt.trackId === track.id);
                         return (
                             <div key={track.id} className="flex items-center justify-between py-2 px-4 hover:bg-gray-700 rounded-md group">
-                                <div className="flex flex-col min-w-0 max-w-[70%]">
-                                    <span className="text-white font-medium truncate">{track.title}</span>
-                                    <span className="text-gray-400 text-sm truncate">{track.artist}</span>
+                                <div className="flex items-center gap-3 min-w-0 max-w-[70%]">
+                                    {track.coverUrl ? (
+                                        <img src={track.coverUrl} className="w-10 h-10 rounded object-cover" alt="Cover" />
+                                    ) : (
+                                        <div className="w-10 h-10 rounded bg-gray-900 flex items-center justify-center text-xs">MP3</div>
+                                    )}
+                                    <div className="flex flex-col min-w-0">
+                                        <span className="text-white font-medium truncate">{track.title}</span>
+                                        <span className="text-gray-400 text-sm truncate">{track.artist}</span>
+                                    </div>
                                 </div>
                                 <button
                                     onClick={() => addTrack(track.id)}
