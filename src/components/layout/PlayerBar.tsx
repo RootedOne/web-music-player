@@ -60,22 +60,40 @@ export function PlayerBar() {
   };
 
   const handleGlobalShufflePlay = async () => {
-    if (queue.length === 0) {
+    // Context-Aware Global Shuffle
+    // If the queue only has 1 track (a single song played from Library/Discover)
+    // or is completely empty, act as a "Global Radio" and pull random tracks.
+    if (queue.length <= 1) {
       try {
-        const res = await fetch("/api/tracks?filter=global");
+        const res = await fetch("/api/tracks/random?limit=50");
         if (res.ok) {
           const data = await res.json();
           if (data.tracks && data.tracks.length > 0) {
-            playQueue(data.tracks, 0);
+            // If a single track is currently playing, preserve it as the first track
+            // and append the random radio queue behind it.
+            let newQueue = data.tracks;
+            const startIndex = 0;
+
+            if (queue.length === 1 && currentTrack) {
+               // Remove the current track from the randomized pool to avoid immediate duplicates
+               // eslint-disable-next-line @typescript-eslint/no-explicit-any
+               newQueue = newQueue.filter((t: any) => t.id !== currentTrack.id);
+               newQueue.unshift(currentTrack);
+            }
+
+            playQueue(newQueue, startIndex);
+
             if (!isShuffle) {
               toggleShuffle();
             }
           }
         }
       } catch (err) {
-        console.error("Failed to fetch global tracks for shuffle", err);
+        console.error("Failed to fetch global random tracks", err);
       }
     } else {
+      // The user is in an active Playlist or Album queue (length > 1)
+      // Only shuffle the existing active context.
       toggleShuffle();
     }
   };
