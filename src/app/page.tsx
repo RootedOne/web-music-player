@@ -1,48 +1,101 @@
-import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
-import { authOptions } from "@/lib/auth";
+"use client";
+
 import { MainLayout } from "@/components/layout/MainLayout";
-import { prisma } from "@/lib/prisma";
 import TrackCard from "@/components/TrackCard";
+import { useSession } from "next-auth/react";
+import { redirect } from "next/navigation";
+import { useState, useEffect } from "react";
+import { Track } from "@/store/playerStore";
+import { Search as SearchIcon } from "lucide-react";
 
-export default async function Home() {
-  const session = await getServerSession(authOptions);
+export default function Home() {
+  const { data: session, status } = useSession();
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [query, setQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (!session) {
-    redirect("/login");
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      redirect("/login");
+    }
+  }, [status]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchTracks(query);
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [query]);
+
+  const fetchTracks = async (searchQuery: string = "") => {
+    setIsLoading(true);
+    try {
+      const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : '';
+      const res = await fetch(`/api/tracks?filter=global${searchParam}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTracks(data.tracks);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (status === "loading") {
+    return <MainLayout><div className="p-8">Loading...</div></MainLayout>;
   }
-
-  const tracks = await prisma.track.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 24, // Show latest 24 uploaded globally
-  });
 
   return (
     <MainLayout>
-      <header className="flex justify-between items-center mb-8">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <h1 className="text-4xl font-extrabold tracking-tight text-white drop-shadow-md">
           Discover
         </h1>
-        <div className="flex items-center gap-4">
-          <div className="bg-gray-800 rounded-full w-10 h-10 flex items-center justify-center font-bold text-gray-300">
-            {session.user?.name?.[0].toUpperCase()}
+
+        {/* Global Search Bar */}
+        <div className="relative w-full max-w-md">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <SearchIcon className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            className="block w-full pl-10 pr-4 py-2.5 bg-gray-800 border-none rounded-full text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 shadow-md text-sm outline-none transition-all"
+            placeholder="Search all songs and artists..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
+
+        <div className="hidden md:flex items-center gap-4">
+          <div className="bg-gray-800 rounded-full w-10 h-10 flex items-center justify-center font-bold text-gray-300 shadow-md border border-gray-700">
+            {session?.user?.name?.[0]?.toUpperCase() || "?"}
           </div>
         </div>
       </header>
 
-      <section className="mt-12">
-        <h2 className="text-2xl font-bold mb-6 text-gray-100">Global Feed</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-           {tracks.length === 0 ? (
-             <div className="col-span-full text-gray-500 py-8">
-               No tracks have been uploaded to the platform yet. Be the first!
-             </div>
-           ) : (
-             tracks.map(track => (
-               <TrackCard key={track.id} track={track} />
-             ))
-           )}
-        </div>
+      <section className="mt-8">
+        <h2 className="text-2xl font-bold mb-6 text-gray-100">
+            {query ? `Search Results for "${query}"` : "Global Feed"}
+        </h2>
+
+        {isLoading ? (
+            <p className="text-gray-500">Loading tracks...</p>
+        ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
+               {tracks.length === 0 ? (
+                 <div className="col-span-full text-gray-500 py-8">
+                   {query ? "No matching tracks found." : "No tracks have been uploaded to the platform yet. Be the first!"}
+                 </div>
+               ) : (
+                 tracks.map(track => (
+                   <TrackCard key={track.id} track={track} />
+                 ))
+               )}
+            </div>
+        )}
       </section>
     </MainLayout>
   );

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Library, Search, Plus, LogOut, Music, Menu, X } from "lucide-react";
+import { Home, Library, Plus, LogOut, Music, Menu, X } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 
@@ -95,16 +95,6 @@ export function Sidebar() {
             >
               <Home className="w-5 h-5" />
               <span>Discover</span>
-            </Link>
-            <Link
-              href="/search"
-              onClick={() => setIsOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                pathname === "/search" ? "bg-gray-800 text-white" : "text-gray-400 hover:text-white hover:bg-gray-800"
-              }`}
-            >
-              <Search className="w-5 h-5" />
-              <span>Search</span>
             </Link>
             <Link
               href="/library"
