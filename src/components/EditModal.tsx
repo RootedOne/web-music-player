@@ -115,7 +115,7 @@ export default function EditModal({
                         <div className="mt-4 flex text-sm leading-6 text-gray-400">
                           <label
                             htmlFor="file-upload"
-                            className="relative cursor-pointer rounded-md bg-gray-900 font-semibold text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 focus-within:ring-offset-gray-900 hover:text-blue-400"
+                        className="relative cursor-pointer rounded-md bg-gray-900 font-semibold text-white focus-within:outline-none focus-within:ring-2 focus-within:ring-white focus-within:ring-offset-2 focus-within:ring-offset-gray-900 hover:text-gray-300"
                           >
                             <span>Upload a file</span>
                             <input
@@ -150,7 +150,7 @@ export default function EditModal({
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="inline-flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none disabled:opacity-50"
+                      className="inline-flex justify-center items-center rounded-md border border-transparent bg-white px-4 py-2 text-sm font-bold text-black hover:bg-gray-200 focus:outline-none disabled:opacity-50"
                     >
                       {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                       Save Changes

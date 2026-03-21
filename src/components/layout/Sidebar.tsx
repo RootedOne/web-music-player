@@ -55,10 +55,10 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile Top Bar */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-gray-950 border-b border-gray-800 w-full fixed top-0 left-0 z-40">
-        <Link href="/" className="flex items-center gap-2 text-white font-bold text-lg">
-          <Music className="w-6 h-6 text-blue-500" />
-          <span>Music Player</span>
+      <div className="md:hidden flex items-center justify-between p-4 bg-[#121212] border-b border-gray-800 w-full fixed top-0 left-0 z-40">
+        <Link href="/" className="flex items-center gap-2 text-white font-bold text-lg tracking-tighter">
+          <Music className="w-6 h-6 text-white" />
+          <span>Sepatifay</span>
         </Link>
         <button onClick={() => setIsOpen(!isOpen)} className="text-white p-2">
           {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -75,14 +75,14 @@ export function Sidebar() {
 
       {/* Sidebar Content */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-gray-950 border-r border-gray-800 flex flex-col h-full transform transition-transform duration-300 ease-in-out
+        className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-[#121212] border-r border-gray-800 flex flex-col h-full transform transition-transform duration-300 ease-in-out
           ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
       >
         <div className="p-6 md:pt-6 pt-20">
-          <Link href="/" className="hidden md:flex items-center gap-3 text-white font-bold text-xl mb-8">
-            <Music className="w-8 h-8 text-blue-500" />
-            <span>Music Player</span>
+          <Link href="/" className="hidden md:flex items-center gap-3 text-white font-bold text-2xl tracking-tighter mb-8 hover:scale-105 transition-transform">
+            <Music className="w-8 h-8 text-white" />
+            <span>Sepatifay</span>
           </Link>
 
           <nav className="space-y-2">

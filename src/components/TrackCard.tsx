@@ -20,7 +20,7 @@ export default function TrackCard({ track, onUpdate }: { track: Track & { userId
       className="bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition cursor-pointer group shadow-lg"
       onClick={handlePlay}
     >
-      <div className="w-full aspect-square bg-gray-900 rounded-md mb-4 flex items-center justify-center relative shadow-inner overflow-hidden">
+      <div className="w-full aspect-square bg-[#181818] rounded-md mb-4 flex items-center justify-center relative shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden">
         {track.coverUrl ? (
           <img src={track.coverUrl} alt="Cover" className="w-full h-full object-cover" />
         ) : (
@@ -28,7 +28,7 @@ export default function TrackCard({ track, onUpdate }: { track: Track & { userId
         )}
         <button
           onClick={(e) => { e.stopPropagation(); handlePlay(); }}
-          className="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all shadow-xl hover:scale-105"
+          className="absolute bottom-2 right-2 w-12 h-12 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all shadow-xl hover:scale-105"
         >
           <Play className="w-6 h-6 ml-1 fill-black text-black" />
         </button>

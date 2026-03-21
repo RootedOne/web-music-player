@@ -31,7 +31,7 @@ export default function SharedTrackPage() {
   return (
     <MainLayout>
       <header className="flex flex-col md:flex-row items-center md:items-end gap-6 mb-8 mt-12 text-center md:text-left">
-        <div className="w-48 h-48 bg-gray-800 shadow-2xl flex items-center justify-center rounded-md shrink-0 relative overflow-hidden">
+        <div className="w-48 h-48 bg-[#282828] shadow-[0_8px_24px_rgba(0,0,0,0.5)] flex items-center justify-center rounded-md shrink-0 relative overflow-hidden">
            {track.coverUrl ? (
              <img src={track.coverUrl} alt="Cover" className="w-full h-full object-cover" />
            ) : (
@@ -49,7 +49,7 @@ export default function SharedTrackPage() {
       <div className="flex items-center justify-center md:justify-start gap-4 mb-8">
         <button
           onClick={() => play(track)}
-          className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center hover:scale-105 transition shadow-lg text-black"
+          className="w-16 h-16 bg-white rounded-full flex items-center justify-center hover:scale-105 transition shadow-lg text-black"
         >
           <Play className="w-8 h-8 ml-1 fill-current" />
         </button>

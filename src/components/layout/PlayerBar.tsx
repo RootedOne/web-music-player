@@ -89,7 +89,7 @@ export function PlayerBar() {
   if (!currentTrack) return null; // Don't render until a track is selected (optional, or render empty state)
 
   return (
-    <div className="bg-gray-900 border-t border-gray-800 shadow-[0_-4px_10px_rgba(0,0,0,0.5)] z-50 fixed bottom-0 left-0 w-full md:h-24">
+    <div className="bg-black border-t border-[#282828] shadow-[0_-4px_10px_rgba(0,0,0,0.5)] z-50 fixed bottom-0 left-0 w-full md:h-24">
       {/* Hidden Audio Element */}
       {currentTrack && (
          <audio
@@ -104,9 +104,9 @@ export function PlayerBar() {
       {/* --- Mobile View (Spotify Style) --- */}
       <div className="flex flex-col md:hidden w-full px-2 py-2">
         {/* Top Progress Bar */}
-        <div className="absolute top-0 left-0 w-full h-[2px] bg-gray-700 pointer-events-none">
+        <div className="absolute top-0 left-0 w-full h-[2px] bg-[#404040] pointer-events-none">
           <div
-            className="h-full bg-blue-500 rounded-r-full"
+            className="h-full bg-white rounded-r-full"
             style={{ width: `${(progress / (duration || 1)) * 100}%` }}
           />
         </div>
@@ -139,7 +139,7 @@ export function PlayerBar() {
 
           {/* Right: Controls */}
           <div className="flex items-center gap-3 shrink-0 mr-1">
-             <button onClick={toggleShuffle} className={`p-1 transition ${isShuffle ? 'text-green-500 hover:text-green-400' : 'text-gray-400 hover:text-white'}`}>
+             <button onClick={toggleShuffle} className={`p-1 transition ${isShuffle ? 'text-white' : 'text-gray-400 hover:text-white'}`}>
                <Shuffle className="w-4 h-4" />
              </button>
              <button onClick={togglePlayPause} className="text-white p-1 focus:outline-none">
@@ -176,8 +176,9 @@ export function PlayerBar() {
         {/* Controls */}
         <div className="flex flex-col items-center justify-center w-1/3 max-w-lg">
           <div className="flex items-center gap-6 mb-2">
-            <button onClick={toggleShuffle} className={`transition ${isShuffle ? 'text-green-500 hover:text-green-400' : 'text-gray-400 hover:text-white'}`}>
+            <button onClick={toggleShuffle} className={`transition relative ${isShuffle ? 'text-white' : 'text-gray-400 hover:text-white'}`}>
                <Shuffle className="w-5 h-5" />
+               {isShuffle && <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full"></span>}
             </button>
             <button onClick={prev} className="text-gray-400 hover:text-white transition">
               <SkipBack className="w-6 h-6 fill-current" />
@@ -185,7 +186,7 @@ export function PlayerBar() {
 
             <button
               onClick={togglePlayPause}
-              className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-full hover:scale-105 transition"
+              className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-full hover:scale-105 active:scale-95 transition"
             >
               {isPlaying ? (
                 <Pause className="w-5 h-5 fill-current" />
@@ -208,9 +209,9 @@ export function PlayerBar() {
                 max={duration || 100}
                 value={progress}
                 onChange={handleSeek}
-                className="w-full h-1 bg-gray-700 rounded-full appearance-none cursor-pointer focus:outline-none"
+                className="w-full h-1 bg-[#4d4d4d] rounded-full appearance-none cursor-pointer focus:outline-none"
                 style={{
-                  background: `linear-gradient(to right, #3b82f6 ${(progress / (duration || 1)) * 100}%, #374151 ${(progress / (duration || 1)) * 100}%)`
+                  background: `linear-gradient(to right, #ffffff ${(progress / (duration || 1)) * 100}%, #4d4d4d ${(progress / (duration || 1)) * 100}%)`
                 }}
               />
             </div>
@@ -231,9 +232,9 @@ export function PlayerBar() {
               step={0.01}
               value={volume}
               onChange={handleVolumeChange}
-              className="w-full h-1 bg-gray-700 rounded-full appearance-none cursor-pointer focus:outline-none"
+              className="w-full h-1 bg-[#4d4d4d] rounded-full appearance-none cursor-pointer focus:outline-none"
               style={{
-                  background: `linear-gradient(to right, #3b82f6 ${volume * 100}%, #374151 ${volume * 100}%)`
+                  background: `linear-gradient(to right, #ffffff ${volume * 100}%, #4d4d4d ${volume * 100}%)`
               }}
             />
           </div>

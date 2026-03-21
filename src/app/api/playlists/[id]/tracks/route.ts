@@ -25,8 +25,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 
     const track = await prisma.track.findUnique({ where: { id: trackId } });
-    if (!track || track.userId !== session.user.id) {
-      return NextResponse.json({ error: "Track not found or forbidden" }, { status: 403 });
+    if (!track) {
+      return NextResponse.json({ error: "Track not found" }, { status: 404 });
     }
 
     const playlistTrack = await prisma.playlistTrack.create({

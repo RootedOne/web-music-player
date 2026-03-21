@@ -84,7 +84,6 @@ export default function PlaylistPage() {
     });
     if (res.ok) {
       fetchPlaylist();
-      setIsAdding(false);
     }
   };
 
@@ -164,8 +163,8 @@ export default function PlaylistPage() {
 
   return (
     <MainLayout>
-      <header className="flex items-end gap-6 mb-8 mt-12">
-        <div className="w-48 h-48 bg-gray-800 shadow-2xl flex items-center justify-center rounded-md shrink-0 overflow-hidden relative">
+      <header className="flex flex-col md:flex-row items-center md:items-end gap-6 mb-8 mt-12 text-center md:text-left">
+        <div className="w-48 h-48 bg-[#282828] shadow-[0_8px_24px_rgba(0,0,0,0.5)] flex items-center justify-center rounded-md shrink-0 overflow-hidden relative">
           {playlist.coverUrl ? (
             <img src={playlist.coverUrl} alt="Cover" className="w-full h-full object-cover" />
           ) : playlist.tracks.length > 0 && playlist.tracks[0].track.coverUrl ? (
@@ -174,26 +173,26 @@ export default function PlaylistPage() {
             <span className="text-gray-500 font-bold text-xl">Playlist</span>
           )}
         </div>
-        <div className="flex flex-col gap-2 flex-1">
+        <div className="flex flex-col gap-2 flex-1 w-full overflow-hidden">
           <span className="text-sm font-bold uppercase tracking-widest text-gray-300">Playlist</span>
-          <h1 className="text-6xl font-black text-white tracking-tighter truncate">{playlist.name}</h1>
-          <p className="text-gray-400 mt-2">Created by {playlist.user.username} • {playlist.tracks.length} songs</p>
+          <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter truncate w-full">{playlist.name}</h1>
+          <p className="text-gray-400 mt-2 text-sm md:text-base">Created by {playlist.user.username} • {playlist.tracks.length} songs</p>
         </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center w-full md:w-auto justify-center md:justify-start mt-4 md:mt-0">
             {session?.user && !isOwner && (
-                <button onClick={toggleSavePlaylist} title={isSaved ? "Unsave Playlist" : "Save to Library"} className="mb-2 text-red-500 hover:text-red-400 transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
+                <button onClick={toggleSavePlaylist} title={isSaved ? "Unsave Playlist" : "Save to Library"} className="text-red-500 hover:text-red-400 transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
                    <Heart className={`w-5 h-5 ${isSaved ? "fill-current" : ""}`} />
                 </button>
             )}
-            <button onClick={copyShareLink} title="Share Playlist" className="mb-2 text-gray-400 hover:text-white transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
+            <button onClick={copyShareLink} title="Share Playlist" className="text-gray-400 hover:text-white transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
                 <Share2 className="w-5 h-5" />
             </button>
             {isOwner && (
               <>
-                <button onClick={() => setIsEditing(true)} title="Edit Playlist" className="mb-2 text-blue-400 hover:text-blue-300 transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
+                <button onClick={() => setIsEditing(true)} title="Edit Playlist" className="text-blue-400 hover:text-blue-300 transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
                    <Edit2 className="w-5 h-5" />
                 </button>
-                <button onClick={deletePlaylist} title="Delete Playlist" className="mb-2 text-red-400 hover:text-red-300 transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
+                <button onClick={deletePlaylist} title="Delete Playlist" className="text-red-400 hover:text-red-300 transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
                    <Trash2 className="w-5 h-5" />
                 </button>
               </>
@@ -214,7 +213,7 @@ export default function PlaylistPage() {
          />
       )}
 
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex items-center justify-center md:justify-start gap-4 mb-8">
         <button
           onClick={() => {
             if (isCurrentPlaylistPlaying && isPlaying) {
@@ -225,19 +224,19 @@ export default function PlaylistPage() {
               handlePlayPlaylist();
             }
           }}
-          className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center hover:scale-105 transition shadow-lg text-black"
+          className="w-14 h-14 md:w-16 md:h-16 bg-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition shadow-lg text-black"
         >
           {isCurrentPlaylistPlaying && isPlaying ? (
-            <Pause className="w-6 h-6 fill-current" />
+            <Pause className="w-6 h-6 md:w-8 md:h-8 fill-current" />
           ) : (
-            <Play className="w-6 h-6 ml-1 fill-current" />
+            <Play className="w-6 h-6 md:w-8 md:h-8 ml-1 fill-current" />
           )}
         </button>
       </div>
 
       {/* Tracks Table */}
       <div className="w-full">
-        <div className="grid grid-cols-[16px_minmax(0,1fr)_minmax(0,1fr)_50px] gap-4 px-4 py-2 text-gray-400 text-sm border-b border-gray-800 mb-4">
+        <div className="hidden md:grid grid-cols-[16px_minmax(0,1fr)_minmax(0,1fr)_50px] gap-4 px-4 py-2 text-gray-400 text-sm border-b border-gray-800 mb-4 uppercase tracking-wider font-semibold">
           <div>#</div>
           <div>Title</div>
           <div>Album</div>
@@ -257,34 +256,34 @@ export default function PlaylistPage() {
               className="grid grid-cols-[30px_minmax(0,1fr)_minmax(0,1fr)_50px] md:grid-cols-[16px_minmax(0,1fr)_minmax(0,1fr)_50px] items-center gap-2 md:gap-4 px-2 md:px-4 py-2 md:py-3 hover:bg-gray-800 rounded-md group text-gray-300 text-sm transition-colors cursor-pointer"
             >
               <div className="relative flex items-center justify-center w-6 h-6 md:w-auto md:h-auto">
-                  <div className={`text-gray-500 group-hover:hidden ${isThisTrackPlaying ? 'text-green-500' : ''}`}>{index + 1}</div>
+                  <div className={`text-gray-500 group-hover:hidden ${isThisTrackPlaying ? 'text-white font-bold' : ''}`}>{index + 1}</div>
                   <div
                     className="hidden group-hover:block text-white absolute inset-0 flex items-center justify-center bg-gray-800/80 rounded"
                     onClick={(e) => { e.stopPropagation(); handlePlayTrack(index); }}
                   >
-                    {isThisTrackPlaying ? <Pause className="w-3 h-3 md:w-4 md:h-4 fill-current text-green-500" /> : <Play className="w-3 h-3 md:w-4 md:h-4 fill-current" />}
+                    {isThisTrackPlaying ? <Pause className="w-3 h-3 md:w-4 md:h-4 fill-current text-white" /> : <Play className="w-3 h-3 md:w-4 md:h-4 fill-current" />}
                   </div>
               </div>
 
               <div className="flex items-center gap-3 min-w-0">
                 {pt.track.coverUrl && (
-                  <img src={pt.track.coverUrl} alt="Cover" className="w-10 h-10 object-cover rounded hidden sm:block" />
+                  <img src={pt.track.coverUrl} alt="Cover" className="w-10 h-10 object-cover rounded hidden sm:block bg-[#282828]" />
                 )}
                 <div className="flex flex-col min-w-0">
-                  <span className={`font-medium truncate ${isThisTrackPlaying ? 'text-green-500' : 'text-white'}`}>{pt.track.title}</span>
+                  <span className={`font-medium truncate ${isThisTrackPlaying ? 'text-white font-bold' : 'text-white'}`}>{pt.track.title}</span>
                   <span className="text-gray-500 truncate">{pt.track.artist}</span>
                 </div>
               </div>
-              <div className="truncate text-gray-400">{pt.track.album}</div>
+              <div className="hidden md:block truncate text-gray-400 pr-4">{pt.track.album}</div>
 
-              <div className="flex items-center justify-end gap-3 text-gray-400">
+              <div className="flex items-center justify-end gap-2 text-gray-400">
                 {isOwner && (
-                  <button onClick={(e) => { e.stopPropagation(); removeTrack(pt.track.id); }} className="opacity-0 group-hover:opacity-100 hover:text-white transition">
-                    <Trash2 className="w-4 h-4" />
+                  <button onClick={(e) => { e.stopPropagation(); removeTrack(pt.track.id); }} className="md:opacity-0 group-hover:opacity-100 hover:text-white transition p-1">
+                    <Trash2 className="w-4 h-4 text-red-500 hover:text-red-400" />
                   </button>
                 )}
-                <span>{Math.floor(pt.track.duration / 60)}:{(Math.floor(pt.track.duration % 60)).toString().padStart(2, '0')}</span>
-                <div className="opacity-0 group-hover:opacity-100 transition pl-2">
+                <span className="hidden sm:block tabular-nums">{Math.floor(pt.track.duration / 60)}:{(Math.floor(pt.track.duration % 60)).toString().padStart(2, '0')}</span>
+                <div className="md:opacity-0 group-hover:opacity-100 transition sm:pl-2" onClick={(e) => e.stopPropagation()}>
                    <TrackOptions trackId={pt.track.id} trackOwnerId={pt.track.userId} />
                 </div>
               </div>
@@ -295,10 +294,10 @@ export default function PlaylistPage() {
       </div>
 
       {isOwner && (
-      <div className="mt-12 pt-8 border-t border-gray-800">
+      <div className="mt-8 md:mt-12 pt-8 border-t border-gray-800">
         <div className="flex flex-col gap-4 mb-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-white">Let&apos;s find something for your playlist</h2>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h2 className="text-xl md:text-2xl font-bold text-white">Let&apos;s find something for your playlist</h2>
                 <button
                     onClick={() => { setIsAdding(!isAdding); if(!isAdding) fetchAllTracks(); }}
                     className="text-sm font-bold bg-transparent border border-gray-500 text-white px-4 py-1 rounded-full hover:border-white transition"
@@ -329,9 +328,9 @@ export default function PlaylistPage() {
                             <div key={track.id} className="flex items-center justify-between py-2 px-4 hover:bg-gray-700 rounded-md group">
                                 <div className="flex items-center gap-3 min-w-0 max-w-[70%]">
                                     {track.coverUrl ? (
-                                        <img src={track.coverUrl} className="w-10 h-10 rounded object-cover" alt="Cover" />
+                                        <img src={track.coverUrl} className="w-10 h-10 rounded object-cover bg-[#282828]" alt="Cover" />
                                     ) : (
-                                        <div className="w-10 h-10 rounded bg-gray-900 flex items-center justify-center text-xs">MP3</div>
+                                        <div className="w-10 h-10 rounded bg-[#282828] flex items-center justify-center text-xs">MP3</div>
                                     )}
                                     <div className="flex flex-col min-w-0">
                                         <span className="text-white font-medium truncate">{track.title}</span>

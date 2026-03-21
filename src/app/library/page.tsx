@@ -123,7 +123,7 @@ export default function LibraryPage() {
               <p className="text-gray-300 font-semibold mb-2">Drag and drop your audio files here</p>
               <p className="text-gray-500 text-sm mb-6">Supports .mp3 and .wav</p>
 
-              <label className="bg-white text-black px-6 py-2 rounded-full font-bold cursor-pointer hover:scale-105 transition-transform">
+              <label className="bg-white text-black px-8 py-3 rounded-full font-bold cursor-pointer hover:scale-105 transition-transform">
                 Browse Files
                 <input
                   type="file"
