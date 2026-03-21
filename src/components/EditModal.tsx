@@ -16,6 +16,9 @@ type EditModalProps = {
   initialSecondaryName?: string;
   secondaryNameFieldLabel?: string;
   secondaryNameFieldKey?: string;
+  initialTertiaryName?: string;
+  tertiaryNameFieldLabel?: string;
+  tertiaryNameFieldKey?: string;
 };
 
 export default function EditModal({
@@ -30,9 +33,13 @@ export default function EditModal({
   initialSecondaryName,
   secondaryNameFieldLabel,
   secondaryNameFieldKey,
+  initialTertiaryName,
+  tertiaryNameFieldLabel,
+  tertiaryNameFieldKey,
 }: EditModalProps) {
   const [name, setName] = useState(initialName);
   const [secondaryName, setSecondaryName] = useState(initialSecondaryName || "");
+  const [tertiaryName, setTertiaryName] = useState(initialTertiaryName || "");
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -46,6 +53,9 @@ export default function EditModal({
     formData.append(nameFieldKey, name);
     if (secondaryNameFieldKey) {
       formData.append(secondaryNameFieldKey, secondaryName);
+    }
+    if (tertiaryNameFieldKey) {
+      formData.append(tertiaryNameFieldKey, tertiaryName);
     }
     if (coverFile) {
       formData.append("coverFile", coverFile);
@@ -124,6 +134,18 @@ export default function EditModal({
                         type="text"
                         value={secondaryName}
                         onChange={(e) => setSecondaryName(e.target.value)}
+                        className="w-full px-4 py-3 bg-[#242424] text-white rounded-md border border-transparent focus:outline-none focus:ring-2 focus:ring-white transition-all placeholder-gray-500"
+                      />
+                    </div>
+                  )}
+
+                  {tertiaryNameFieldLabel && tertiaryNameFieldKey && (
+                    <div>
+                      <label className="block text-sm font-bold text-white mb-2 uppercase tracking-wide">{tertiaryNameFieldLabel}</label>
+                      <input
+                        type="text"
+                        value={tertiaryName}
+                        onChange={(e) => setTertiaryName(e.target.value)}
                         className="w-full px-4 py-3 bg-[#242424] text-white rounded-md border border-transparent focus:outline-none focus:ring-2 focus:ring-white transition-all placeholder-gray-500"
                       />
                     </div>

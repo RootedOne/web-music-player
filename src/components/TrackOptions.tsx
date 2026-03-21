@@ -4,6 +4,7 @@ import { Fragment, useState, useEffect } from "react";
 import { Menu, Transition, Dialog } from "@headlessui/react";
 import { MoreHorizontal, Plus, Share2, Edit2, Loader2, Music, Trash2, X } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import toast from "react-hot-toast";
 import ConfirmModal from "./modals/ConfirmModal";
 
@@ -25,6 +26,9 @@ export default function TrackOptions({ trackId, trackOwnerId, onEdit, onDelete, 
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const pathname = usePathname();
+
+  const isLibraryPage = pathname === "/library";
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isOwner = session?.user && (session.user as any).id === trackOwnerId;
@@ -166,7 +170,7 @@ export default function TrackOptions({ trackId, trackOwnerId, onEdit, onDelete, 
               </Menu.Item>
             </div>
 
-            {isOwner && (
+            {isOwner && isLibraryPage && (
               <div className="py-1">
                 {onEdit && (
                 <Menu.Item>

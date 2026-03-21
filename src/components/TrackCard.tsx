@@ -61,6 +61,9 @@ export default function TrackCard({ track, onUpdate, onDelete }: { track: Track 
            initialSecondaryName={track.artist || ""}
            secondaryNameFieldLabel="Track Artist"
            secondaryNameFieldKey="artist"
+           initialTertiaryName={track.album || ""}
+           tertiaryNameFieldLabel="Track Album"
+           tertiaryNameFieldKey="album"
          />
       )}
     </div>

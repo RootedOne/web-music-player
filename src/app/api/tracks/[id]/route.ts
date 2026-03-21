@@ -44,6 +44,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     const formData = await req.formData();
     const title = formData.get("title") as string;
     const artist = formData.get("artist") as string | null;
+    const album = formData.get("album") as string | null;
     const coverFile = formData.get("coverFile") as File | null;
 
     let coverUrl = track.coverUrl;
@@ -67,6 +68,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       data: {
         title: title || track.title,
         artist: artist !== null ? artist : track.artist,
+        album: album !== null ? album : track.album,
         coverUrl,
       },
     });

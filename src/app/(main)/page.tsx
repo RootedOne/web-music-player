@@ -4,14 +4,15 @@ import TrackCard from "@/components/TrackCard";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Track } from "@/store/playerStore";
-import { Search as SearchIcon } from "lucide-react";
+import { Track, usePlayerStore } from "@/store/playerStore";
+import { Search as SearchIcon, Play, Pause, Shuffle } from "lucide-react";
 
 export default function Home() {
   const { data: session, status } = useSession();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const { playQueue, pause, resume, toggleShuffle, isShuffle, isPlaying, queue } = usePlayerStore();
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -74,6 +75,43 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {tracks.length > 0 && !isLoading && (
+        <div className="flex items-center gap-4 md:gap-6 mb-8 mt-2">
+          <button
+            onClick={() => {
+              const isCurrentFeedPlaying = queue.length === tracks.length && queue.every((t, i) => t.id === tracks[i]?.id);
+              if (isCurrentFeedPlaying && isPlaying) {
+                pause();
+              } else if (isCurrentFeedPlaying && !isPlaying) {
+                resume();
+              } else {
+                playQueue(tracks, 0);
+              }
+            }}
+            className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition shadow-lg text-black"
+          >
+            {queue.length === tracks.length && queue.every((t, i) => t.id === tracks[i]?.id) && isPlaying ? (
+              <Pause className="w-5 h-5 md:w-6 md:h-6 fill-current" />
+            ) : (
+              <Play className="w-5 h-5 md:w-6 md:h-6 ml-1 fill-current" />
+            )}
+          </button>
+
+          <button
+            onClick={() => {
+              const isCurrentFeedPlaying = queue.length === tracks.length && queue.every((t, i) => t.id === tracks[i]?.id);
+              if (!isCurrentFeedPlaying) playQueue(tracks, 0);
+              toggleShuffle();
+            }}
+            className={`p-3 rounded-full hover:scale-105 active:scale-95 transition relative ${isShuffle ? 'text-white' : 'text-gray-400 hover:text-white'}`}
+            title="Shuffle Play"
+          >
+            <Shuffle className="w-5 h-5 md:w-6 md:h-6" />
+            {isShuffle && <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full"></span>}
+          </button>
+        </div>
+      )}
 
       <section className="mt-8">
         <h2 className="text-2xl font-bold mb-6 text-gray-100">
