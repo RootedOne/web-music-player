@@ -118,9 +118,29 @@ export default function PlaylistPage() {
         });
         if(res.ok) {
             fetchPlaylist();
+            toast.success(isSaved ? "Removed from Library" : "Added to Library");
         }
     } catch(err) {
         console.error(err);
+    }
+  };
+
+  const saveAsCopy = async () => {
+    if (!playlist) return;
+    try {
+        const res = await fetch(`/api/playlists/${playlistId}/clone`, {
+            method: "POST"
+        });
+        if(res.ok) {
+            const newPlaylist = await res.json();
+            toast.success("Playlist saved as copy!");
+            window.location.href = `/playlists/${newPlaylist.id}`;
+        } else {
+            toast.error("Failed to copy playlist.");
+        }
+    } catch(err) {
+        console.error(err);
+        toast.error("Failed to copy playlist.");
     }
   };
 
@@ -182,22 +202,38 @@ export default function PlaylistPage() {
           <span className="text-sm font-bold uppercase tracking-widest text-gray-300">Playlist</span>
           <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter truncate w-full">{playlist.name}</h1>
           <p className="text-gray-400 mt-2 text-sm md:text-base">Created by {playlist.user.username} • {playlist.tracks.length} songs</p>
+
+          {session?.user && !isOwner && (
+            <div className="mt-4 flex flex-col gap-2 w-full md:w-auto">
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={toggleSavePlaylist}
+                  className={`px-6 py-2 rounded-full font-bold text-sm transition-all shadow-md active:scale-95 flex items-center gap-2 ${isSaved ? 'bg-[#282828] text-white hover:bg-[#383838]' : 'bg-white text-black hover:bg-gray-200'}`}
+                >
+                  <Heart className={`w-4 h-4 ${isSaved ? "fill-white" : ""}`} />
+                  {isSaved ? "Added to Library" : "Add to Library"}
+                </button>
+                <button
+                  onClick={saveAsCopy}
+                  className="px-6 py-2 rounded-full font-bold text-sm bg-transparent border border-gray-500 text-white hover:border-white transition-colors active:scale-95 flex items-center gap-2"
+                >
+                  Save as Copy
+                </button>
+              </div>
+              <p className="text-[#a0a0a0] text-xs">Add to get live updates, or Save a copy to edit yourself.</p>
+            </div>
+          )}
         </div>
         <div className="flex gap-2 items-center w-full md:w-auto justify-center md:justify-start mt-4 md:mt-0">
-            {session?.user && !isOwner && (
-                <button onClick={toggleSavePlaylist} title={isSaved ? "Unsave Playlist" : "Save to Library"} className="text-red-500 hover:text-red-400 transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
-                   <Heart className={`w-5 h-5 ${isSaved ? "fill-current" : ""}`} />
-                </button>
-            )}
-            <button onClick={copyShareLink} title="Share Playlist" className="text-gray-400 hover:text-white transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
+            <button onClick={copyShareLink} title="Share Playlist" className="text-gray-400 hover:text-white transition-colors p-2 bg-[#282828] rounded-full hover:bg-[#383838] shadow-md">
                 <Share2 className="w-5 h-5" />
             </button>
             {isOwner && (
               <>
-                <button onClick={() => setIsEditing(true)} title="Edit Playlist" className="text-white hover:text-gray-300 transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
+                <button onClick={() => setIsEditing(true)} title="Edit Playlist" className="text-white hover:text-gray-300 transition-colors p-2 bg-[#282828] rounded-full hover:bg-[#383838] shadow-md">
                    <Edit2 className="w-5 h-5" />
                 </button>
-                <button onClick={() => setIsDeleteConfirmOpen(true)} title="Delete Playlist" className="text-red-400 hover:text-red-300 transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
+                <button onClick={() => setIsDeleteConfirmOpen(true)} title="Delete Playlist" className="text-red-400 hover:text-red-300 transition-colors p-2 bg-[#282828] rounded-full hover:bg-[#383838] shadow-md">
                    <Trash2 className="w-5 h-5" />
                 </button>
               </>

@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { useEffect } from "react";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload, Loader2, Music } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import TrackCard from "@/components/TrackCard";
 import { Track } from "@/store/playerStore";
+
+type Playlist = { id: string; name: string, coverUrl: string | null };
 
 export default function LibraryPage() {
   const router = useRouter();
@@ -13,10 +16,12 @@ export default function LibraryPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
   const [myTracks, setMyTracks] = useState<Track[]>([]);
+  const [myPlaylists, setMyPlaylists] = useState<Playlist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchMyTracks();
+    fetchMyPlaylists();
   }, []);
 
   const fetchMyTracks = async () => {
@@ -30,6 +35,17 @@ export default function LibraryPage() {
       console.error(err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchMyPlaylists = async () => {
+    try {
+      const res = await fetch("/api/playlists");
+      if (res.ok) {
+        setMyPlaylists(await res.json());
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -99,9 +115,36 @@ export default function LibraryPage() {
       </header>
 
       <section className="mb-12">
+        <h2 className="text-2xl font-bold mb-6 text-gray-100">Playlists</h2>
+        {isLoading ? (
+          <p className="text-gray-500">Loading playlists...</p>
+        ) : myPlaylists.length === 0 ? (
+          <p className="text-gray-500 bg-[#181818] p-6 rounded-lg text-center border border-[#282828] border-dashed">
+            You haven&apos;t created or saved any playlists yet.
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+            {myPlaylists.map((pl) => (
+              <Link key={pl.id} href={`/playlists/${pl.id}`} className="bg-[#181818] p-4 rounded-lg hover:bg-[#282828] transition cursor-pointer shadow-[0_8px_24px_rgba(0,0,0,0.5)] group">
+                <div className="w-full aspect-square bg-[#282828] rounded-md mb-4 flex items-center justify-center overflow-hidden shadow-inner relative">
+                  {pl.coverUrl ? (
+                     <img src={pl.coverUrl} alt="Cover" className="w-full h-full object-cover" />
+                  ) : (
+                     <Music className="w-12 h-12 text-gray-600" />
+                  )}
+                </div>
+                <h3 className="text-white font-semibold truncate">{pl.name}</h3>
+                <p className="text-gray-400 text-sm truncate">Playlist</p>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="mb-12">
         <h2 className="text-2xl font-bold mb-6 text-gray-100">Upload Music</h2>
 
-        {error && <div className="mb-4 text-red-400 bg-red-900/20 p-3 rounded">{error}</div>}
+        {error && <div className="mb-4 text-red-400 bg-red-900/20 p-3 rounded font-medium border border-red-900/50">{error}</div>}
 
         <div
           onDragOver={handleDragOver}
