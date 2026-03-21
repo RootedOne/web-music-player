@@ -2,22 +2,26 @@
 
 import { Fragment, useState, useEffect } from "react";
 import { Menu, Transition, Dialog } from "@headlessui/react";
-import { MoreHorizontal, Plus, Share2, Edit2, Loader2, Music, Trash2 } from "lucide-react";
+import { MoreHorizontal, Plus, Share2, Edit2, Loader2, Music, Trash2, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
+import ConfirmModal from "./modals/ConfirmModal";
 
 type TrackOptionsProps = {
   trackId: string;
   trackOwnerId: string;
   onEdit?: () => void;
   onDelete?: () => void;
+  onRemoveFromPlaylist?: () => void;
 };
 
 type Playlist = { id: string; name: string };
 
-export default function TrackOptions({ trackId, trackOwnerId, onEdit, onDelete }: TrackOptionsProps) {
+export default function TrackOptions({ trackId, trackOwnerId, onEdit, onDelete, onRemoveFromPlaylist }: TrackOptionsProps) {
   const { data: session } = useSession();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isRemoveConfirmOpen, setIsRemoveConfirmOpen] = useState(false);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -88,8 +92,6 @@ export default function TrackOptions({ trackId, trackOwnerId, onEdit, onDelete }
   };
 
   const deleteTrack = async () => {
-    if (!window.confirm("Are you sure you want to delete this track? This action cannot be undone.")) return;
-
     try {
       const res = await fetch(`/api/tracks/${trackId}`, {
         method: "DELETE",
@@ -105,6 +107,15 @@ export default function TrackOptions({ trackId, trackOwnerId, onEdit, onDelete }
     } catch (err) {
       console.error(err);
       toast.error("An unexpected error occurred.");
+    } finally {
+      setIsDeleteConfirmOpen(false);
+    }
+  };
+
+  const handleRemoveFromPlaylist = () => {
+    if (onRemoveFromPlaylist) {
+      onRemoveFromPlaylist();
+      setIsRemoveConfirmOpen(false);
     }
   };
 
@@ -170,22 +181,61 @@ export default function TrackOptions({ trackId, trackOwnerId, onEdit, onDelete }
                   )}
                 </Menu.Item>
                 )}
-                <Menu.Item>
-                  {({ active }) => (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); deleteTrack(); }}
-                      className={`${active ? "bg-red-900/50 text-red-400" : "text-red-500"} group flex w-full items-center px-4 py-2.5 text-sm font-medium transition-colors`}
-                    >
-                      <Trash2 className="mr-3 h-4 w-4" />
-                      Delete Track
-                    </button>
-                  )}
-                </Menu.Item>
+                {onDelete && (
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setIsDeleteConfirmOpen(true); }}
+                        className={`${active ? "bg-red-900/50 text-red-400" : "text-red-500"} group flex w-full items-center px-4 py-2.5 text-sm font-medium transition-colors`}
+                      >
+                        <Trash2 className="mr-3 h-4 w-4" />
+                        Delete Track
+                      </button>
+                    )}
+                  </Menu.Item>
+                )}
               </div>
+            )}
+
+            {onRemoveFromPlaylist && (
+               <div className="py-1">
+                 <Menu.Item>
+                   {({ active }) => (
+                     <button
+                       onClick={(e) => { e.stopPropagation(); setIsRemoveConfirmOpen(true); }}
+                       className={`${active ? "bg-red-900/50 text-red-400" : "text-gray-400 hover:text-white"} group flex w-full items-center px-4 py-2.5 text-sm font-medium transition-colors`}
+                     >
+                       <X className="mr-3 h-4 w-4" />
+                       Remove from Playlist
+                     </button>
+                   )}
+                 </Menu.Item>
+               </div>
             )}
           </Menu.Items>
         </Transition>
       </Menu>
+
+      {/* Modals */}
+      <ConfirmModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={deleteTrack}
+        title="Delete Track?"
+        description="Are you sure you want to permanently delete this track? This action cannot be undone."
+        confirmText="Delete"
+        isDestructive={true}
+      />
+
+      <ConfirmModal
+        isOpen={isRemoveConfirmOpen}
+        onClose={() => setIsRemoveConfirmOpen(false)}
+        onConfirm={handleRemoveFromPlaylist}
+        title="Remove from Playlist?"
+        description="Are you sure you want to remove this track from the playlist?"
+        confirmText="Remove"
+        isDestructive={true}
+      />
 
       {/* Add to Playlist Modal */}
       <Transition appear show={isModalOpen} as={Fragment}>

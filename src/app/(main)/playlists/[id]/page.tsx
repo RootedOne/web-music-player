@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trash2, Play, Pause, Share2, Edit2, Heart } from "lucide-react";
+import { Trash2, Play, Pause, Share2, Edit2, Heart, Shuffle } from "lucide-react";
 import { useParams } from "next/navigation";
 import { usePlayerStore } from "@/store/playerStore";
 import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
 import TrackOptions from "@/components/TrackOptions";
 import EditModal from "@/components/EditModal";
+import ConfirmModal from "@/components/modals/ConfirmModal";
 
 type TrackType = { id: string; title: string; artist: string | null; album: string | null; duration: number; coverUrl: string | null; userId: string };
 type PlaylistTrackType = { id: string; trackId: string; track: TrackType };
@@ -19,7 +21,8 @@ export default function PlaylistPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isEditing, setIsEditing] = useState(false);
-  const { playQueue, currentTrackIndex, queue, isPlaying, pause, resume } = usePlayerStore();
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const { playQueue, currentTrackIndex, queue, isPlaying, pause, resume, toggleShuffle, isShuffle } = usePlayerStore();
   const { data: session } = useSession();
 
   const playlistId = params.id as string;
@@ -59,10 +62,13 @@ export default function PlaylistPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
 
   const deletePlaylist = async () => {
-    if (!confirm("Are you sure you want to delete this playlist?")) return;
-    const res = await fetch(`/api/playlists/${playlistId}`, { method: "DELETE" });
-    if (res.ok) {
-      window.location.href = "/";
+    try {
+      const res = await fetch(`/api/playlists/${playlistId}`, { method: "DELETE" });
+      if (res.ok) {
+        window.location.href = "/";
+      }
+    } finally {
+      setIsDeleteConfirmOpen(false);
     }
   };
 
@@ -122,7 +128,7 @@ export default function PlaylistPage() {
     const url = `${window.location.origin}/playlists/${playlistId}`;
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(url).then(() => {
-        alert("Playlist link copied to clipboard!");
+        toast.success("Playlist link copied to clipboard!");
       }).catch((err) => {
         console.error('Failed to copy text: ', err);
       });
@@ -140,7 +146,7 @@ export default function PlaylistPage() {
       try {
         const successful = document.execCommand('copy');
         if (successful) {
-          alert("Playlist link copied to clipboard!");
+          toast.success("Playlist link copied to clipboard!");
         } else {
           console.error("Fallback copy command was unsuccessful");
         }
@@ -188,16 +194,26 @@ export default function PlaylistPage() {
             </button>
             {isOwner && (
               <>
-                <button onClick={() => setIsEditing(true)} title="Edit Playlist" className="text-blue-400 hover:text-blue-300 transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
+                <button onClick={() => setIsEditing(true)} title="Edit Playlist" className="text-white hover:text-gray-300 transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
                    <Edit2 className="w-5 h-5" />
                 </button>
-                <button onClick={deletePlaylist} title="Delete Playlist" className="text-red-400 hover:text-red-300 transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
+                <button onClick={() => setIsDeleteConfirmOpen(true)} title="Delete Playlist" className="text-red-400 hover:text-red-300 transition-colors p-2 bg-gray-800 rounded-full hover:bg-gray-700">
                    <Trash2 className="w-5 h-5" />
                 </button>
               </>
             )}
         </div>
       </header>
+
+      <ConfirmModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={deletePlaylist}
+        title="Delete Playlist?"
+        description="Are you sure you want to delete this playlist? This action cannot be undone."
+        confirmText="Delete"
+        isDestructive={true}
+      />
 
       {isEditing && (
          <EditModal
@@ -212,7 +228,7 @@ export default function PlaylistPage() {
          />
       )}
 
-      <div className="flex items-center justify-center md:justify-start gap-4 mb-8">
+      <div className="flex items-center justify-center md:justify-start gap-6 mb-8 mt-2">
         <button
           onClick={() => {
             if (isCurrentPlaylistPlaying && isPlaying) {
@@ -230,6 +246,18 @@ export default function PlaylistPage() {
           ) : (
             <Play className="w-6 h-6 md:w-8 md:h-8 ml-1 fill-current" />
           )}
+        </button>
+
+        <button
+          onClick={() => {
+            if (!isCurrentPlaylistPlaying) handlePlayPlaylist();
+            toggleShuffle();
+          }}
+          className={`p-3 rounded-full hover:scale-105 active:scale-95 transition relative ${isShuffle ? 'text-white' : 'text-gray-400 hover:text-white'}`}
+          title="Shuffle Play"
+        >
+          <Shuffle className="w-6 h-6 md:w-8 md:h-8" />
+          {isShuffle && <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full"></span>}
         </button>
       </div>
 
@@ -266,24 +294,23 @@ export default function PlaylistPage() {
 
               <div className="flex items-center gap-3 min-w-0">
                 {pt.track.coverUrl && (
-                  <img src={pt.track.coverUrl} alt="Cover" className="w-10 h-10 object-cover rounded hidden sm:block bg-[#282828]" />
+                  <img src={pt.track.coverUrl} alt="Cover" className="w-10 h-10 object-cover rounded hidden sm:block bg-[#282828] shrink-0" />
                 )}
                 <div className="flex flex-col min-w-0">
                   <span className={`font-medium truncate ${isThisTrackPlaying ? 'text-white font-bold' : 'text-white'}`}>{pt.track.title}</span>
-                  <span className="text-gray-500 truncate">{pt.track.artist}</span>
+                  <span className="text-gray-500 text-xs md:text-sm truncate">{pt.track.artist}</span>
                 </div>
               </div>
               <div className="hidden md:block truncate text-gray-400 pr-4">{pt.track.album}</div>
 
-              <div className="flex items-center justify-end gap-2 text-gray-400">
-                {isOwner && (
-                  <button onClick={(e) => { e.stopPropagation(); removeTrack(pt.track.id); }} className="md:opacity-0 group-hover:opacity-100 hover:text-white transition p-1">
-                    <Trash2 className="w-4 h-4 text-red-500 hover:text-red-400" />
-                  </button>
-                )}
-                <span className="hidden sm:block tabular-nums">{Math.floor(pt.track.duration / 60)}:{(Math.floor(pt.track.duration % 60)).toString().padStart(2, '0')}</span>
-                <div className="md:opacity-0 group-hover:opacity-100 transition sm:pl-2" onClick={(e) => e.stopPropagation()}>
-                   <TrackOptions trackId={pt.track.id} trackOwnerId={pt.track.userId} />
+              <div className="flex items-center justify-end gap-1 md:gap-2 text-gray-400">
+                <span className="hidden sm:block tabular-nums text-xs md:text-sm mr-2">{Math.floor(pt.track.duration / 60)}:{(Math.floor(pt.track.duration % 60)).toString().padStart(2, '0')}</span>
+                <div className="opacity-100 md:opacity-0 group-hover:opacity-100 transition" onClick={(e) => e.stopPropagation()}>
+                   <TrackOptions
+                      trackId={pt.track.id}
+                      trackOwnerId={pt.track.userId}
+                      onRemoveFromPlaylist={isOwner ? () => removeTrack(pt.track.id) : undefined}
+                   />
                 </div>
               </div>
             </div>
@@ -295,11 +322,11 @@ export default function PlaylistPage() {
       {isOwner && (
       <div className="mt-8 md:mt-12 pt-8 border-t border-gray-800">
         <div className="flex flex-col gap-4 mb-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <h2 className="text-xl md:text-2xl font-bold text-white">Let&apos;s find something for your playlist</h2>
                 <button
                     onClick={() => { setIsAdding(!isAdding); if(!isAdding) fetchAllTracks(); }}
-                    className="text-sm font-bold bg-transparent border border-gray-500 text-white px-4 py-1 rounded-full hover:border-white transition"
+                    className="text-sm font-bold bg-transparent border border-gray-500 text-white px-6 py-2 rounded-full hover:border-white hover:scale-105 active:scale-95 transition-all self-start sm:self-auto"
                 >
                     {isAdding ? "Close" : "Add tracks"}
                 </button>
@@ -337,15 +364,14 @@ export default function PlaylistPage() {
                                     </div>
                                 </div>
                                 <button
-                                    onClick={() => addTrack(track.id)}
-                                    disabled={isInPlaylist}
-                                    className={`px-3 py-1 text-sm font-bold rounded-full border ${
+                                    onClick={() => isInPlaylist ? removeTrack(track.id) : addTrack(track.id)}
+                                    className={`px-4 py-1 text-sm font-bold rounded-full border transition-all ${
                                         isInPlaylist
-                                        ? "border-gray-600 text-gray-600 cursor-not-allowed"
-                                        : "border-gray-400 text-white hover:border-white transition-colors"
+                                        ? "border-red-500/50 text-red-500 hover:border-red-500 hover:bg-red-500/10"
+                                        : "border-gray-400 text-white hover:border-white hover:scale-105 active:scale-95"
                                     }`}
                                 >
-                                    {isInPlaylist ? "Added" : "Add"}
+                                    {isInPlaylist ? "Remove" : "Add"}
                                 </button>
                             </div>
                         );
