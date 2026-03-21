@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trash2, Play, Pause, Share2, Edit2, Heart, Shuffle } from "lucide-react";
+import { Trash2, Play, Pause, Share2, Edit2, Heart, Shuffle, Download, Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { usePlayerStore } from "@/store/playerStore";
 import { useSession } from "next-auth/react";
@@ -9,8 +9,10 @@ import toast from "react-hot-toast";
 import TrackOptions from "@/components/TrackOptions";
 import EditModal from "@/components/EditModal";
 import ConfirmModal from "@/components/modals/ConfirmModal";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 
-type TrackType = { id: string; title: string; artist: string | null; album: string | null; duration: number; coverUrl: string | null; userId: string };
+type TrackType = { id: string; title: string; artist: string | null; album: string | null; duration: number; coverUrl: string | null; userId: string; fileUrl: string };
 type PlaylistTrackType = { id: string; trackId: string; track: TrackType };
 type PlaylistType = { id: string; name: string; coverUrl: string | null, tracks: PlaylistTrackType[], userId: string, user: { username: string }, savedBy?: { id: string }[] };
 
@@ -22,6 +24,7 @@ export default function PlaylistPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const { playQueue, currentTrackIndex, queue, isPlaying, pause, resume, toggleShuffle, isShuffle } = usePlayerStore();
   const { data: session } = useSession();
 
@@ -144,6 +147,44 @@ export default function PlaylistPage() {
     }
   };
 
+  const downloadPlaylist = async () => {
+    if (!playlist || playlist.tracks.length === 0) {
+      toast.error("Playlist is empty.");
+      return;
+    }
+
+    setIsDownloading(true);
+    const toastId = toast.loading("Zipping playlist...");
+    try {
+      const zip = new JSZip();
+
+      // Fetch all blobs in parallel
+      const blobPromises = playlist.tracks.map(async (pt, idx) => {
+        const response = await fetch(pt.track.fileUrl);
+        if (!response.ok) throw new Error(`Failed to fetch ${pt.track.title}`);
+        const blob = await response.blob();
+
+        // ensure a neat filename
+        const ext = pt.track.fileUrl.split('.').pop() || 'mp3';
+        const paddedIdx = String(idx + 1).padStart(2, '0');
+        const filename = `${paddedIdx}. ${pt.track.title}.${ext}`;
+
+        zip.file(filename, blob);
+      });
+
+      await Promise.all(blobPromises);
+
+      const content = await zip.generateAsync({ type: "blob" });
+      saveAs(content, `${playlist.name}.zip`);
+      toast.success("Playlist downloaded!", { id: toastId });
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download playlist.", { id: toastId });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const copyShareLink = () => {
     const url = `${window.location.origin}/playlists/${playlistId}`;
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -225,6 +266,9 @@ export default function PlaylistPage() {
           )}
         </div>
         <div className="flex gap-2 items-center w-full md:w-auto justify-center md:justify-start mt-4 md:mt-0">
+            <button onClick={downloadPlaylist} disabled={isDownloading} title="Download Playlist" className="text-gray-400 hover:text-white transition-colors p-2 bg-[#282828] rounded-full hover:bg-[#383838] shadow-md disabled:opacity-50">
+                {isDownloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+            </button>
             <button onClick={copyShareLink} title="Share Playlist" className="text-gray-400 hover:text-white transition-colors p-2 bg-[#282828] rounded-full hover:bg-[#383838] shadow-md">
                 <Share2 className="w-5 h-5" />
             </button>
@@ -345,6 +389,8 @@ export default function PlaylistPage() {
                    <TrackOptions
                       trackId={pt.track.id}
                       trackOwnerId={pt.track.userId}
+                      fileUrl={pt.track.fileUrl}
+                      trackTitle={pt.track.title}
                       onRemoveFromPlaylist={isOwner ? () => removeTrack(pt.track.id) : undefined}
                    />
                 </div>

@@ -53,7 +53,12 @@ export default function SharedTrackPage() {
           <Play className="w-8 h-8 ml-1 fill-current" />
         </button>
         <div className="bg-gray-800 rounded-full p-2">
-           <TrackOptions trackId={track.id} trackOwnerId={track.userId || ""} />
+           <TrackOptions
+              trackId={track.id}
+              trackOwnerId={track.userId || ""}
+              fileUrl={track.fileUrl}
+              trackTitle={track.title}
+           />
         </div>
       </div>
     </>

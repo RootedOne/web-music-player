@@ -42,6 +42,8 @@ export default function TrackCard({ track, onUpdate, onDelete }: { track: Track 
            <TrackOptions
              trackId={track.id}
              trackOwnerId={track.userId || ""}
+             fileUrl={track.fileUrl}
+             trackTitle={track.title}
              onEdit={() => setIsEditing(true)}
              onDelete={onDelete}
            />

@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useEffect } from "react";
 import { Menu, Transition, Dialog } from "@headlessui/react";
-import { MoreHorizontal, Plus, Share2, Edit2, Loader2, Music, Trash2, X } from "lucide-react";
+import { MoreHorizontal, Plus, Share2, Edit2, Loader2, Music, Trash2, X, Download } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import toast from "react-hot-toast";
@@ -11,6 +11,8 @@ import ConfirmModal from "./modals/ConfirmModal";
 type TrackOptionsProps = {
   trackId: string;
   trackOwnerId: string;
+  fileUrl: string;
+  trackTitle: string;
   onEdit?: () => void;
   onDelete?: () => void;
   onRemoveFromPlaylist?: () => void;
@@ -18,7 +20,7 @@ type TrackOptionsProps = {
 
 type Playlist = { id: string; name: string };
 
-export default function TrackOptions({ trackId, trackOwnerId, onEdit, onDelete, onRemoveFromPlaylist }: TrackOptionsProps) {
+export default function TrackOptions({ trackId, trackOwnerId, fileUrl, trackTitle, onEdit, onDelete, onRemoveFromPlaylist }: TrackOptionsProps) {
   const { data: session } = useSession();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -123,6 +125,34 @@ export default function TrackOptions({ trackId, trackOwnerId, onEdit, onDelete, 
     }
   };
 
+  const handleDownload = async () => {
+    try {
+      const toastId = toast.loading("Downloading...");
+      const response = await fetch(fileUrl);
+      if (!response.ok) throw new Error("Failed to fetch file");
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = blobUrl;
+      // Get extension from URL or fallback to mp3
+      const ext = fileUrl.split('.').pop() || 'mp3';
+      a.download = `${trackTitle}.${ext}`;
+
+      document.body.appendChild(a);
+      a.click();
+
+      window.URL.revokeObjectURL(blobUrl);
+      document.body.removeChild(a);
+      toast.success("Download complete!", { id: toastId });
+    } catch (error) {
+      console.error(error);
+      toast.error("Download failed.");
+    }
+  };
+
   return (
     <>
       <Menu as="div" className="relative inline-block text-left">
@@ -165,6 +195,17 @@ export default function TrackOptions({ trackId, trackOwnerId, onEdit, onDelete, 
                   >
                     <Share2 className="mr-3 h-4 w-4" />
                     Share Track
+                  </button>
+                )}
+              </Menu.Item>
+              <Menu.Item>
+                {({ active }) => (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDownload(); }}
+                    className={`${active ? "bg-gray-700 text-white" : "text-gray-300"} group flex w-full items-center px-4 py-2.5 text-sm font-medium transition-colors`}
+                  >
+                    <Download className="mr-3 h-4 w-4" />
+                    Download
                   </button>
                 )}
               </Menu.Item>
