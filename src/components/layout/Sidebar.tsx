@@ -161,7 +161,7 @@ export function Sidebar() {
                  <span className={`text-[10px] font-medium transition-colors ${pathname === '/library' ? 'text-white' : 'text-gray-400'}`}>Library</span>
               </Link>
 
-              <Link href="/library" onClick={() => setSearchMode(false)} className="flex flex-col items-center justify-center gap-1 w-16 h-full cursor-pointer">
+              <Link href="/playlists" onClick={() => setSearchMode(false)} className="flex flex-col items-center justify-center gap-1 w-16 h-full cursor-pointer">
                  <ListMusic className={`w-5 h-5 transition-colors ${pathname.includes('/playlists') ? 'text-white' : 'text-gray-400'}`} />
                  <span className={`text-[10px] font-medium transition-colors ${pathname.includes('/playlists') ? 'text-white' : 'text-gray-400'}`}>Playlists</span>
               </Link>
