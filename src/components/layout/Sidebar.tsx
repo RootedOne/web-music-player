@@ -151,7 +151,7 @@ export function Sidebar() {
 
         <div className="p-4 border-t border-gray-800 mt-auto">
           <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={() => signOut({ callbackUrl: `${window.location.origin}/login` })}
             className="flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800 w-full rounded-md transition-colors"
           >
             <LogOut className="w-5 h-5" />

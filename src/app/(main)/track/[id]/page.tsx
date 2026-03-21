@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
 import { Play } from "lucide-react";
 import { useParams } from "next/navigation";
 import { usePlayerStore, Track } from "@/store/playerStore";
@@ -26,10 +25,10 @@ export default function SharedTrackPage() {
     }
   };
 
-  if (!track) return <MainLayout><div className="p-8">Loading track...</div></MainLayout>;
+  if (!track) return <div className="p-8">Loading track...</div>;
 
   return (
-    <MainLayout>
+    <>
       <header className="flex flex-col md:flex-row items-center md:items-end gap-6 mb-8 mt-12 text-center md:text-left">
         <div className="w-48 h-48 bg-[#282828] shadow-[0_8px_24px_rgba(0,0,0,0.5)] flex items-center justify-center rounded-md shrink-0 relative overflow-hidden">
            {track.coverUrl ? (
@@ -57,6 +56,6 @@ export default function SharedTrackPage() {
            <TrackOptions trackId={track.id} trackOwnerId={track.userId || ""} />
         </div>
       </div>
-    </MainLayout>
+    </>
   );
 }

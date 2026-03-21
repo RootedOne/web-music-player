@@ -1,6 +1,5 @@
 "use client";
 
-import { MainLayout } from "@/components/layout/MainLayout";
 import TrackCard from "@/components/TrackCard";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
@@ -45,11 +44,11 @@ export default function Home() {
   };
 
   if (status === "loading") {
-    return <MainLayout><div className="p-8">Loading...</div></MainLayout>;
+    return <div className="p-8">Loading...</div>;
   }
 
   return (
-    <MainLayout>
+    <>
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <h1 className="text-4xl font-extrabold tracking-tight text-white drop-shadow-md">
           Discover
@@ -97,6 +96,6 @@ export default function Home() {
             </div>
         )}
       </section>
-    </MainLayout>
+    </>
   );
 }

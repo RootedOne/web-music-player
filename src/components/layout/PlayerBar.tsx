@@ -104,27 +104,27 @@ export function PlayerBar() {
       {/* --- Mobile View (Spotify Style) --- */}
       <div className="flex flex-col md:hidden w-full px-2 py-2">
         {/* Top Progress Bar */}
-        <div className="absolute top-0 left-0 w-full h-[2px] bg-[#404040] pointer-events-none">
+        <div className="absolute top-0 left-0 w-full h-[2px] bg-[#404040] pointer-events-none z-0">
           <div
             className="h-full bg-white rounded-r-full"
             style={{ width: `${(progress / (duration || 1)) * 100}%` }}
           />
         </div>
 
-        {/* Invisible exact-width touch target for progress scrubbing */}
+        {/* Increased invisible touch target for progress scrubbing */}
         <input
           type="range"
           min={0}
           max={duration || 100}
           value={progress}
           onChange={handleSeek}
-          className="absolute top-[-6px] left-0 w-full h-4 opacity-0 cursor-pointer z-10"
+          className="absolute top-[-16px] left-0 w-full h-8 opacity-0 cursor-pointer z-20 touch-none"
         />
 
-        <div className="flex items-center justify-between mt-[2px]">
+        <div className="flex items-center justify-between mt-[4px]">
           {/* Left: Track Info */}
-          <div className="flex items-center gap-2 min-w-0 max-w-[65%]">
-            <div className="w-10 h-10 bg-gray-800 rounded-md flex-shrink-0 flex items-center justify-center overflow-hidden relative">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div className="w-12 h-12 bg-gray-800 rounded-md flex-shrink-0 flex items-center justify-center overflow-hidden relative shadow-sm">
               {currentTrack.coverUrl ? (
                  <img src={currentTrack.coverUrl} alt="Cover" className="w-full h-full object-cover" />
               ) : (
@@ -132,25 +132,26 @@ export function PlayerBar() {
               )}
             </div>
             <div className="flex flex-col min-w-0 pr-2">
-              <p className="text-white text-sm font-semibold truncate leading-tight">{currentTrack.title || "Unknown Title"}</p>
-              <p className="text-gray-400 text-xs truncate leading-tight mt-0.5">{currentTrack.artist || "Unknown Artist"}</p>
+              <p className="text-white text-[15px] font-semibold truncate leading-tight">{currentTrack.title || "Unknown Title"}</p>
+              <p className="text-gray-400 text-[13px] truncate leading-tight mt-[2px]">{currentTrack.artist || "Unknown Artist"}</p>
+              <p className="text-[#a0a0a0] text-[10px] font-medium tracking-wide mt-[2px]">{formatTime(progress)} / {formatTime(duration)}</p>
             </div>
           </div>
 
           {/* Right: Controls */}
-          <div className="flex items-center gap-3 shrink-0 mr-1">
-             <button onClick={toggleShuffle} className={`p-1 transition ${isShuffle ? 'text-white' : 'text-gray-400 hover:text-white'}`}>
-               <Shuffle className="w-4 h-4" />
+          <div className="flex items-center gap-2 shrink-0 mr-1">
+             <button onClick={prev} className="text-gray-400 hover:text-white p-2 focus:outline-none active:scale-95 transition-transform">
+               <SkipBack className="w-5 h-5 fill-current" />
              </button>
-             <button onClick={togglePlayPause} className="text-white p-1 focus:outline-none">
+             <button onClick={togglePlayPause} className="text-white p-2 focus:outline-none active:scale-95 transition-transform">
                {isPlaying ? (
-                 <Pause className="w-6 h-6 fill-current" />
+                 <Pause className="w-7 h-7 fill-current" />
                ) : (
-                 <Play className="w-6 h-6 fill-current ml-0.5" />
+                 <Play className="w-7 h-7 fill-current ml-0.5" />
                )}
              </button>
-             <button onClick={next} className="text-gray-400 hover:text-white p-1 focus:outline-none">
-               <SkipForward className="w-6 h-6 fill-current" />
+             <button onClick={next} className="text-gray-400 hover:text-white p-2 focus:outline-none active:scale-95 transition-transform">
+               <SkipForward className="w-5 h-5 fill-current" />
              </button>
           </div>
         </div>

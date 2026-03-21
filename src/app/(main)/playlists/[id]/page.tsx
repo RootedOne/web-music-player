@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
 import { Trash2, Play, Pause, Share2, Edit2, Heart } from "lucide-react";
 import { useParams } from "next/navigation";
 import { usePlayerStore } from "@/store/playerStore";
@@ -152,7 +151,7 @@ export default function PlaylistPage() {
     }
   };
 
-  if (!playlist) return <MainLayout><div className="p-8">Loading...</div></MainLayout>;
+  if (!playlist) return <div className="p-8">Loading...</div>;
 
   const isCurrentPlaylistPlaying = queue.length === playlist.tracks.length &&
     queue.every((t, i) => t.id === playlist.tracks[i]?.track.id);
@@ -162,7 +161,7 @@ export default function PlaylistPage() {
   const isSaved = playlist.savedBy && playlist.savedBy.length > 0;
 
   return (
-    <MainLayout>
+    <>
       <header className="flex flex-col md:flex-row items-center md:items-end gap-6 mb-8 mt-12 text-center md:text-left">
         <div className="w-48 h-48 bg-[#282828] shadow-[0_8px_24px_rgba(0,0,0,0.5)] flex items-center justify-center rounded-md shrink-0 overflow-hidden relative">
           {playlist.coverUrl ? (
@@ -356,6 +355,6 @@ export default function PlaylistPage() {
         )}
       </div>
       )}
-    </MainLayout>
+    </>
   );
 }

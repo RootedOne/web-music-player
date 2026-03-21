@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useEffect } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
 import { Upload, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import TrackCard from "@/components/TrackCard";
@@ -91,7 +90,7 @@ export default function LibraryPage() {
   };
 
   return (
-    <MainLayout>
+    <>
       <header className="mb-8">
         <h1 className="text-4xl font-extrabold tracking-tight text-white drop-shadow-md">
           Your Library
@@ -153,6 +152,6 @@ export default function LibraryPage() {
           </div>
         )}
       </section>
-    </MainLayout>
+    </>
   );
 }

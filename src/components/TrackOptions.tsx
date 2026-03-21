@@ -4,6 +4,7 @@ import { Fragment, useState, useEffect } from "react";
 import { Menu, Transition, Dialog } from "@headlessui/react";
 import { MoreHorizontal, Plus, Share2, Edit2, Loader2, Music } from "lucide-react";
 import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
 
 type TrackOptionsProps = {
   trackId: string;
@@ -53,7 +54,7 @@ export default function TrackOptions({ trackId, trackOwnerId, onEdit }: TrackOpt
       });
       if (res.ok) {
         setIsModalOpen(false);
-        alert("Added to playlist!");
+        toast.success("Added to playlist!");
       } else {
         const data = await res.json();
         setError(data.error || "Failed to add track");
@@ -68,7 +69,7 @@ export default function TrackOptions({ trackId, trackOwnerId, onEdit }: TrackOpt
     const url = `${window.location.origin}/track/${trackId}`;
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(url).then(() => {
-        alert("Track link copied!");
+        toast.success("Track link copied!");
       });
     } else {
       const textArea = document.createElement("textarea");
@@ -77,7 +78,7 @@ export default function TrackOptions({ trackId, trackOwnerId, onEdit }: TrackOpt
       textArea.select();
       try {
         document.execCommand("copy");
-        alert("Track link copied!");
+        toast.success("Track link copied!");
       } catch (err) {
         console.error(err);
       }
@@ -177,16 +178,16 @@ export default function TrackOptions({ trackId, trackOwnerId, onEdit }: TrackOpt
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-gray-900 border border-gray-800 p-6 text-left align-middle shadow-xl transition-all">
-                  <Dialog.Title as="h3" className="text-lg font-bold leading-6 text-white mb-4">
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-[#121212] border border-[#282828] p-6 text-left align-middle shadow-2xl transition-all">
+                  <Dialog.Title as="h3" className="text-xl font-extrabold leading-6 text-white mb-6">
                     Add to Playlist
                   </Dialog.Title>
 
-                  {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
+                  {error && <p className="text-red-400 text-sm mb-4 bg-red-900/20 p-2 rounded">{error}</p>}
 
-                  <div className="max-h-64 overflow-y-auto space-y-2 mt-4">
+                  <div className="max-h-64 overflow-y-auto space-y-2 mt-4 custom-scrollbar">
                     {isLoading ? (
-                      <div className="flex justify-center p-4"><Loader2 className="w-6 h-6 animate-spin text-blue-500" /></div>
+                      <div className="flex justify-center p-4"><Loader2 className="w-6 h-6 animate-spin text-white" /></div>
                     ) : playlists.length === 0 ? (
                       <p className="text-gray-400 text-sm">You haven&apos;t created any playlists yet.</p>
                     ) : (
@@ -194,19 +195,21 @@ export default function TrackOptions({ trackId, trackOwnerId, onEdit }: TrackOpt
                          <button
                            key={pl.id}
                            onClick={() => addToPlaylist(pl.id)}
-                           className="w-full text-left px-4 py-3 rounded-md hover:bg-gray-800 transition flex items-center gap-3 text-white border border-transparent hover:border-gray-700"
+                           className="w-full text-left px-4 py-3 rounded-md hover:bg-[#282828] transition flex items-center gap-3 text-white font-medium"
                          >
-                           <Music className="w-5 h-5 text-gray-500" />
+                           <div className="w-10 h-10 bg-[#181818] flex items-center justify-center rounded-sm">
+                             <Music className="w-5 h-5 text-gray-400" />
+                           </div>
                            {pl.name}
                          </button>
                       ))
                     )}
                   </div>
 
-                  <div className="mt-6 flex justify-end">
+                  <div className="mt-8 flex justify-end">
                     <button
                       type="button"
-                      className="inline-flex justify-center rounded-md border border-gray-700 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500"
+                      className="inline-flex justify-center rounded-full border border-transparent bg-white px-6 py-2.5 text-sm font-bold text-black hover:scale-105 active:scale-95 transition focus:outline-none"
                       onClick={() => setIsModalOpen(false)}
                     >
                       Cancel

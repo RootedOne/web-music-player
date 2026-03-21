@@ -88,34 +88,34 @@ export default function EditModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-gray-900 border border-gray-800 p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title as="h3" className="text-xl font-bold leading-6 text-white mb-6">
+              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-[#121212] border border-[#282828] p-6 text-left align-middle shadow-2xl transition-all">
+                <Dialog.Title as="h3" className="text-xl font-extrabold leading-6 text-white mb-6">
                   {title}
                 </Dialog.Title>
 
-                {error && <p className="text-red-400 text-sm mb-4 bg-red-900/20 p-3 rounded">{error}</p>}
+                {error && <p className="text-red-400 text-sm mb-4 bg-red-900/20 p-3 rounded font-medium border border-red-900/50">{error}</p>}
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">{nameFieldLabel}</label>
+                    <label className="block text-sm font-bold text-white mb-2 uppercase tracking-wide">{nameFieldLabel}</label>
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-3 text-white focus:outline-none focus:border-blue-500"
+                      className="w-full px-4 py-3 bg-[#242424] text-white rounded-md border border-transparent focus:outline-none focus:ring-2 focus:ring-white transition-all placeholder-gray-500"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">Custom Cover Image (Optional)</label>
-                    <div className="mt-1 flex justify-center rounded-lg border border-dashed border-gray-600 px-6 py-8 hover:border-gray-400 transition-colors">
+                    <label className="block text-sm font-bold text-white mb-2 uppercase tracking-wide">Custom Cover Image (Optional)</label>
+                    <div className="mt-1 flex justify-center rounded-md border border-dashed border-[#404040] bg-[#181818] px-6 py-8 hover:border-gray-400 transition-colors">
                       <div className="text-center">
                         <Upload className="mx-auto h-8 w-8 text-gray-400" aria-hidden="true" />
-                        <div className="mt-4 flex text-sm leading-6 text-gray-400">
+                        <div className="mt-4 flex text-sm leading-6 text-gray-400 justify-center">
                           <label
                             htmlFor="file-upload"
-                        className="relative cursor-pointer rounded-md bg-gray-900 font-semibold text-white focus-within:outline-none focus-within:ring-2 focus-within:ring-white focus-within:ring-offset-2 focus-within:ring-offset-gray-900 hover:text-gray-300"
+                            className="relative cursor-pointer rounded-md font-bold text-white focus-within:outline-none hover:underline"
                           >
                             <span>Upload a file</span>
                             <input
@@ -133,16 +133,16 @@ export default function EditModal({
                           </label>
                           <p className="pl-1">or drag and drop</p>
                         </div>
-                        <p className="text-xs leading-5 text-gray-400">PNG, JPG, GIF up to 5MB</p>
-                        {coverFile && <p className="text-xs text-green-400 mt-2 font-medium">Selected: {coverFile.name}</p>}
+                        <p className="text-xs leading-5 text-gray-500 mt-1">PNG, JPG, GIF up to 5MB</p>
+                        {coverFile && <p className="text-xs text-white mt-3 font-bold bg-[#282828] p-2 rounded truncate max-w-full">Selected: {coverFile.name}</p>}
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-8 flex justify-end gap-3">
+                  <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-[#282828]">
                     <button
                       type="button"
-                      className="inline-flex justify-center rounded-md border border-gray-700 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none"
+                      className="inline-flex justify-center rounded-full bg-transparent px-6 py-2.5 text-sm font-bold text-white hover:scale-105 active:scale-95 transition focus:outline-none"
                       onClick={onClose}
                     >
                       Cancel
@@ -150,9 +150,9 @@ export default function EditModal({
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="inline-flex justify-center items-center rounded-md border border-transparent bg-white px-4 py-2 text-sm font-bold text-black hover:bg-gray-200 focus:outline-none disabled:opacity-50"
+                      className="inline-flex justify-center items-center rounded-full border border-transparent bg-white px-6 py-2.5 text-sm font-bold text-black hover:scale-105 active:scale-95 transition focus:outline-none disabled:opacity-50"
                     >
-                      {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                      {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin text-black" /> : null}
                       Save Changes
                     </button>
                   </div>
