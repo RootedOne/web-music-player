@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Home, Library, Plus, LogOut, Music, Menu, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Home, Library, Plus, LogOut, Music, Compass, Search, ListMusic, Mic } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 
@@ -10,10 +10,12 @@ type Playlist = { id: string; name: string };
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
+  const [searchMode, setSearchMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchPlaylists();
@@ -52,35 +54,18 @@ export function Sidebar() {
     }
   };
 
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    router.push(`/?q=${encodeURIComponent(val)}`);
+  };
+
   return (
     <>
-      {/* Mobile Top Bar */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-[#121212] border-b border-gray-800 w-full fixed top-0 left-0 z-40">
-        <Link href="/" className="flex items-center gap-2 text-white font-bold text-lg tracking-tighter">
-          <Music className="w-6 h-6 text-white" />
-          <span>Sepatifay</span>
-        </Link>
-        <button onClick={() => setIsOpen(!isOpen)} className="text-white p-2">
-          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
-      </div>
-
-      {/* Overlay for mobile */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 z-40 md:hidden"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-
-      {/* Sidebar Content */}
-      <aside
-        className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-[#121212] border-r border-gray-800 flex flex-col h-full transform transition-transform duration-300 ease-in-out
-          ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-        `}
-      >
-        <div className="p-6 md:pt-6 pt-20">
-          <Link href="/" className="hidden md:flex items-center gap-3 text-white font-bold text-2xl tracking-tighter mb-8 hover:scale-105 transition-transform">
+      {/* Desktop Sidebar (Hidden on Mobile) */}
+      <aside className="hidden md:flex inset-y-0 left-0 z-50 w-64 bg-[#121212] border-r border-gray-800 flex-col h-full">
+        <div className="p-6 pt-6">
+          <Link href="/" className="flex items-center gap-3 text-white font-bold text-2xl tracking-tighter mb-8 hover:scale-105 transition-transform">
             <Music className="w-8 h-8 text-white" />
             <span>Sepatifay</span>
           </Link>
@@ -88,19 +73,17 @@ export function Sidebar() {
           <nav className="space-y-2">
             <Link
               href="/"
-              onClick={() => setIsOpen(false)}
               className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                pathname === "/" ? "bg-gray-800 text-white" : "text-gray-400 hover:text-white hover:bg-gray-800"
+                pathname === "/" ? "bg-[#282828] text-white" : "text-gray-400 hover:text-white hover:bg-gray-800"
               }`}
             >
-              <Home className="w-5 h-5" />
+              <Compass className="w-5 h-5" />
               <span>Discover</span>
             </Link>
             <Link
               href="/library"
-              onClick={() => setIsOpen(false)}
               className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                pathname === "/library" ? "bg-gray-800 text-white" : "text-gray-400 hover:text-white hover:bg-gray-800"
+                pathname === "/library" ? "bg-[#282828] text-white" : "text-gray-400 hover:text-white hover:bg-gray-800"
               }`}
             >
               <Library className="w-5 h-5" />
@@ -110,43 +93,42 @@ export function Sidebar() {
         </div>
 
         <div className="px-6 py-4 border-t border-gray-800 flex-1 overflow-y-auto">
-        <div className="flex items-center justify-between mb-4 text-gray-400">
-          <span className="text-sm font-semibold uppercase tracking-wider">Playlists</span>
-          <button
-            onClick={() => setIsCreating(!isCreating)}
-            className="hover:text-white p-1 rounded-full hover:bg-gray-800 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
-        </div>
+          <div className="flex items-center justify-between mb-4 text-gray-400">
+            <span className="text-sm font-bold uppercase tracking-wider">Playlists</span>
+            <button
+              onClick={() => setIsCreating(!isCreating)}
+              className="hover:text-white p-1 rounded-full hover:bg-gray-800 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
 
-        {isCreating && (
-          <form onSubmit={createPlaylist} className="mb-4">
-            <input
-              type="text"
-              autoFocus
-              placeholder="Playlist name..."
-              value={newPlaylistName}
-              onChange={(e) => setNewPlaylistName(e.target.value)}
-              onBlur={() => { if(!newPlaylistName) setIsCreating(false); }}
-              className="w-full px-3 py-1 bg-gray-800 text-white rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </form>
-        )}
+          {isCreating && (
+            <form onSubmit={createPlaylist} className="mb-4">
+              <input
+                type="text"
+                autoFocus
+                placeholder="Playlist name..."
+                value={newPlaylistName}
+                onChange={(e) => setNewPlaylistName(e.target.value)}
+                onBlur={() => { if(!newPlaylistName) setIsCreating(false); }}
+                className="w-full px-3 py-1 bg-gray-800 text-white rounded text-sm focus:outline-none focus:ring-1 focus:ring-white"
+              />
+            </form>
+          )}
 
-        <ul className="space-y-2 text-sm">
-          {playlists.map((pl) => (
-            <li key={pl.id}>
-              <Link
-                href={`/playlists/${pl.id}`}
-                onClick={() => setIsOpen(false)}
-                className={`block px-3 py-2 rounded-md transition-colors truncate ${pathname === `/playlists/${pl.id}` ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
-              >
-                {pl.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
+          <ul className="space-y-2 text-sm">
+            {playlists.map((pl) => (
+              <li key={pl.id}>
+                <Link
+                  href={`/playlists/${pl.id}`}
+                  className={`block px-3 py-2 rounded-md transition-colors truncate ${pathname === `/playlists/${pl.id}` ? 'bg-[#282828] text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                >
+                  {pl.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="p-4 border-t border-gray-800 mt-auto">
@@ -159,6 +141,63 @@ export function Sidebar() {
           </button>
         </div>
       </aside>
+
+      {/* --- Mobile Floating Bottom Nav (Apple Music Inspired) --- */}
+      <div className="md:hidden fixed bottom-2 left-0 right-0 z-[60] px-4">
+        <div className="flex items-center justify-between gap-2 h-14">
+           {/* STATE A: Normal Nav Pill */}
+           <div
+             className={`flex items-center justify-around h-full bg-[rgba(30,30,30,0.75)] backdrop-blur-[15px] saturate-[180%] rounded-full px-4 overflow-hidden transition-all duration-350 cubic-bezier-[0.32,0.72,0,1] ease-out flex-shrink-0 origin-left border border-white/5 shadow-2xl ${searchMode ? 'max-w-0 opacity-0 px-0 border-none' : 'w-full max-w-[85%] opacity-100'}`}
+           >
+              <Link href="/" onClick={() => setSearchMode(false)} className="flex flex-col items-center justify-center gap-1 w-16 h-full cursor-pointer">
+                 <Compass className={`w-5 h-5 transition-colors ${pathname === '/' ? 'text-red-500' : 'text-gray-400'}`} />
+                 <span className={`text-[10px] font-medium transition-colors ${pathname === '/' ? 'text-red-500' : 'text-gray-400'}`}>Discover</span>
+              </Link>
+
+              <Link href="/library" onClick={() => setSearchMode(false)} className="flex flex-col items-center justify-center gap-1 w-16 h-full cursor-pointer">
+                 <Library className={`w-5 h-5 transition-colors ${pathname === '/library' ? 'text-red-500' : 'text-gray-400'}`} />
+                 <span className={`text-[10px] font-medium transition-colors ${pathname === '/library' ? 'text-red-500' : 'text-gray-400'}`}>Library</span>
+              </Link>
+
+              <Link href="/library" onClick={() => setSearchMode(false)} className="flex flex-col items-center justify-center gap-1 w-16 h-full cursor-pointer">
+                 <ListMusic className={`w-5 h-5 transition-colors ${pathname.includes('/playlists') ? 'text-red-500' : 'text-gray-400'}`} />
+                 <span className={`text-[10px] font-medium transition-colors ${pathname.includes('/playlists') ? 'text-red-500' : 'text-gray-400'}`}>Playlists</span>
+              </Link>
+           </div>
+
+           {/* STATE B: Home Button (Replaces Nav Pill when searching) */}
+           <button
+             onClick={() => { setSearchMode(false); setSearchQuery(""); router.push("/"); }}
+             className={`flex items-center justify-center h-14 bg-[rgba(30,30,30,0.75)] backdrop-blur-[15px] saturate-[180%] rounded-full flex-shrink-0 transition-all duration-350 cubic-bezier-[0.32,0.72,0,1] ease-out border border-white/5 shadow-2xl ${searchMode ? 'w-14 max-w-14 opacity-100 delay-100' : 'w-0 max-w-0 opacity-0 overflow-hidden border-none'}`}
+           >
+              <Home className="w-5 h-5 text-white" />
+           </button>
+
+           {/* STATE B: Search Bar (Expands) */}
+           <div
+             className={`flex items-center h-full bg-[rgba(30,30,30,0.75)] backdrop-blur-[15px] saturate-[180%] rounded-full px-4 overflow-hidden transition-all duration-350 cubic-bezier-[0.32,0.72,0,1] ease-out flex-shrink-0 origin-right border border-white/5 shadow-2xl ${searchMode ? 'w-full max-w-[85%] opacity-100 delay-75' : 'max-w-0 opacity-0 px-0 border-none'}`}
+           >
+              <Search className="w-5 h-5 text-gray-400 shrink-0" />
+              <input
+                 type="text"
+                 value={searchQuery}
+                 onChange={handleSearch}
+                 placeholder="Search..."
+                 className="w-full bg-transparent border-none text-white text-sm focus:outline-none px-3"
+                 autoFocus={searchMode}
+              />
+              <Mic className="w-5 h-5 text-white shrink-0" />
+           </div>
+
+           {/* STATE A: Search Trigger Button (Right) */}
+           <button
+             onClick={() => { setSearchMode(true); router.push("/"); }}
+             className={`flex items-center justify-center h-14 bg-[rgba(30,30,30,0.75)] backdrop-blur-[15px] saturate-[180%] rounded-full flex-shrink-0 transition-all duration-350 cubic-bezier-[0.32,0.72,0,1] ease-out border border-white/5 shadow-2xl ${!searchMode ? 'w-14 max-w-14 opacity-100' : 'w-0 max-w-0 opacity-0 overflow-hidden border-none'}`}
+           >
+              <Search className="w-5 h-5 text-white" />
+           </button>
+        </div>
+      </div>
     </>
   );
 }

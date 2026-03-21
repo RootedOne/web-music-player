@@ -2,15 +2,17 @@
 
 import TrackCard from "@/components/TrackCard";
 import { useSession } from "next-auth/react";
-import { redirect } from "next/navigation";
-import { useState, useEffect } from "react";
+import { redirect, useSearchParams } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
 import { Track } from "@/store/playerStore";
 import { Search as SearchIcon } from "lucide-react";
 
-export default function Home() {
+function HomeContent() {
   const { data: session, status } = useSession();
+  const searchParams = useSearchParams();
+  const urlQuery = searchParams.get('q') || "";
   const [tracks, setTracks] = useState<Track[]>([]);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(urlQuery);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -18,6 +20,13 @@ export default function Home() {
       redirect("/login");
     }
   }, [status]);
+
+  useEffect(() => {
+    if (urlQuery !== query) {
+      setQuery(urlQuery);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlQuery]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -55,13 +64,13 @@ export default function Home() {
         </h1>
 
         {/* Global Search Bar */}
-        <div className="relative w-full max-w-md">
+        <div className="relative w-full max-w-md hidden md:block">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <SearchIcon className="h-5 w-5 text-gray-400" />
           </div>
           <input
             type="text"
-            className="block w-full pl-10 pr-4 py-2.5 bg-gray-800 border-none rounded-full text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 shadow-md text-sm outline-none transition-all"
+            className="block w-full pl-10 pr-4 py-2.5 bg-[#282828] border-none rounded-full text-white placeholder-gray-400 focus:ring-2 focus:ring-white shadow-md text-sm outline-none transition-all"
             placeholder="Search all songs and artists..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -97,5 +106,13 @@ export default function Home() {
         )}
       </section>
     </>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="p-8 text-white">Loading Discover...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }
