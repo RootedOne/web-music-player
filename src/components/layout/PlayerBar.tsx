@@ -21,6 +21,7 @@ export function PlayerBar() {
     setProgress,
     setDuration,
     toggleShuffle,
+    playQueue,
   } = usePlayerStore();
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -56,6 +57,27 @@ export function PlayerBar() {
 
   const handleEnded = () => {
     next();
+  };
+
+  const handleGlobalShufflePlay = async () => {
+    if (queue.length === 0) {
+      try {
+        const res = await fetch("/api/tracks?filter=global");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.tracks && data.tracks.length > 0) {
+            playQueue(data.tracks, 0);
+            if (!isShuffle) {
+              toggleShuffle();
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch global tracks for shuffle", err);
+      }
+    } else {
+      toggleShuffle();
+    }
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,6 +162,10 @@ export function PlayerBar() {
 
           {/* Right: Controls */}
           <div className="flex items-center gap-2 shrink-0 mr-1">
+             <button onClick={handleGlobalShufflePlay} className={`p-2 focus:outline-none transition relative ${isShuffle ? 'text-white' : 'text-gray-400 hover:text-white'}`}>
+               <Shuffle className="w-5 h-5" />
+               {isShuffle && <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full"></span>}
+             </button>
              <button onClick={togglePlayPause} className="text-white p-2 focus:outline-none active:scale-95 transition-transform">
                {isPlaying ? (
                  <Pause className="w-7 h-7 fill-current" />
@@ -174,7 +200,7 @@ export function PlayerBar() {
         {/* Controls */}
         <div className="flex flex-col items-center justify-center w-1/3 max-w-lg">
           <div className="flex items-center gap-6 mb-2">
-            <button onClick={toggleShuffle} className={`transition relative ${isShuffle ? 'text-white' : 'text-gray-400 hover:text-white'}`}>
+            <button onClick={handleGlobalShufflePlay} className={`transition relative ${isShuffle ? 'text-white' : 'text-gray-400 hover:text-white'}`}>
                <Shuffle className="w-5 h-5" />
                {isShuffle && <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full"></span>}
             </button>
