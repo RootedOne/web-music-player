@@ -129,7 +129,7 @@ export function PlayerBar() {
   if (!currentTrack) return null; // Don't render until a track is selected (optional, or render empty state)
 
   return (
-    <div className="bg-black border-t border-[#282828] shadow-[0_-4px_10px_rgba(0,0,0,0.5)] z-50 fixed bottom-0 left-0 w-full md:h-24">
+    <>
       {/* Hidden Audio Element */}
       {currentTrack && (
          <audio
@@ -141,30 +141,19 @@ export function PlayerBar() {
         />
       )}
 
-      {/* --- Mobile View (Spotify Style) --- */}
-      <div className="flex flex-col md:hidden w-full px-2 py-2">
-        {/* Top Progress Bar */}
-        <div className="absolute top-0 left-0 w-full h-[2px] bg-[#404040] pointer-events-none z-0">
+      {/* --- Mobile View (Apple Music Style Floating Pill) --- */}
+      <div className="md:hidden fixed bottom-[88px] inset-x-0 z-[60] flex items-center justify-center pointer-events-none px-4">
+        <div className="w-full max-w-md h-[60px] bg-neutral-900/90 backdrop-blur-xl saturate-[180%] rounded-full shadow-2xl border border-white/10 flex items-center justify-between px-2 relative overflow-hidden pointer-events-auto transition-transform duration-300">
+
+          {/* Subtle Background Progress Bar */}
           <div
-            className="h-full bg-white rounded-r-full"
+            className="absolute bottom-0 left-0 h-[3px] bg-white/20 pointer-events-none"
             style={{ width: `${(progress / (duration || 1)) * 100}%` }}
           />
-        </div>
 
-        {/* Increased invisible touch target for progress scrubbing */}
-        <input
-          type="range"
-          min={0}
-          max={duration || 100}
-          value={progress}
-          onChange={handleSeek}
-          className="absolute top-[-16px] left-0 w-full h-8 opacity-0 cursor-pointer z-20 touch-none"
-        />
-
-        <div className="flex items-center justify-between mt-[4px]">
           {/* Left: Track Info */}
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <div className="w-12 h-12 bg-gray-800 rounded-md flex-shrink-0 flex items-center justify-center overflow-hidden relative shadow-sm">
+          <div className="flex items-center gap-3 min-w-0 flex-1 z-10 pl-1">
+            <div className="w-11 h-11 bg-[#181818] rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden relative shadow-sm border border-white/5">
               {currentTrack.coverUrl ? (
                  <img src={currentTrack.coverUrl} alt="Cover" className="w-full h-full object-cover" />
               ) : (
@@ -172,26 +161,21 @@ export function PlayerBar() {
               )}
             </div>
             <div className="flex flex-col min-w-0 pr-2">
-              <p className="text-white text-[15px] font-semibold truncate leading-tight">{currentTrack.title || "Unknown Title"}</p>
-              <p className="text-gray-400 text-[13px] truncate leading-tight mt-[2px]">{currentTrack.artist || "Unknown Artist"}</p>
-              <p className="text-[#a0a0a0] text-[10px] font-medium tracking-wide mt-[2px]">{formatTime(progress)} / {formatTime(duration)}</p>
+              <p className="text-white text-sm font-bold truncate leading-tight tracking-wide">{currentTrack.title || "Unknown Title"}</p>
+              <p className="text-[#a0a0a0] text-xs font-medium truncate leading-tight mt-0.5">{currentTrack.artist || "Unknown Artist"}</p>
             </div>
           </div>
 
           {/* Right: Controls */}
-          <div className="flex items-center gap-2 shrink-0 mr-1">
-             <button onClick={handleGlobalShufflePlay} className={`p-2 focus:outline-none transition relative ${isShuffle ? 'text-white' : 'text-gray-400 hover:text-white'}`}>
-               <Shuffle className="w-5 h-5" />
-               {isShuffle && <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full"></span>}
-             </button>
-             <button onClick={togglePlayPause} className="text-white p-2 focus:outline-none active:scale-95 transition-transform">
+          <div className="flex items-center gap-1 shrink-0 z-10 mr-1">
+             <button onClick={togglePlayPause} className="text-white p-2 rounded-full hover:bg-white/10 focus:outline-none active:scale-95 transition-all">
                {isPlaying ? (
-                 <Pause className="w-7 h-7 fill-current" />
+                 <Pause className="w-6 h-6 fill-current" />
                ) : (
-                 <Play className="w-7 h-7 fill-current ml-0.5" />
+                 <Play className="w-6 h-6 fill-current ml-0.5" />
                )}
              </button>
-             <button onClick={next} className="text-gray-400 hover:text-white p-2 focus:outline-none active:scale-95 transition-transform">
+             <button onClick={next} className="text-white p-2 rounded-full hover:bg-white/10 focus:outline-none active:scale-95 transition-all">
                <SkipForward className="w-6 h-6 fill-current" />
              </button>
           </div>
@@ -199,7 +183,7 @@ export function PlayerBar() {
       </div>
 
       {/* --- Desktop View --- */}
-      <div className="hidden md:flex h-full items-center justify-between px-6">
+      <div className="hidden md:flex bg-black border-t border-[#282828] shadow-[0_-4px_10px_rgba(0,0,0,0.5)] z-50 fixed bottom-0 left-0 w-full h-24 items-center justify-between px-6">
         {/* Track Info */}
         <div className="flex items-center gap-4 w-1/3 min-w-0">
           <div className="w-14 h-14 bg-gray-800 rounded-md flex-shrink-0 flex items-center justify-center overflow-hidden relative shadow-md">
@@ -297,6 +281,6 @@ export function PlayerBar() {
           opacity: 1;
         }
       `}} />
-    </div>
+    </>
   );
 }

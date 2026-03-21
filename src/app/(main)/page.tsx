@@ -63,7 +63,7 @@ function HomeContent() {
           Discover
         </h1>
 
-        {/* Global Search Bar */}
+        {/* Global Search Bar (Hidden on mobile where floating nav takes over) */}
         <div className="relative w-full max-w-md hidden md:block">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <SearchIcon className="h-5 w-5 text-gray-400" />

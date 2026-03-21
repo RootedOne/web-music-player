@@ -143,39 +143,41 @@ export function Sidebar() {
       </aside>
 
       {/* --- Mobile Floating Bottom Nav (Apple Music Inspired) --- */}
-      <div className="md:hidden fixed bottom-2 left-0 right-0 z-[60] px-4">
-        <div className="flex items-center justify-between gap-2 h-14">
+      <div className="md:hidden fixed bottom-2 inset-x-0 z-[60] flex items-center justify-center pointer-events-none px-4">
+        {/* Pointer-events-auto re-enabled on the inner container so clicks work, but clicks outside pass through */}
+        <div className="w-full max-w-md flex items-center justify-between gap-2 h-[60px] pointer-events-auto relative">
+
            {/* STATE A: Normal Nav Pill */}
            <div
-             className={`flex items-center justify-around h-full bg-[rgba(30,30,30,0.75)] backdrop-blur-[15px] saturate-[180%] rounded-full px-4 overflow-hidden transition-all duration-350 cubic-bezier-[0.32,0.72,0,1] ease-out flex-shrink-0 origin-left border border-white/5 shadow-2xl ${searchMode ? 'max-w-0 opacity-0 px-0 border-none' : 'w-full max-w-[85%] opacity-100'}`}
+             className={`flex items-center justify-around h-full bg-neutral-900/80 backdrop-blur-md saturate-[180%] rounded-full px-2 overflow-hidden transition-all duration-300 ease-out border border-white/10 shadow-2xl flex-grow ${searchMode ? 'opacity-0 scale-95 pointer-events-none absolute w-[80%]' : 'opacity-100 scale-100 relative'}`}
            >
               <Link href="/" onClick={() => setSearchMode(false)} className="flex flex-col items-center justify-center gap-1 w-16 h-full cursor-pointer">
-                 <Compass className={`w-5 h-5 transition-colors ${pathname === '/' ? 'text-red-500' : 'text-gray-400'}`} />
-                 <span className={`text-[10px] font-medium transition-colors ${pathname === '/' ? 'text-red-500' : 'text-gray-400'}`}>Discover</span>
+                 <Compass className={`w-5 h-5 transition-colors ${pathname === '/' ? 'text-white' : 'text-gray-400'}`} />
+                 <span className={`text-[10px] font-medium transition-colors ${pathname === '/' ? 'text-white' : 'text-gray-400'}`}>Discover</span>
               </Link>
 
               <Link href="/library" onClick={() => setSearchMode(false)} className="flex flex-col items-center justify-center gap-1 w-16 h-full cursor-pointer">
-                 <Library className={`w-5 h-5 transition-colors ${pathname === '/library' ? 'text-red-500' : 'text-gray-400'}`} />
-                 <span className={`text-[10px] font-medium transition-colors ${pathname === '/library' ? 'text-red-500' : 'text-gray-400'}`}>Library</span>
+                 <Library className={`w-5 h-5 transition-colors ${pathname === '/library' ? 'text-white' : 'text-gray-400'}`} />
+                 <span className={`text-[10px] font-medium transition-colors ${pathname === '/library' ? 'text-white' : 'text-gray-400'}`}>Library</span>
               </Link>
 
               <Link href="/library" onClick={() => setSearchMode(false)} className="flex flex-col items-center justify-center gap-1 w-16 h-full cursor-pointer">
-                 <ListMusic className={`w-5 h-5 transition-colors ${pathname.includes('/playlists') ? 'text-red-500' : 'text-gray-400'}`} />
-                 <span className={`text-[10px] font-medium transition-colors ${pathname.includes('/playlists') ? 'text-red-500' : 'text-gray-400'}`}>Playlists</span>
+                 <ListMusic className={`w-5 h-5 transition-colors ${pathname.includes('/playlists') ? 'text-white' : 'text-gray-400'}`} />
+                 <span className={`text-[10px] font-medium transition-colors ${pathname.includes('/playlists') ? 'text-white' : 'text-gray-400'}`}>Playlists</span>
               </Link>
            </div>
 
            {/* STATE B: Home Button (Replaces Nav Pill when searching) */}
            <button
              onClick={() => { setSearchMode(false); setSearchQuery(""); router.push("/"); }}
-             className={`flex items-center justify-center h-14 bg-[rgba(30,30,30,0.75)] backdrop-blur-[15px] saturate-[180%] rounded-full flex-shrink-0 transition-all duration-350 cubic-bezier-[0.32,0.72,0,1] ease-out border border-white/5 shadow-2xl ${searchMode ? 'w-14 max-w-14 opacity-100 delay-100' : 'w-0 max-w-0 opacity-0 overflow-hidden border-none'}`}
+             className={`flex items-center justify-center h-full bg-neutral-900/80 backdrop-blur-md saturate-[180%] rounded-full shrink-0 transition-all duration-300 ease-out border border-white/10 shadow-2xl ${searchMode ? 'w-[60px] opacity-100 scale-100 relative' : 'opacity-0 scale-95 pointer-events-none absolute w-[60px]'}`}
            >
               <Home className="w-5 h-5 text-white" />
            </button>
 
            {/* STATE B: Search Bar (Expands) */}
            <div
-             className={`flex items-center h-full bg-[rgba(30,30,30,0.75)] backdrop-blur-[15px] saturate-[180%] rounded-full px-4 overflow-hidden transition-all duration-350 cubic-bezier-[0.32,0.72,0,1] ease-out flex-shrink-0 origin-right border border-white/5 shadow-2xl ${searchMode ? 'w-full max-w-[85%] opacity-100 delay-75' : 'max-w-0 opacity-0 px-0 border-none'}`}
+             className={`flex items-center h-full bg-neutral-900/80 backdrop-blur-md saturate-[180%] rounded-full px-4 overflow-hidden transition-all duration-300 ease-out border border-white/10 shadow-2xl flex-grow ${searchMode ? 'opacity-100 scale-100 relative' : 'opacity-0 scale-95 pointer-events-none absolute right-16 w-[80%]'}`}
            >
               <Search className="w-5 h-5 text-gray-400 shrink-0" />
               <input
@@ -192,7 +194,7 @@ export function Sidebar() {
            {/* STATE A: Search Trigger Button (Right) */}
            <button
              onClick={() => { setSearchMode(true); router.push("/"); }}
-             className={`flex items-center justify-center h-14 bg-[rgba(30,30,30,0.75)] backdrop-blur-[15px] saturate-[180%] rounded-full flex-shrink-0 transition-all duration-350 cubic-bezier-[0.32,0.72,0,1] ease-out border border-white/5 shadow-2xl ${!searchMode ? 'w-14 max-w-14 opacity-100' : 'w-0 max-w-0 opacity-0 overflow-hidden border-none'}`}
+             className={`flex items-center justify-center h-full bg-neutral-900/80 backdrop-blur-md saturate-[180%] rounded-full shrink-0 transition-all duration-300 ease-out border border-white/10 shadow-2xl ${!searchMode ? 'w-[60px] opacity-100 scale-100 relative' : 'opacity-0 scale-95 pointer-events-none absolute right-0 w-[60px]'}`}
            >
               <Search className="w-5 h-5 text-white" />
            </button>
