@@ -13,16 +13,15 @@ export default async function Home() {
   }
 
   const tracks = await prisma.track.findMany({
-    where: { userId: session.user?.id as string },
     orderBy: { createdAt: "desc" },
-    take: 12, // Show latest 12 uploaded
+    take: 24, // Show latest 24 uploaded globally
   });
 
   return (
     <MainLayout>
       <header className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-extrabold tracking-tight text-white drop-shadow-md">
-          Good Morning
+          Discover
         </h1>
         <div className="flex items-center gap-4">
           <div className="bg-gray-800 rounded-full w-10 h-10 flex items-center justify-center font-bold text-gray-300">
@@ -32,11 +31,11 @@ export default async function Home() {
       </header>
 
       <section className="mt-12">
-        <h2 className="text-2xl font-bold mb-6 text-gray-100">Recently Added</h2>
+        <h2 className="text-2xl font-bold mb-6 text-gray-100">Global Feed</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
            {tracks.length === 0 ? (
              <div className="col-span-full text-gray-500 py-8">
-               No tracks uploaded yet. Go to your Library to upload some music.
+               No tracks have been uploaded to the platform yet. Be the first!
              </div>
            ) : (
              tracks.map(track => (

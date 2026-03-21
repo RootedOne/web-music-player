@@ -12,6 +12,8 @@ export type Track = {
 type PlayerState = {
   currentTrackIndex: number;
   queue: Track[];
+  originalQueue: Track[];
+  isShuffle: boolean;
   isPlaying: boolean;
   volume: number;
   progress: number;
@@ -19,6 +21,7 @@ type PlayerState = {
 
   play: (track: Track, queue?: Track[]) => void;
   playQueue: (queue: Track[], startIndex?: number) => void;
+  toggleShuffle: () => void;
   pause: () => void;
   resume: () => void;
   next: () => void;
@@ -31,17 +34,33 @@ type PlayerState = {
 export const usePlayerStore = create<PlayerState>((set) => ({
   currentTrackIndex: -1,
   queue: [],
+  originalQueue: [],
+  isShuffle: false,
   isPlaying: false,
   volume: 0.5,
   progress: 0,
   duration: 0,
 
   play: (track, newQueue) =>
-    set(() => {
+    set((state) => {
       const queue = newQueue || [track];
-      const index = queue.findIndex((t) => t.id === track.id);
+      let currentQueue = queue;
+
+      if(state.isShuffle) {
+         currentQueue = [...queue].sort(() => Math.random() - 0.5);
+         // Move the selected track to the front
+         const selectedIdx = currentQueue.findIndex((t) => t.id === track.id);
+         if(selectedIdx > -1) {
+            const [selectedTrack] = currentQueue.splice(selectedIdx, 1);
+            currentQueue.unshift(selectedTrack);
+         }
+      }
+
+      const index = currentQueue.findIndex((t) => t.id === track.id);
+
       return {
-        queue,
+        originalQueue: queue,
+        queue: currentQueue,
         currentTrackIndex: index !== -1 ? index : 0,
         isPlaying: true,
         progress: 0,
@@ -49,12 +68,63 @@ export const usePlayerStore = create<PlayerState>((set) => ({
     }),
 
   playQueue: (queue, startIndex = 0) =>
-    set({
-      queue,
-      currentTrackIndex: startIndex,
-      isPlaying: true,
-      progress: 0,
+    set((state) => {
+      let currentQueue = queue;
+      let currentIndex = startIndex;
+
+      if(state.isShuffle) {
+          currentQueue = [...queue].sort(() => Math.random() - 0.5);
+          // Keep the chosen track first
+          const selectedTrack = queue[startIndex];
+          const newSelectedIdx = currentQueue.findIndex(t => t.id === selectedTrack.id);
+          if(newSelectedIdx > -1) {
+             const [track] = currentQueue.splice(newSelectedIdx, 1);
+             currentQueue.unshift(track);
+             currentIndex = 0;
+          }
+      }
+
+      return {
+        originalQueue: queue,
+        queue: currentQueue,
+        currentTrackIndex: currentIndex,
+        isPlaying: true,
+        progress: 0,
+      };
     }),
+
+  toggleShuffle: () => set((state) => {
+      if(!state.isShuffle) {
+          // Turn Shuffle On
+          if(state.queue.length === 0) return { isShuffle: true };
+
+          const currentTrack = state.queue[state.currentTrackIndex];
+          const shuffledQueue = [...state.originalQueue].sort(() => Math.random() - 0.5);
+
+          // Make sure current track remains playing
+          const newIdx = shuffledQueue.findIndex(t => t.id === currentTrack.id);
+          if(newIdx > -1) {
+              const [track] = shuffledQueue.splice(newIdx, 1);
+              shuffledQueue.unshift(track);
+          }
+
+          return {
+              isShuffle: true,
+              queue: shuffledQueue,
+              currentTrackIndex: 0
+          };
+      } else {
+          // Turn Shuffle Off
+          const currentTrack = state.queue[state.currentTrackIndex];
+          const originalIdx = state.originalQueue.findIndex(t => t.id === currentTrack?.id);
+
+          return {
+              isShuffle: false,
+              queue: state.originalQueue,
+              currentTrackIndex: originalIdx > -1 ? originalIdx : 0
+          };
+      }
+  }),
 
   pause: () => set({ isPlaying: false }),
   resume: () => set({ isPlaying: true }),

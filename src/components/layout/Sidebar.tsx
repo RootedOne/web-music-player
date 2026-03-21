@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Library, Plus, LogOut, Music } from "lucide-react";
+import { Home, Library, Search, Plus, LogOut, Music, Menu, X } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 
@@ -11,6 +11,7 @@ type Playlist = { id: string; name: string };
 export function Sidebar() {
   const pathname = usePathname();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
 
@@ -52,36 +53,73 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-gray-950 border-r border-gray-800 flex flex-col h-full">
-      <div className="p-6">
-        <Link href="/" className="flex items-center gap-3 text-white font-bold text-xl mb-8">
-          <Music className="w-8 h-8 text-blue-500" />
+    <>
+      {/* Mobile Top Bar */}
+      <div className="md:hidden flex items-center justify-between p-4 bg-gray-950 border-b border-gray-800 w-full fixed top-0 left-0 z-40">
+        <Link href="/" className="flex items-center gap-2 text-white font-bold text-lg">
+          <Music className="w-6 h-6 text-blue-500" />
           <span>Music Player</span>
         </Link>
-
-        <nav className="space-y-2">
-          <Link
-            href="/"
-            className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-              pathname === "/" ? "bg-gray-800 text-white" : "text-gray-400 hover:text-white hover:bg-gray-800"
-            }`}
-          >
-            <Home className="w-5 h-5" />
-            <span>Home</span>
-          </Link>
-          <Link
-            href="/library"
-            className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-              pathname === "/library" ? "bg-gray-800 text-white" : "text-gray-400 hover:text-white hover:bg-gray-800"
-            }`}
-          >
-            <Library className="w-5 h-5" />
-            <span>Your Library</span>
-          </Link>
-        </nav>
+        <button onClick={() => setIsOpen(!isOpen)} className="text-white p-2">
+          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
       </div>
 
-      <div className="px-6 py-4 border-t border-gray-800 flex-1 overflow-y-auto">
+      {/* Overlay for mobile */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-40 md:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar Content */}
+      <aside
+        className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-gray-950 border-r border-gray-800 flex flex-col h-full transform transition-transform duration-300 ease-in-out
+          ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        `}
+      >
+        <div className="p-6 md:pt-6 pt-20">
+          <Link href="/" className="hidden md:flex items-center gap-3 text-white font-bold text-xl mb-8">
+            <Music className="w-8 h-8 text-blue-500" />
+            <span>Music Player</span>
+          </Link>
+
+          <nav className="space-y-2">
+            <Link
+              href="/"
+              onClick={() => setIsOpen(false)}
+              className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                pathname === "/" ? "bg-gray-800 text-white" : "text-gray-400 hover:text-white hover:bg-gray-800"
+              }`}
+            >
+              <Home className="w-5 h-5" />
+              <span>Discover</span>
+            </Link>
+            <Link
+              href="/search"
+              onClick={() => setIsOpen(false)}
+              className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                pathname === "/search" ? "bg-gray-800 text-white" : "text-gray-400 hover:text-white hover:bg-gray-800"
+              }`}
+            >
+              <Search className="w-5 h-5" />
+              <span>Search</span>
+            </Link>
+            <Link
+              href="/library"
+              onClick={() => setIsOpen(false)}
+              className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                pathname === "/library" ? "bg-gray-800 text-white" : "text-gray-400 hover:text-white hover:bg-gray-800"
+              }`}
+            >
+              <Library className="w-5 h-5" />
+              <span>Your Library</span>
+            </Link>
+          </nav>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-800 flex-1 overflow-y-auto">
         <div className="flex items-center justify-between mb-4 text-gray-400">
           <span className="text-sm font-semibold uppercase tracking-wider">Playlists</span>
           <button
@@ -111,6 +149,7 @@ export function Sidebar() {
             <li key={pl.id}>
               <Link
                 href={`/playlists/${pl.id}`}
+                onClick={() => setIsOpen(false)}
                 className={`block px-3 py-2 rounded-md transition-colors truncate ${pathname === `/playlists/${pl.id}` ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
               >
                 {pl.name}
@@ -118,17 +157,18 @@ export function Sidebar() {
             </li>
           ))}
         </ul>
-      </div>
+        </div>
 
-      <div className="p-4 border-t border-gray-800">
-        <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800 w-full rounded-md transition-colors"
-        >
-          <LogOut className="w-5 h-5" />
-          <span>Logout</span>
-        </button>
-      </div>
-    </aside>
+        <div className="p-4 border-t border-gray-800 mt-auto">
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800 w-full rounded-md transition-colors"
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX } from "lucide-react";
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle } from "lucide-react";
 import { usePlayerStore } from "@/store/playerStore";
 
 export function PlayerBar() {
   const {
     currentTrackIndex,
     queue,
+    isShuffle,
     isPlaying,
     volume,
     progress,
@@ -19,6 +20,7 @@ export function PlayerBar() {
     setVolume,
     setProgress,
     setDuration,
+    toggleShuffle,
   } = usePlayerStore();
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -87,7 +89,7 @@ export function PlayerBar() {
   if (!currentTrack) return null; // Don't render until a track is selected (optional, or render empty state)
 
   return (
-    <div className="h-24 bg-gray-900 border-t border-gray-800 flex items-center justify-between px-6 shadow-[0_-4px_10px_rgba(0,0,0,0.5)] z-50 fixed bottom-0 left-0 w-full">
+    <div className="h-20 md:h-24 bg-gray-900 border-t border-gray-800 flex items-center justify-between px-4 md:px-6 shadow-[0_-4px_10px_rgba(0,0,0,0.5)] z-50 fixed bottom-0 left-0 w-full">
       {/* Hidden Audio Element */}
       {currentTrack && (
          <audio
@@ -100,41 +102,48 @@ export function PlayerBar() {
       )}
 
       {/* Track Info */}
-      <div className="flex items-center gap-4 w-1/3 min-w-0">
-        <div className="w-14 h-14 bg-gray-800 rounded-md flex-shrink-0 flex items-center justify-center overflow-hidden">
-          <span className="text-gray-500 text-xs text-center p-1 font-bold">MP3</span>
+      <div className="flex items-center gap-2 md:gap-4 w-[30%] md:w-1/3 min-w-0">
+        <div className="w-10 h-10 md:w-14 md:h-14 bg-gray-800 rounded-md flex-shrink-0 flex items-center justify-center overflow-hidden">
+          <span className="text-gray-500 text-[10px] md:text-xs text-center p-1 font-bold">MP3</span>
         </div>
         <div className="truncate">
-          <p className="text-white font-medium truncate">{currentTrack.title || "Unknown Title"}</p>
-          <p className="text-gray-400 text-sm truncate">{currentTrack.artist || "Unknown Artist"}</p>
+          <p className="text-white text-sm md:text-base font-medium truncate">{currentTrack.title || "Unknown Title"}</p>
+          <p className="text-gray-400 text-xs md:text-sm truncate">{currentTrack.artist || "Unknown Artist"}</p>
         </div>
       </div>
 
       {/* Controls */}
-      <div className="flex flex-col items-center justify-center w-1/3">
-        <div className="flex items-center gap-6 mb-2">
+      <div className="flex flex-col items-center justify-center w-[40%] md:w-1/3 max-w-lg">
+        <div className="flex items-center gap-3 md:gap-6 mb-1 md:mb-2">
+          <button onClick={toggleShuffle} className={`hidden sm:block transition ${isShuffle ? 'text-green-500 hover:text-green-400' : 'text-gray-400 hover:text-white'}`}>
+             <Shuffle className="w-4 h-4 md:w-5 md:h-5" />
+          </button>
           <button onClick={prev} className="text-gray-400 hover:text-white transition">
-            <SkipBack className="w-6 h-6 fill-current" />
+            <SkipBack className="w-5 h-5 md:w-6 md:h-6 fill-current" />
           </button>
 
           <button
             onClick={togglePlayPause}
-            className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-full hover:scale-105 transition"
+            className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-white text-black rounded-full hover:scale-105 transition"
           >
             {isPlaying ? (
-              <Pause className="w-5 h-5 fill-current" />
+              <Pause className="w-4 h-4 md:w-5 md:h-5 fill-current" />
             ) : (
-              <Play className="w-5 h-5 ml-1 fill-current" />
+              <Play className="w-4 h-4 md:w-5 md:h-5 ml-1 fill-current" />
             )}
           </button>
 
           <button onClick={next} className="text-gray-400 hover:text-white transition">
-            <SkipForward className="w-6 h-6 fill-current" />
+            <SkipForward className="w-5 h-5 md:w-6 md:h-6 fill-current" />
+          </button>
+
+          <button onClick={toggleShuffle} className={`sm:hidden transition ${isShuffle ? 'text-green-500 hover:text-green-400' : 'text-gray-400 hover:text-white'}`}>
+             <Shuffle className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="w-full max-w-md flex items-center gap-3">
-          <span className="text-xs text-gray-400 w-10 text-right">{formatTime(progress)}</span>
+        <div className="w-full flex items-center gap-2 md:gap-3">
+          <span className="text-[10px] md:text-xs text-gray-400 w-8 md:w-10 text-right">{formatTime(progress)}</span>
           <div className="relative w-full flex items-center group">
             <input
               type="range"
@@ -153,11 +162,11 @@ export function PlayerBar() {
       </div>
 
       {/* Volume & Extras */}
-      <div className="flex items-center justify-end w-1/3 gap-3">
-        <button onClick={toggleMute} className="text-gray-400 hover:text-white transition">
-          {volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+      <div className="flex items-center justify-end w-[30%] md:w-1/3 gap-2 md:gap-3 pr-2">
+        <button onClick={toggleMute} className="text-gray-400 hover:text-white transition hidden sm:block">
+          {volume === 0 ? <VolumeX className="w-4 h-4 md:w-5 md:h-5" /> : <Volume2 className="w-4 h-4 md:w-5 md:h-5" />}
         </button>
-        <div className="relative w-24 flex items-center group">
+        <div className="relative w-16 md:w-24 flex items-center group hidden sm:flex">
           <input
             type="range"
             min={0}

@@ -30,14 +30,10 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
         const playlist = await prisma.playlist.findUnique({
             where: { id: params.id },
             include: {
+                user: { select: { username: true } },
                 tracks: {
                     include: {
                         track: true
@@ -49,8 +45,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
             }
         });
 
-        if (!playlist || playlist.userId !== session.user.id) {
-            return NextResponse.json({ error: "Playlist not found or forbidden" }, { status: 403 });
+        if (!playlist) {
+            return NextResponse.json({ error: "Playlist not found" }, { status: 404 });
         }
 
         return NextResponse.json(playlist, { status: 200 });

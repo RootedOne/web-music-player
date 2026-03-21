@@ -76,15 +76,36 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const filter = searchParams.get('filter') || 'global';
+    const searchQuery = searchParams.get('search') || '';
+
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const whereClause: any = {};
+
+    if (filter === 'personal') {
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+        whereClause.userId = session.user.id;
+    }
+
+    if (searchQuery) {
+        whereClause.OR = [
+            { title: { contains: searchQuery } },
+            { artist: { contains: searchQuery } }
+        ];
     }
 
     const tracks = await prisma.track.findMany({
-      where: { userId: session.user.id },
+      where: whereClause,
+      include: {
+        user: { select: { username: true } },
+      },
       orderBy: { createdAt: "desc" },
     });
 

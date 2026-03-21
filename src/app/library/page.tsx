@@ -1,15 +1,38 @@
 "use client";
 
 import { useState } from "react";
+import { useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Upload, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import TrackCard from "@/components/TrackCard";
+import { Track } from "@/store/playerStore";
 
 export default function LibraryPage() {
   const router = useRouter();
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
+  const [myTracks, setMyTracks] = useState<Track[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchMyTracks();
+  }, []);
+
+  const fetchMyTracks = async () => {
+    try {
+      const res = await fetch("/api/tracks?filter=personal");
+      if (res.ok) {
+        const data = await res.json();
+        setMyTracks(data.tracks);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -54,8 +77,8 @@ export default function LibraryPage() {
       }
 
       router.refresh();
-      // Wait a tiny bit and then navigate to home where "Recently Added" could show it
-      setTimeout(() => router.push("/"), 500);
+      // Wait a tiny bit and refresh personal list
+      setTimeout(() => { fetchMyTracks(); }, 500);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -114,7 +137,22 @@ export default function LibraryPage() {
         </div>
       </section>
 
-      {/* Here we will list existing library items later */}
+      <section>
+        <h2 className="text-2xl font-bold mb-6 text-gray-100">Your Uploads</h2>
+        {isLoading ? (
+          <p className="text-gray-500">Loading your music...</p>
+        ) : myTracks.length === 0 ? (
+          <p className="text-gray-500 bg-gray-800/50 p-6 rounded-lg text-center border border-gray-700 border-dashed">
+            You haven&apos;t uploaded any tracks yet.
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+            {myTracks.map((track) => (
+              <TrackCard key={track.id} track={track} />
+            ))}
+          </div>
+        )}
+      </section>
     </MainLayout>
   );
 }

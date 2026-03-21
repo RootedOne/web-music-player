@@ -1141,3 +1141,95 @@ constructor() {
  ✓ Compiled in 172ms (522 modules)
  ✓ Compiled in 1746ms (883 modules)
  ✓ Compiled in 505ms (883 modules)
+ ✓ Compiled in 4.2s (522 modules)
+ ✓ Compiled in 4.1s (864 modules)
+ ✓ Compiled in 294ms (522 modules)
+ ✓ Compiled in 536ms (522 modules)
+ ✓ Compiled in 931ms (864 modules)
+ ✓ Compiled in 180ms (522 modules)
+ ✓ Compiled in 158ms (522 modules)
+ ✓ Compiled in 275ms (522 modules)
+ ✓ Compiled in 251ms (522 modules)
+ ✓ Compiled in 201ms (522 modules)
+ ✓ Compiled in 501ms (864 modules)
+ ⨯ ./src/components/layout/Sidebar.tsx
+Error:
+  [31mx[0m Unexpected token `aside`. Expected jsx identifier
+    ,-[[36;1;4m/app/src/components/layout/Sidebar.tsx[0m:53:1]
+ [2m53[0m |   };
+ [2m54[0m |
+ [2m55[0m |   return (
+ [2m56[0m |     <aside className="w-64 bg-gray-950 border-r border-gray-800 flex flex-col h-full">
+    : [31;1m     ^^^^^[0m
+ [2m57[0m |       {/* Mobile Top Bar */}
+ [2m58[0m |       <div className="md:hidden flex items-center justify-between p-4 bg-gray-950 border-b border-gray-800 w-full fixed top-0 left-0 z-40">
+ [2m59[0m |         <Link href="/" className="flex items-center gap-2 text-white font-bold text-lg">
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/layout/Sidebar.tsx
+ ⨯ ./src/components/layout/Sidebar.tsx
+Error:
+  [31mx[0m Unexpected token `aside`. Expected jsx identifier
+    ,-[[36;1;4m/app/src/components/layout/Sidebar.tsx[0m:53:1]
+ [2m53[0m |   };
+ [2m54[0m |
+ [2m55[0m |   return (
+ [2m56[0m |     <aside className="w-64 bg-gray-950 border-r border-gray-800 flex flex-col h-full">
+    : [31;1m     ^^^^^[0m
+ [2m57[0m |       {/* Mobile Top Bar */}
+ [2m58[0m |       <div className="md:hidden flex items-center justify-between p-4 bg-gray-950 border-b border-gray-800 w-full fixed top-0 left-0 z-40">
+ [2m59[0m |         <Link href="/" className="flex items-center gap-2 text-white font-bold text-lg">
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/layout/Sidebar.tsx
+ ⨯ ./src/components/layout/Sidebar.tsx
+Error:
+  [31mx[0m Unexpected token `aside`. Expected jsx identifier
+    ,-[[36;1;4m/app/src/components/layout/Sidebar.tsx[0m:53:1]
+ [2m53[0m |   };
+ [2m54[0m |
+ [2m55[0m |   return (
+ [2m56[0m |     <aside className="w-64 bg-gray-950 border-r border-gray-800 flex flex-col h-full">
+    : [31;1m     ^^^^^[0m
+ [2m57[0m |       {/* Mobile Top Bar */}
+ [2m58[0m |       <div className="md:hidden flex items-center justify-between p-4 bg-gray-950 border-b border-gray-800 w-full fixed top-0 left-0 z-40">
+ [2m59[0m |         <Link href="/" className="flex items-center gap-2 text-white font-bold text-lg">
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/layout/Sidebar.tsx
+ ⨯ ./src/components/layout/Sidebar.tsx
+Error:
+  [31mx[0m Unexpected token `aside`. Expected jsx identifier
+    ,-[[36;1;4m/app/src/components/layout/Sidebar.tsx[0m:53:1]
+ [2m53[0m |   };
+ [2m54[0m |
+ [2m55[0m |   return (
+ [2m56[0m |     <aside className="w-64 bg-gray-950 border-r border-gray-800 flex flex-col h-full">
+    : [31;1m     ^^^^^[0m
+ [2m57[0m |       {/* Mobile Top Bar */}
+ [2m58[0m |       <div className="md:hidden flex items-center justify-between p-4 bg-gray-950 border-b border-gray-800 w-full fixed top-0 left-0 z-40">
+ [2m59[0m |         <Link href="/" className="flex items-center gap-2 text-white font-bold text-lg">
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/layout/Sidebar.tsx
+ ✓ Compiled in 696ms (526 modules)
+ ✓ Compiled in 190ms (526 modules)
+ ✓ Compiled in 192ms (526 modules)
+ ✓ Compiled in 211ms (526 modules)
+ ✓ Compiled in 108ms (512 modules)
