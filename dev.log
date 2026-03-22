@@ -1,0 +1,192 @@
+
+> music-player@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+  - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 2.7s
+ ○ Compiling /login ...
+ ✓ Compiled /login in 8.6s (646 modules)
+ ✓ Compiled in 751ms (309 modules)
+ GET /login 200 in 9386ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 6.5s (557 modules)
+[next-auth][warn][NEXTAUTH_URL]
+https://next-auth.js.org/warnings#nextauth_url
+ GET /api/auth/session 200 in 7414ms
+ GET /api/auth/session 200 in 29ms
+ GET /login 200 in 152ms
+ GET /api/auth/session 200 in 33ms
+ GET /api/auth/session 200 in 13ms
+ GET /login 200 in 32ms
+ GET /api/auth/session 200 in 29ms
+ GET /api/auth/session 200 in 22ms
+ ○ Compiling /register ...
+ ✓ Compiled /register in 588ms (858 modules)
+ GET /register 200 in 748ms
+[next-auth][warn][NEXTAUTH_URL]
+https://next-auth.js.org/warnings#nextauth_url
+ GET /api/auth/session 200 in 88ms
+ GET /api/auth/session 200 in 11ms
+ ✓ Compiled /api/auth/register in 382ms (585 modules)
+ POST /api/auth/register 201 in 682ms
+[next-auth][warn][NEXTAUTH_URL]
+https://next-auth.js.org/warnings#nextauth_url
+ GET /api/auth/providers 200 in 36ms
+ GET /api/auth/csrf 200 in 11ms
+ POST /api/auth/callback/credentials 200 in 154ms
+ GET /api/auth/session 200 in 15ms
+ ✓ Compiled /src/middleware in 375ms (174 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 3s (1338 modules)
+ GET /login 200 in 2719ms
+[next-auth][warn][NEXTAUTH_URL]
+https://next-auth.js.org/warnings#nextauth_url
+ GET /api/auth/session 200 in 71ms
+ GET /api/auth/session 200 in 20ms
+ GET /api/auth/providers 200 in 28ms
+ GET /api/auth/csrf 200 in 15ms
+ POST /api/auth/callback/credentials 200 in 163ms
+ GET /api/auth/session 200 in 12ms
+ ✓ Compiled /api/tracks in 456ms (818 modules)
+ ✓ Compiled (925 modules)
+[next-auth][warn][NEXTAUTH_URL]
+https://next-auth.js.org/warnings#nextauth_url
+ GET /api/tracks?filter=global 200 in 1038ms
+ GET /api/playlists 200 in 1366ms
+ GET /api/playlists 200 in 18ms
+ GET /api/playlists 200 in 29ms
+ GET /api/playlists 200 in 18ms
+ GET /login 200 in 154ms
+ GET /api/auth/session 200 in 43ms
+ GET /api/auth/session 200 in 15ms
+ GET /api/auth/providers 200 in 39ms
+ GET /api/auth/csrf 200 in 14ms
+ POST /api/auth/callback/credentials 200 in 197ms
+ GET /api/auth/session 200 in 18ms
+ GET /api/playlists 200 in 35ms
+ GET /api/playlists 200 in 15ms
+ GET /api/playlists 200 in 23ms
+ GET /api/playlists 200 in 18ms
+ GET /api/tracks?filter=global 200 in 17ms
+ GET / 200 in 121ms
+ GET /api/playlists 200 in 44ms
+ GET /api/auth/session 200 in 62ms
+ GET /api/playlists 200 in 64ms
+ GET /api/auth/session 200 in 44ms
+ GET /api/playlists 200 in 36ms
+ GET /api/playlists 200 in 27ms
+ GET /api/tracks?filter=global 200 in 23ms
+ GET /login 200 in 34ms
+ GET /api/auth/session 200 in 34ms
+ GET /api/auth/session 200 in 26ms
+ GET /api/auth/providers 200 in 40ms
+ GET /api/auth/csrf 200 in 17ms
+ POST /api/auth/callback/credentials 200 in 152ms
+ GET /api/auth/session 200 in 16ms
+ GET /api/playlists 200 in 27ms
+ GET /api/playlists 200 in 39ms
+ GET /api/playlists 200 in 18ms
+ GET /api/playlists 200 in 17ms
+ GET /api/tracks?filter=global 200 in 18ms
+ GET / 200 in 51ms
+ GET /api/playlists 200 in 55ms
+ GET /api/auth/session 200 in 53ms
+ GET /api/playlists 200 in 52ms
+ GET /api/auth/session 200 in 53ms
+ GET /api/playlists 200 in 40ms
+ GET /api/playlists 200 in 19ms
+ GET /api/tracks?filter=global 200 in 18ms
+ GET /login 200 in 44ms
+ GET /api/auth/session 200 in 35ms
+ GET /api/auth/session 200 in 16ms
+ GET /api/auth/providers 200 in 49ms
+ GET /api/auth/csrf 200 in 13ms
+ POST /api/auth/callback/credentials 200 in 149ms
+ GET /api/auth/session 200 in 15ms
+ GET /api/playlists 200 in 30ms
+ GET /api/playlists 200 in 37ms
+ GET /api/playlists 200 in 17ms
+ GET /api/playlists 200 in 18ms
+ GET /api/tracks?filter=global 200 in 17ms
+ ○ Compiling /library ...
+ ✓ Compiled /library in 864ms (1453 modules)
+ GET /library 200 in 1055ms
+[next-auth][warn][NEXTAUTH_URL]
+https://next-auth.js.org/warnings#nextauth_url
+ GET /api/playlists 200 in 165ms
+ GET /api/tracks?filter=personal 200 in 169ms
+ GET /api/auth/session 200 in 170ms
+ GET /api/playlists 200 in 68ms
+ GET /api/tracks?filter=personal 200 in 43ms
+ GET /api/auth/session 200 in 43ms
+ GET /api/playlists 200 in 26ms
+ GET /api/playlists 200 in 19ms
+ GET /api/playlists 200 in 18ms
+ GET /api/playlists 200 in 18ms
+ GET /login 200 in 78ms
+ GET /api/auth/session 200 in 43ms
+ GET /api/auth/session 200 in 18ms
+ GET /api/auth/providers 200 in 42ms
+ GET /api/auth/csrf 200 in 23ms
+ POST /api/auth/callback/credentials 200 in 181ms
+ GET /api/auth/session 200 in 15ms
+ GET /api/playlists 200 in 30ms
+ GET /api/playlists 200 in 27ms
+ GET /api/playlists 200 in 16ms
+ GET /api/playlists 200 in 19ms
+ GET /api/tracks?filter=global 200 in 17ms
+ GET /library 200 in 55ms
+ GET /api/playlists 200 in 62ms
+ GET /api/tracks?filter=personal 200 in 65ms
+ GET /api/auth/session 200 in 83ms
+ GET /api/playlists 200 in 48ms
+ GET /api/tracks?filter=personal 200 in 50ms
+ GET /api/auth/session 200 in 48ms
+ GET /api/playlists 200 in 29ms
+ GET /api/playlists 200 in 14ms
+ GET /api/playlists 200 in 18ms
+ GET /api/playlists 200 in 18ms
+ ✓ Compiled in 1405ms (1098 modules)
+ GET /login?mock-expand=true 200 in 220ms
+ ✓ Compiled /api/auth/[...nextauth] in 406ms (797 modules)
+[next-auth][warn][NEXTAUTH_URL]
+https://next-auth.js.org/warnings#nextauth_url
+ GET /api/auth/session 200 in 587ms
+ GET /api/auth/session 200 in 13ms
+ GET /api/auth/signin?callbackUrl=%2Flibrary%3Fmock-expand%3Dtrue 302 in 41ms
+ GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2Flibrary%3Fmock-expand%3Dtrue 200 in 164ms
+ GET /api/auth/session 200 in 42ms
+ GET /api/auth/session 200 in 20ms
+ GET /login 200 in 55ms
+ GET /api/auth/session 200 in 43ms
+ GET /api/auth/session 200 in 19ms
+ GET /api/auth/providers 200 in 52ms
+ GET /api/auth/csrf 200 in 24ms
+ POST /api/auth/callback/credentials 200 in 192ms
+ GET /api/auth/session 200 in 20ms
+ ○ Compiling /api/tracks ...
+ ✓ Compiled /api/tracks in 920ms (821 modules)
+ ✓ Compiled (928 modules)
+[next-auth][warn][NEXTAUTH_URL]
+https://next-auth.js.org/warnings#nextauth_url
+ GET /api/tracks?filter=global 200 in 1036ms
+ GET /api/playlists 200 in 1362ms
+ GET /api/playlists 200 in 34ms
+ GET /api/playlists 200 in 24ms
+ GET /api/playlists 200 in 16ms
+ GET /library?mock-expand=true 200 in 206ms
+ GET /api/tracks?filter=personal 200 in 54ms
+ GET /api/playlists 200 in 193ms
+ GET /api/auth/session 200 in 185ms
+ GET /api/tracks?filter=personal 200 in 112ms
+ GET /api/playlists 200 in 104ms
+ GET /api/auth/session 200 in 52ms
+ GET /api/playlists 200 in 21ms
+ GET /api/playlists 200 in 18ms
+ GET /api/playlists 200 in 16ms
+ GET /api/playlists 200 in 18ms
+ ✓ Compiled in 1050ms (1098 modules)

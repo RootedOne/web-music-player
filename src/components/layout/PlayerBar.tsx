@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle } from "lucide-react";
+import { useState, Fragment } from "react";
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, MoreHorizontal } from "lucide-react";
 import { usePlayerStore } from "@/store/playerStore";
+import { Dialog, Transition } from "@headlessui/react";
 
 export function PlayerBar() {
+  const [isExpanded, setIsExpanded] = useState(false);
   const {
     currentTrackIndex,
     queue,
@@ -161,8 +164,11 @@ export function PlayerBar() {
             className="absolute bottom-[-14px] left-0 w-full h-8 opacity-0 cursor-pointer z-20 touch-none"
           />
 
-          {/* Left: Track Info */}
-          <div className="flex items-center gap-3 min-w-0 flex-1 z-10 pl-1">
+        {/* Left: Track Info (Clickable to Expand) */}
+        <div
+          className="flex items-center gap-3 min-w-0 flex-1 z-10 pl-1 cursor-pointer"
+          onClick={() => setIsExpanded(true)}
+        >
             <div className="w-10 h-10 bg-black/50 rounded-full border border-white/5 flex-shrink-0 flex items-center justify-center overflow-hidden relative">
               {currentTrack.coverUrl ? (
                  <img src={currentTrack.coverUrl} alt="Cover" className="w-full h-full object-cover" />
@@ -276,6 +282,137 @@ export function PlayerBar() {
           </div>
         </div>
       </div>
+
+      {/* --- Mobile Full-Screen Expanded Player Modal --- */}
+      <Transition appear show={isExpanded && !!currentTrack} as={Fragment}>
+        <Dialog as="div" className="relative z-[100] md:hidden" onClose={() => setIsExpanded(false)}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0 translate-y-full"
+            enterTo="opacity-100 translate-y-0"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100 translate-y-0"
+            leaveTo="opacity-0 translate-y-full"
+          >
+            <div className="fixed inset-0 bg-gradient-to-b from-neutral-800 to-black backdrop-blur-3xl flex flex-col p-6 pt-10">
+
+              {/* Top Drag Handle (Close Button) */}
+              <div className="w-full flex justify-center mb-8 shrink-0">
+                <button
+                  onClick={() => setIsExpanded(false)}
+                  className="w-12 h-1.5 bg-white/30 rounded-full hover:bg-white/50 transition-colors focus:outline-none"
+                  aria-label="Close Player"
+                />
+              </div>
+
+              {/* Album Artwork */}
+              <div className="w-full aspect-square bg-[#181818] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-center overflow-hidden relative mb-8 border border-white/5 shrink-0">
+                 {currentTrack.coverUrl ? (
+                   <img src={currentTrack.coverUrl} alt="Cover" className="w-full h-full object-cover" />
+                 ) : (
+                   <span className="text-gray-500 font-bold text-4xl">MP3</span>
+                 )}
+              </div>
+
+              {/* Track Info & Actions Row */}
+              <div className="flex items-center justify-between mb-8 shrink-0">
+                 <div className="flex flex-col min-w-0 pr-4">
+                   <h2 className="text-white text-2xl font-bold truncate tracking-tight">{currentTrack.title || "Unknown Title"}</h2>
+                   <p className="text-gray-400 text-base font-medium truncate mt-1">{currentTrack.artist || "Unknown Artist"}</p>
+                 </div>
+                 <div className="flex items-center gap-3 shrink-0">
+                   <button
+                     onClick={handleGlobalShufflePlay}
+                     className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors relative ${isShuffle ? 'bg-white/20 text-white' : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'}`}
+                   >
+                     <Shuffle className="w-5 h-5" />
+                     {isShuffle && <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full"></span>}
+                   </button>
+                   <button className="w-10 h-10 rounded-full bg-white/5 text-white flex items-center justify-center hover:bg-white/10 transition-colors">
+                     <MoreHorizontal className="w-5 h-5" />
+                   </button>
+                 </div>
+              </div>
+
+              {/* Scrubber */}
+              <div className="flex flex-col mb-8 shrink-0">
+                <div className="relative w-full flex items-center group h-6">
+                  <input
+                    type="range"
+                    min={0}
+                    max={duration || 100}
+                    value={progress}
+                    onChange={handleSeek}
+                    className="absolute z-20 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden pointer-events-none">
+                    <div
+                      className="h-full bg-white rounded-full pointer-events-none"
+                      style={{ width: `${(progress / (duration || 1)) * 100}%` }}
+                    />
+                  </div>
+                  {/* Thumb indicator visible on drag/hover (simulated via group-hover in CSS) */}
+                  <div
+                    className="absolute h-3 w-3 bg-white rounded-full shadow pointer-events-none z-10 transition-transform scale-0 group-hover:scale-100"
+                    style={{ left: `calc(${(progress / (duration || 1)) * 100}% - 6px)` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-xs text-white/50 font-medium tabular-nums">{formatTime(progress)}</span>
+                  <span className="text-xs text-white/50 font-medium tabular-nums">{formatTime(duration)}</span>
+                </div>
+              </div>
+
+              {/* Main Controls */}
+              <div className="flex items-center justify-center gap-8 mb-8 shrink-0">
+                <button onClick={prev} className="text-white/70 hover:text-white transition-colors p-2 active:scale-90">
+                  <SkipBack className="w-10 h-10 fill-current" />
+                </button>
+                <button
+                  onClick={togglePlayPause}
+                  className="w-20 h-20 flex items-center justify-center bg-white text-black rounded-full hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)]"
+                >
+                  {isPlaying ? (
+                    <Pause className="w-10 h-10 fill-current" />
+                  ) : (
+                    <Play className="w-10 h-10 ml-2 fill-current" />
+                  )}
+                </button>
+                <button onClick={next} className="text-white/70 hover:text-white transition-colors p-2 active:scale-90">
+                  <SkipForward className="w-10 h-10 fill-current" />
+                </button>
+              </div>
+
+              {/* Volume Control */}
+              <div className="flex items-center gap-4 shrink-0 mt-auto pb-4">
+                <button onClick={toggleMute} className="text-white/50 hover:text-white transition-colors p-2">
+                  {volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                </button>
+                <div className="relative w-full flex items-center group h-6">
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={volume}
+                    onChange={handleVolumeChange}
+                    className="absolute z-20 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden pointer-events-none">
+                    <div
+                      className="h-full bg-white rounded-full pointer-events-none"
+                      style={{ width: `${volume * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </Transition.Child>
+        </Dialog>
+      </Transition>
+
       <style dangerouslySetInnerHTML={{__html: `
         input[type=range]::-webkit-slider-thumb {
           -webkit-appearance: none;
