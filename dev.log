@@ -1,71 +1,11 @@
 
-> music-player@0.1.0 dev
-> next dev
+> music-player@0.1.0 start
+> next start
 
- ⚠ Port 3000 is in use, trying 3001 instead.
- ⚠ Port 3001 is in use, trying 3002 instead.
- ⚠ Port 3002 is in use, trying 3003 instead.
   ▲ Next.js 14.2.35
-  - Local:        http://localhost:3003
-  - Environments: .env
+  - Local:        http://localhost:3000
 
  ✓ Starting...
- ✓ Ready in 3.4s
- ○ Compiling /api/auth/register ...
- ✓ Compiled /api/auth/register in 650ms (60 modules)
- POST /api/auth/register 400 in 869ms
- ○ Compiling /login ...
- ✓ Compiled /login in 7.2s (678 modules)
- ✓ Compiled in 682ms (309 modules)
- GET /login 200 in 7933ms
- ○ Compiling /api/auth/[...nextauth] ...
- ✓ Compiled /api/auth/[...nextauth] in 4.6s (581 modules)
+ ✓ Ready in 469ms
 [next-auth][warn][NEXTAUTH_URL]
 https://next-auth.js.org/warnings#nextauth_url
- GET /api/auth/providers 200 in 4875ms
- GET /api/auth/session 200 in 5712ms
- GET /api/auth/session 200 in 41ms
- GET /api/auth/csrf 200 in 39ms
- POST /api/auth/callback/credentials 200 in 14ms
- GET /api/auth/session 200 in 11ms
- ○ Compiling /src/middleware ...
- ✓ Compiled /src/middleware in 663ms (174 modules)
- POST /api/auth/register 400 in 35ms
- GET /login 200 in 133ms
- GET /api/auth/session 200 in 29ms
- GET /api/auth/session 200 in 10ms
- GET /api/auth/providers 200 in 22ms
- GET /api/auth/csrf 200 in 20ms
- POST /api/auth/callback/credentials 200 in 175ms
- GET /api/auth/session 200 in 13ms
- ○ Compiling / ...
- ✓ Compiled / in 2.8s (1332 modules)
- ✓ Compiled /api/playlists in 250ms (814 modules)
-[next-auth][warn][NEXTAUTH_URL]
-https://next-auth.js.org/warnings#nextauth_url
- GET /api/playlists 200 in 400ms
- ○ Compiling /api/tracks ...
- ✓ Compiled /api/tracks in 859ms (921 modules)
-[next-auth][warn][NEXTAUTH_URL]
-https://next-auth.js.org/warnings#nextauth_url
- POST /api/auth/register 400 in 19ms
- GET /login 200 in 140ms
- GET /api/auth/session 200 in 47ms
- GET /api/auth/session 200 in 9ms
- GET /api/auth/providers 200 in 38ms
- GET /api/auth/csrf 200 in 16ms
- POST /api/auth/callback/credentials 200 in 167ms
- GET /api/auth/session 200 in 15ms
- GET /api/playlists 200 in 55ms
- GET /api/playlists 200 in 17ms
- GET /api/playlists 200 in 20ms
- GET /api/playlists 200 in 15ms
- GET /api/tracks?filter=global 200 in 14ms
- ○ Compiling /library ...
- ✓ Compiled /library in 1006ms (1449 modules)
-[next-auth][warn][NEXTAUTH_URL]
-https://next-auth.js.org/warnings#nextauth_url
- GET /api/tracks?filter=personal 200 in 219ms
- GET /api/playlists 200 in 226ms
- GET /api/tracks?filter=personal 200 in 34ms
- GET /api/playlists 200 in 35ms
