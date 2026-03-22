@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tracks    Track[]
+  playlists Playlist[] // Playlists created by the user
+  savedPlaylists SavedPlaylist[] // Playlists saved by the user
+}
+
+model Track {
+  id        String   @id @default(cuid())
+  title     String
+  artist    String?
+  album     String?
+  duration  Float?
+  fileUrl   String
+  coverUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  playlists PlaylistTrack[]
+}
+
+model Playlist {
+  id        String   @id @default(cuid())
+  name      String
+  coverUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tracks    PlaylistTrack[]
+  savedBy   SavedPlaylist[]
+}
+
+model SavedPlaylist {
+  id         String   @id @default(cuid())
+  userId     String
+  playlistId String
+  savedAt    DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, playlistId])
+}
+
+model PlaylistTrack {
+  id         String   @id @default(cuid())
+  playlistId String
+  trackId    String
+  addedAt    DateTime @default(now())
+
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  track      Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@unique([playlistId, trackId])
+}
