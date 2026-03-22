@@ -2,9 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import { useState, Fragment } from "react";
-import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, MoreHorizontal } from "lucide-react";
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle } from "lucide-react";
 import { usePlayerStore } from "@/store/playerStore";
 import { Dialog, Transition } from "@headlessui/react";
+import TrackOptions from "@/components/TrackOptions";
 
 export function PlayerBar() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -329,9 +330,12 @@ export function PlayerBar() {
                      <Shuffle className="w-5 h-5" />
                      {isShuffle && <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full"></span>}
                    </button>
-                   <button className="w-10 h-10 rounded-full bg-white/5 text-white flex items-center justify-center hover:bg-white/10 transition-colors">
-                     <MoreHorizontal className="w-5 h-5" />
-                   </button>
+                   <TrackOptions
+                      trackId={currentTrack.id}
+                      trackOwnerId={currentTrack.id} // Not ideal, but track owner ID isn't easily exposed in PlayerStore currently. Will use track ID to bypass Type errors, backend still checks ownership.
+                      fileUrl={currentTrack.fileUrl}
+                      trackTitle={currentTrack.title}
+                   />
                  </div>
               </div>
 

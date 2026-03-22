@@ -58,10 +58,15 @@ function HomeContent() {
 
   return (
     <>
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <h1 className="text-4xl font-extrabold tracking-tight text-white drop-shadow-md">
           Discover
         </h1>
+
+        {/* Mobile Logo (Top Right) */}
+        <div className="absolute right-0 top-0 md:hidden flex items-center justify-center pointer-events-none">
+           <span className="text-2xl font-black tracking-tighter text-white drop-shadow-lg">Sepatifay</span>
+        </div>
 
         {/* Global Search Bar (Hidden on mobile where floating nav takes over) */}
         <div className="relative w-full max-w-md hidden md:block">
@@ -85,7 +90,7 @@ function HomeContent() {
       </header>
 
       <section className="mt-8">
-        <h2 className="text-2xl font-bold mb-6 text-gray-100">
+        <h2 className="text-2xl font-bold mb-6 text-gray-100 hidden md:block">
             {query ? `Search Results for "${query}"` : "Global Feed"}
         </h2>
 
