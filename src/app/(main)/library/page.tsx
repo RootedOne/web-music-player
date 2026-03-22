@@ -14,6 +14,7 @@ export default function LibraryPage() {
   const router = useRouter();
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
   const [error, setError] = useState("");
   const [myTracks, setMyTracks] = useState<Track[]>([]);
   const [myPlaylists, setMyPlaylists] = useState<Playlist[]>([]);
@@ -63,46 +64,59 @@ export default function LibraryPage() {
     setIsDragging(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      await uploadFile(e.dataTransfer.files[0]);
+      await uploadFiles(Array.from(e.dataTransfer.files));
     }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      await uploadFile(e.target.files[0]);
+      await uploadFiles(Array.from(e.target.files));
     }
   };
 
-  const uploadFile = async (file: File) => {
+  const uploadFiles = async (files: File[]) => {
     setError("");
     setIsUploading(true);
+    let successCount = 0;
+    let failCount = 0;
+    let lastError = "";
 
-    const formData = new FormData();
-    formData.append("file", file);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      setUploadProgress(`Uploading ${i + 1} of ${files.length}: ${file.name}...`);
 
-    try {
-      const res = await fetch("/api/tracks", {
-        method: "POST",
-        body: formData,
-      });
+      const formData = new FormData();
+      formData.append("file", file);
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Upload failed");
+      try {
+        const res = await fetch("/api/tracks", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || `Upload failed for ${file.name}`);
+        }
+        successCount++;
+      } catch (err: unknown) {
+        failCount++;
+        if (err instanceof Error) {
+          lastError = err.message;
+        }
       }
-
-      router.refresh();
-      // Wait a tiny bit and refresh personal list
-      setTimeout(() => { fetchMyTracks(); }, 500);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("An error occurred during upload");
-      }
-    } finally {
-      setIsUploading(false);
     }
+
+    if (failCount > 0) {
+      setError(`Failed to upload ${failCount} file(s). Last error: ${lastError}`);
+    } else if (successCount > 0) {
+      setUploadProgress("");
+    }
+
+    router.refresh();
+    setTimeout(() => { fetchMyTracks(); }, 500);
+    setIsUploading(false);
+    setUploadProgress("");
   };
 
   return (
@@ -150,25 +164,26 @@ export default function LibraryPage() {
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-xl p-12 flex flex-col items-center justify-center transition-colors
+          className={`border-2 border-dashed rounded-xl p-12 flex flex-col items-center justify-center transition-colors text-center
             ${isDragging ? "border-blue-500 bg-blue-500/10" : "border-gray-700 hover:border-gray-500 bg-gray-800/50"}
           `}
         >
           {isUploading ? (
             <div className="flex flex-col items-center text-blue-400">
               <Loader2 className="w-12 h-12 mb-4 animate-spin" />
-              <p className="font-semibold">Uploading & parsing metadata...</p>
+              <p className="font-semibold">{uploadProgress || "Uploading & parsing metadata..."}</p>
             </div>
           ) : (
             <>
               <Upload className="w-12 h-12 text-gray-400 mb-4" />
               <p className="text-gray-300 font-semibold mb-2">Drag and drop your audio files here</p>
-              <p className="text-gray-500 text-sm mb-6">Supports .mp3 and .wav</p>
+              <p className="text-gray-500 text-sm mb-6">Supports multiple .mp3 and .wav files</p>
 
               <label className="bg-white text-black px-8 py-3 rounded-full font-bold cursor-pointer hover:scale-105 transition-transform">
                 Browse Files
                 <input
                   type="file"
+                  multiple
                   className="hidden"
                   accept=".mp3,audio/mpeg,.wav,audio/wav,audio/x-wav"
                   onChange={handleFileChange}

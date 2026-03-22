@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { redirect, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import { Track } from "@/store/playerStore";
-import { Search as SearchIcon } from "lucide-react";
+import { Search as SearchIcon, Music } from "lucide-react";
 
 function HomeContent() {
   const { data: session, status } = useSession();
@@ -64,8 +64,8 @@ function HomeContent() {
         </h1>
 
         {/* Mobile Logo (Top Right) */}
-        <div className="absolute right-0 top-0 md:hidden flex items-center justify-center pointer-events-none">
-           <span className="text-2xl font-black tracking-tighter text-white drop-shadow-lg">Sepatifay</span>
+        <div className="absolute right-0 top-0 md:hidden flex items-center justify-center pointer-events-none text-white opacity-80 mt-1">
+           <Music className="w-8 h-8 drop-shadow-lg" />
         </div>
 
         {/* Global Search Bar (Hidden on mobile where floating nav takes over) */}

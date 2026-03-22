@@ -16,8 +16,10 @@ export const authOptions: AuthOptions = {
           throw new Error("Missing username or password");
         }
 
+        const usernameLower = credentials.username.toLowerCase();
+
         const user = await prisma.user.findUnique({
-          where: { username: credentials.username },
+          where: { username: usernameLower },
         });
 
         if (!user) {

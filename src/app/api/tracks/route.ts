@@ -71,6 +71,34 @@ export async function POST(req: Request) {
       console.warn("Could not parse ID3 tags:", metaErr);
     }
 
+    // Deduplication / Fuzzy Match Check
+    const normalizeString = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normTitle = normalizeString(title);
+    const normArtist = normalizeString(artist);
+
+    const existingTracks = await prisma.track.findMany({
+      where: { userId: session.user.id as string },
+      select: { title: true, artist: true }
+    });
+
+    const isDuplicate = existingTracks.some(t =>
+      normalizeString(t.title) === normTitle &&
+      normalizeString(t.artist || "Unknown Artist") === normArtist
+    );
+
+    if (isDuplicate) {
+      // Cleanup saved files to prevent orphan files
+      await fs.unlink(filepath).catch(() => {});
+      if (coverUrl) {
+        const picFilepath = path.join(process.cwd(), "public", coverUrl);
+        await fs.unlink(picFilepath).catch(() => {});
+      }
+      return NextResponse.json(
+        { error: "A track with this title and artist already exists in your library." },
+        { status: 409 }
+      );
+    }
+
     const track = await prisma.track.create({
       data: {
         title,
