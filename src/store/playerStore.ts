@@ -10,6 +10,8 @@ export type Track = {
   fileUrl: string;
   coverUrl: string | null;
   duration: number | null;
+  createdAt?: string | Date;
+  userId?: string;
 };
 
 type PlayerState = {
