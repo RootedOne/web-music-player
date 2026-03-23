@@ -94,9 +94,22 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const fileUrl = track.fileUrl;
+    const coverUrl = track.coverUrl;
+
     await prisma.track.delete({
       where: { id: trackId },
     });
+
+    if (fileUrl) {
+      const filepath = path.join(process.cwd(), "public", fileUrl);
+      await fs.unlink(filepath).catch(() => {});
+    }
+
+    if (coverUrl) {
+      const coverpath = path.join(process.cwd(), "public", coverUrl);
+      await fs.unlink(coverpath).catch(() => {});
+    }
 
     return NextResponse.json({ message: "Track deleted successfully" }, { status: 200 });
   } catch (error) {
