@@ -64,7 +64,7 @@ npm -v
 ### 3. Clone the Repository
 Clone the Sepatifay project to your local machine:
 ```bash
-git clone https://github.com/[Your-Username]/sepatifay.git
+git clone https://github.com/RootedOne/sepatifay.git
 cd sepatifay
 ```
 
@@ -116,7 +116,4 @@ npm start
 
 ## Author
 
-**[Your Name]**
-*   GitHub: [@YourGitHubUsername](https://github.com/[Your-GitHub-Username])
-*   Portfolio: [Your Portfolio URL]
-*   Twitter/X: [@YourTwitterHandle]
+**RootedOne**
