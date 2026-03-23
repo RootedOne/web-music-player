@@ -1,11 +1,11 @@
 
-> music-player@0.1.0 start
-> next start
+> music-player@0.1.0 dev
+> next dev
 
+ ⚠ Port 3000 is in use, trying 3001 instead.
   ▲ Next.js 14.2.35
-  - Local:        http://localhost:3000
+  - Local:        http://localhost:3001
+  - Environments: .env
 
  ✓ Starting...
- ✓ Ready in 469ms
-[next-auth][warn][NEXTAUTH_URL]
-https://next-auth.js.org/warnings#nextauth_url
+ ✓ Ready in 1963ms

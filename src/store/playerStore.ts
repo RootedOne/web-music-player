@@ -4,6 +4,8 @@ export type Track = {
   id: string;
   title: string;
   artist: string | null;
+  artistId?: string | null;
+  artistObj?: { id: string; name: string } | null;
   album: string | null;
   fileUrl: string;
   coverUrl: string | null;

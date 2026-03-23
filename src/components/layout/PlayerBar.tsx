@@ -6,9 +6,14 @@ import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle } from "l
 import { usePlayerStore } from "@/store/playerStore";
 import { Dialog, Transition } from "@headlessui/react";
 import TrackOptions from "@/components/TrackOptions";
+import { parseArtists } from "@/lib/utils";
+import MultiArtistModal from "@/components/MultiArtistModal";
+import { useRouter } from "next/navigation";
 
 export function PlayerBar() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const router = useRouter();
+  const [isMultiArtistModalOpen, setIsMultiArtistModalOpen] = useState(false);
   const {
     currentTrackIndex,
     queue,
@@ -117,6 +122,29 @@ export function PlayerBar() {
   const togglePlayPause = () => {
     if (isPlaying) pause();
     else resume();
+  };
+
+  const handleArtistClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!currentTrack) return;
+
+    // Attempt parsing multiple artists
+    const parsedArtists = parseArtists(currentTrack.artistObj?.name || currentTrack.artist);
+
+    if (parsedArtists.length > 1) {
+       // Multi Artist Array
+       setIsMultiArtistModalOpen(true);
+    } else {
+       // Single Artist Flow
+       setIsExpanded(false);
+       if (currentTrack.artistId) {
+           router.push(`/artist/${currentTrack.artistId}`);
+       } else {
+           // Fallback to global search if no ID exists
+           const artistName = parsedArtists[0];
+           router.push(`/?q=${encodeURIComponent(artistName)}`);
+       }
+    }
   };
 
   const toggleMute = () => {
@@ -320,7 +348,12 @@ export function PlayerBar() {
               <div className="flex items-center justify-between mb-8 shrink-0">
                  <div className="flex flex-col min-w-0 pr-4">
                    <h2 className="text-white text-2xl font-bold truncate tracking-tight">{currentTrack.title || "Unknown Title"}</h2>
-                   <p className="text-gray-400 text-base font-medium truncate mt-1">{currentTrack.artist || "Unknown Artist"}</p>
+                   <button
+                     onClick={handleArtistClick}
+                     className="text-gray-400 hover:text-white text-base font-medium truncate mt-1 text-left block w-full transition-colors focus:outline-none"
+                   >
+                     {currentTrack.artistObj?.name || currentTrack.artist || "Unknown Artist"}
+                   </button>
                  </div>
                  <div className="flex items-center gap-3 shrink-0">
                    <button
@@ -416,6 +449,15 @@ export function PlayerBar() {
           </Transition.Child>
         </Dialog>
       </Transition>
+
+      {/* --- Multi Artist Bottom Sheet --- */}
+      {currentTrack && isMultiArtistModalOpen && (
+         <MultiArtistModal
+            isOpen={isMultiArtistModalOpen}
+            onClose={() => setIsMultiArtistModalOpen(false)}
+            artists={parseArtists(currentTrack.artistObj?.name || currentTrack.artist)}
+         />
+      )}
 
       <style dangerouslySetInnerHTML={{__html: `
         input[type=range]::-webkit-slider-thumb {
