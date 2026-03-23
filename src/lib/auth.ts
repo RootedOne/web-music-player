@@ -3,6 +3,10 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error("NEXTAUTH_SECRET environment variable is missing.");
+}
+
 export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
@@ -62,5 +66,5 @@ export const authOptions: AuthOptions = {
   pages: {
     signIn: "/login",
   },
-  secret: process.env.NEXTAUTH_SECRET || "fallback_secret_for_local_dev",
+  secret: process.env.NEXTAUTH_SECRET,
 };
