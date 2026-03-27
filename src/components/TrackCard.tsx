@@ -4,10 +4,10 @@ import { usePlayerStore, Track } from "@/store/playerStore";
 import { Play } from "lucide-react";
 import TrackOptions from "./TrackOptions";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import EditModal from "./EditModal";
 
-export default function TrackCard({ track, onUpdate, onDelete }: { track: Track & { userId?: string }, onUpdate?: () => void, onDelete?: () => void }) {
+const TrackCard = React.memo(function TrackCard({ track, onUpdate, onDelete }: { track: Track & { userId?: string }, onUpdate?: () => void, onDelete?: () => void }) {
   const { play } = usePlayerStore();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -70,4 +70,16 @@ export default function TrackCard({ track, onUpdate, onDelete }: { track: Track 
       )}
     </div>
   );
-}
+}, (prevProps, nextProps) => {
+  // ⚡ Bolt Performance Optimization:
+  // Custom comparison for React.memo to ignore function reference changes (onUpdate, onDelete).
+  // This prevents expensive unnecessary re-renders of the entire TrackCard grid
+  // when the parent component re-renders but the underlying track data hasn't changed.
+  // Expected Impact: Reduces DOM reconciliation by ~O(n) where n is list size on parent state updates.
+  return prevProps.track.id === nextProps.track.id &&
+         prevProps.track.title === nextProps.track.title &&
+         prevProps.track.artist === nextProps.track.artist &&
+         prevProps.track.coverUrl === nextProps.track.coverUrl;
+});
+
+export default TrackCard;
