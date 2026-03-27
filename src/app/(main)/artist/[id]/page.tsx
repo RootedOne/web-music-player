@@ -2,15 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { Track, usePlayerStore } from "@/store/playerStore";
 import TrackRow from "@/components/TrackRow";
-import { Play, Music, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Play, Music, ChevronLeft, ChevronRight } from "lucide-react";
+
+type AlbumData = {
+  albumName: string;
+  releaseYear: string;
+  coverUrl: string | null;
+};
 
 type ArtistData = {
   id: string;
   name: string;
   imageUrl: string | null;
   tracks: Track[];
+  topSongs: Track[];
+  albums: AlbumData[];
 };
 
 export default function ArtistProfilePage() {
@@ -45,19 +54,9 @@ export default function ArtistProfilePage() {
     }
   };
 
-  // Group tracks for layout logic
-  // Typically an API would separate singles/albums, but we'll mock it for now based on track list
-  const latestRelease = artist.tracks.length > 0 ? artist.tracks[0] : null;
-  const topSongs = artist.tracks.slice(0, 5);
-
-  // Deduping by album for the carousels
-  const uniqueAlbums = Array.from(new Set(artist.tracks.map(t => t.album).filter(Boolean)));
-  const albumsList = uniqueAlbums.map(albumName => {
-      return artist.tracks.find(t => t.album === albumName);
-  }).filter(Boolean) as Track[];
-
-  // Fallback Singles list if no albums
-  const singlesList = artist.tracks.filter(t => !t.album || t.album === "Unknown Album" || t.album === "Single");
+  // Data from backend
+  const topSongs = artist.topSongs || [];
+  const albumsList = artist.albums || [];
 
   return (
     <div className="relative min-h-screen bg-black text-white pb-36 font-sans">
@@ -103,46 +102,14 @@ export default function ArtistProfilePage() {
       </div>
 
       <div className="px-6 mx-auto max-w-7xl mt-6 space-y-12">
-        {/* 2. Latest Release Section */}
-        {latestRelease && (
-          <section>
-            <h2 className="text-xl font-bold mb-4 text-white/90 tracking-tight">Latest Release</h2>
-            <div className="flex bg-neutral-900/40 backdrop-blur-lg border border-white/5 rounded-xl p-4 gap-4 items-center hover:bg-neutral-800/60 transition-colors group cursor-pointer">
-               {/* Left: Artwork */}
-               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-md bg-neutral-800 overflow-hidden shrink-0 shadow-lg">
-                 {latestRelease.coverUrl ? (
-                   // eslint-disable-next-line @next/next/no-img-element
-                   <img src={latestRelease.coverUrl} alt={latestRelease.album || latestRelease.title} className="w-full h-full object-cover" />
-                 ) : (
-                   <div className="w-full h-full flex items-center justify-center"><Music className="w-8 h-8 text-neutral-600" /></div>
-                 )}
-               </div>
-
-               {/* Right: Info */}
-               <div className="flex-1 min-w-0 flex flex-col justify-center">
-                 <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">
-                   {latestRelease.createdAt ? new Date(latestRelease.createdAt).getFullYear() : ""}
-                 </p>
-                 <h3 className="text-white font-bold text-lg truncate">
-                   {latestRelease.album || latestRelease.title} <span className="font-normal text-gray-400">- {latestRelease.album ? 'Album' : 'Single'}</span>
-                 </h3>
-                 <p className="text-sm text-gray-500 mt-0.5">1 Song</p>
-               </div>
-
-               {/* Right: + Button */}
-               <button className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center shrink-0 transition-colors text-white">
-                 <Plus className="w-5 h-5" />
-               </button>
-            </div>
-          </section>
-        )}
-
-        {/* 3. Top Songs List (Vertical) */}
+        {/* 2. Top Songs List (Vertical) */}
         {topSongs.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-4 group cursor-pointer">
               <h2 className="text-xl font-bold text-white/90 tracking-tight group-hover:text-white transition-colors">Top Songs</h2>
-              <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
+              <Link href={`/artist/${artist.id}/songs`}>
+                <ChevronRight className="w-5 h-5 text-gray-500 hover:text-white transition-colors" />
+              </Link>
             </div>
             <div className="flex flex-col gap-1">
               {topSongs.map((track, idx) => (
@@ -157,67 +124,37 @@ export default function ArtistProfilePage() {
           </section>
         )}
 
-        {/* 4. Discography Carousels (Horizontal Scrolling) */}
+        {/* 3. Discography Carousels (Horizontal Scrolling) */}
 
         {/* Albums */}
         {albumsList.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-4 group cursor-pointer">
               <h2 className="text-xl font-bold text-white/90 tracking-tight group-hover:text-white transition-colors">Albums</h2>
-              <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
+              <Link href={`/artist/${artist.id}/albums`}>
+                <ChevronRight className="w-5 h-5 text-gray-500 hover:text-white transition-colors" />
+              </Link>
             </div>
 
             {/* Horizontal Scroll Container */}
             <div className="flex overflow-x-auto gap-4 sm:gap-6 snap-x snap-mandatory pb-4 hide-scrollbar">
-              {albumsList.map((track) => (
-                <div key={track.id} className="flex flex-col snap-start min-w-[140px] sm:min-w-[180px] group cursor-pointer">
+              {albumsList.map((album, idx) => (
+                <Link key={idx} href={`/artist/${artist.id}/album/${encodeURIComponent(album.albumName)}`} className="flex flex-col snap-start min-w-[140px] sm:min-w-[180px] group cursor-pointer">
                   <div className="w-full aspect-square rounded-lg bg-neutral-800 overflow-hidden mb-3 shadow-md group-hover:shadow-xl transition-all">
-                    {track.coverUrl ? (
+                    {album.coverUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={track.coverUrl} alt={track.album || "Album"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <img src={album.coverUrl} alt={album.albumName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center"><Music className="w-10 h-10 text-neutral-600" /></div>
                     )}
                   </div>
                   <h3 className="text-white font-semibold text-sm sm:text-base truncate group-hover:text-blue-400 transition-colors">
-                    {track.album}
+                    {album.albumName}
                   </h3>
                   <p className="text-gray-400 text-xs sm:text-sm mt-0.5">
-                    {track.createdAt ? new Date(track.createdAt).getFullYear() : ""}
+                    {album.releaseYear}
                   </p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Singles & EPs */}
-        {singlesList.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-4 group cursor-pointer">
-              <h2 className="text-xl font-bold text-white/90 tracking-tight group-hover:text-white transition-colors">Singles & EPs</h2>
-              <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
-            </div>
-
-            {/* Horizontal Scroll Container */}
-            <div className="flex overflow-x-auto gap-4 sm:gap-6 snap-x snap-mandatory pb-4 hide-scrollbar">
-              {singlesList.map((track) => (
-                <div key={track.id} className="flex flex-col snap-start min-w-[140px] sm:min-w-[180px] group cursor-pointer">
-                  <div className="w-full aspect-square rounded-lg bg-neutral-800 overflow-hidden mb-3 shadow-md group-hover:shadow-xl transition-all">
-                    {track.coverUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={track.coverUrl} alt={track.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center"><Music className="w-10 h-10 text-neutral-600" /></div>
-                    )}
-                  </div>
-                  <h3 className="text-white font-semibold text-sm sm:text-base truncate group-hover:text-blue-400 transition-colors">
-                    {track.title}
-                  </h3>
-                  <p className="text-gray-400 text-xs sm:text-sm mt-0.5">
-                    {track.createdAt ? new Date(track.createdAt).getFullYear() : ""}
-                  </p>
-                </div>
+                </Link>
               ))}
             </div>
           </section>
