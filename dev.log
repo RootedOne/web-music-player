@@ -80,3 +80,9 @@ https://next-auth.js.org/warnings#nextauth_url
  GET /api/search?q=a&type=Artists 200 in 15ms
  GET /api/search?q=a&type=Songs 200 in 15ms
  ✓ Compiled in 957ms (1108 modules)
+ ✓ Compiled in 10.5s (1108 modules)
+ ✓ Compiled in 1224ms (546 modules)
+ ✓ Compiled in 743ms (1108 modules)
+ ✓ Compiled in 1255ms (1108 modules)
+ ✓ Compiled in 1146ms (1108 modules)
+ ✓ Compiled in 518ms (1108 modules)

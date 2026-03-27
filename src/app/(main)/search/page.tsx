@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Search as SearchIcon, Music } from "lucide-react";
 import TrackCard from "@/components/TrackCard";
 import { Track } from "@/store/playerStore";
 import { useDebounce } from "@/hooks/useDebounce";
 import Link from "next/link";
 import TrackRow from "@/components/TrackRow";
+import { useSearchParams, useRouter } from "next/navigation";
 
 type SearchResults = {
   tracks: Track[];
@@ -15,10 +16,36 @@ type SearchResults = {
   albums: { id: string; name: string; artist: string; imageUrl: string | null }[];
 };
 
-export default function SearchPage() {
-  const [query, setQuery] = useState("");
+function SearchContent() {
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get('q') || "";
+
+  const [query, setQuery] = useState(initialQuery);
   const debouncedQuery = useDebounce(query, 300);
   const [activeFilter, setActiveFilter] = useState("All");
+  const router = useRouter();
+
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q !== null && q !== query) {
+      setQuery(q);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setQuery(val);
+
+    // Sync back to URL so sidebar search stays in sync
+    const newUrl = new URL(window.location.href);
+    if (val.trim()) {
+      newUrl.searchParams.set("q", val);
+    } else {
+      newUrl.searchParams.delete("q");
+    }
+    router.replace(newUrl.pathname + newUrl.search, { scroll: false });
+  };
 
   const [results, setResults] = useState<SearchResults>({
     tracks: [],
@@ -73,7 +100,7 @@ export default function SearchPage() {
             className="block w-full ps-12 pe-4 py-4 bg-neutral-800/50 backdrop-blur-md border-none rounded-2xl text-white placeholder-gray-400 focus:ring-2 focus:ring-white shadow-lg text-lg outline-none transition-all"
             placeholder="What do you want to listen to?"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={handleQueryChange}
             autoFocus
           />
         </div>
@@ -239,5 +266,13 @@ export default function SearchPage() {
         }
       `}} />
     </>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-white">Loading Search...</div>}>
+      <SearchContent />
+    </Suspense>
   );
 }
