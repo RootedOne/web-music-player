@@ -150,7 +150,7 @@ function SearchContent() {
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                   {results.artists.map((artist) => (
-                    <Link key={artist.id} href={`/artist/${artist.id}`} className="flex flex-col items-center group cursor-pointer">
+                    <Link key={artist.id} href={`/artist/${encodeURIComponent(artist.id)}`} className="flex flex-col items-center group cursor-pointer">
                       <div className="w-full aspect-square rounded-full bg-neutral-800 overflow-hidden mb-4 shadow-lg group-hover:shadow-2xl transition-all">
                         {artist.imageUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -208,7 +208,7 @@ function SearchContent() {
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                   {results.albums.map((album) => (
-                    <Link key={album.id} href={`/album/${album.id}`} className="bg-[#181818] p-4 rounded-lg hover:bg-[#282828] transition cursor-pointer group shadow-[0_8px_24px_rgba(0,0,0,0.5)]">
+                    <Link key={album.id} href={`/album/${encodeURIComponent(album.id)}`} className="bg-[#181818] p-4 rounded-lg hover:bg-[#282828] transition cursor-pointer group shadow-[0_8px_24px_rgba(0,0,0,0.5)]">
                       <div className="w-full aspect-square bg-[#282828] rounded-md mb-4 flex items-center justify-center overflow-hidden relative">
                         {album.imageUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element

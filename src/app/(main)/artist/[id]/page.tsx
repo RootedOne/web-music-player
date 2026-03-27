@@ -170,7 +170,7 @@ export default function ArtistProfilePage() {
             {/* Horizontal Scroll Container */}
             <div className="flex overflow-x-auto gap-4 sm:gap-6 snap-x snap-mandatory pb-4 hide-scrollbar">
               {albumsList.map((track) => (
-                <div key={track.id} className="flex flex-col snap-start min-w-[140px] sm:min-w-[180px] group cursor-pointer">
+                <div key={track.id} onClick={() => router.push(`/album/${encodeURIComponent(track.album!)}`)} className="flex flex-col snap-start min-w-[140px] sm:min-w-[180px] group cursor-pointer">
                   <div className="w-full aspect-square rounded-lg bg-neutral-800 overflow-hidden mb-3 shadow-md group-hover:shadow-xl transition-all">
                     {track.coverUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element

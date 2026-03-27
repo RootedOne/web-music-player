@@ -137,13 +137,8 @@ export function PlayerBar() {
     } else {
        // Single Artist Flow
        setIsExpanded(false);
-       if (currentTrack.artistId) {
-           router.push(`/artist/${currentTrack.artistId}`);
-       } else {
-           // Fallback to global search if no ID exists
-           const artistName = parsedArtists[0];
-           router.push(`/?q=${encodeURIComponent(artistName)}`);
-       }
+       const artistName = parsedArtists[0];
+       router.push(`/artist/${encodeURIComponent(artistName)}`);
     }
   };
 
