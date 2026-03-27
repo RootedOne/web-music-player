@@ -68,11 +68,11 @@ function HomeContent() {
         {/* Global Search Bar (Hidden on mobile where floating nav takes over) */}
         <div className="relative w-full max-w-md hidden md:block">
           <div className="absolute inset-y-0 start-0 ps-3 flex items-center pointer-events-none">
-            <SearchIcon className="h-5 w-5 text-gray-400" />
+            <SearchIcon className="h-5 w-5 text-neutral-400" />
           </div>
           <input
             type="text"
-            className="block w-full ps-10 pe-4 py-2.5 bg-[#282828] border-none rounded-full text-white placeholder-gray-400 focus:ring-2 focus:ring-white shadow-md text-sm outline-none transition-all"
+            className="block w-full ps-10 pe-4 py-2.5 bg-white/5 border border-white/10 rounded-full text-white placeholder-neutral-500 focus:ring-2 focus:ring-white shadow-md text-sm outline-none transition-all"
             placeholder="Search all songs and artists..."
             value={query}
             onChange={handleSearchChange}
@@ -80,28 +80,30 @@ function HomeContent() {
         </div>
 
         <div className="hidden md:flex items-center gap-4">
-          <div className="bg-gray-800 rounded-full w-10 h-10 flex items-center justify-center font-bold text-gray-300 shadow-md border border-gray-700">
+          <div className="bg-neutral-800 rounded-full w-10 h-10 flex items-center justify-center font-bold text-neutral-300 shadow-md border border-white/10">
             {session?.user?.name?.[0]?.toUpperCase() || "?"}
           </div>
         </div>
       </header>
 
       <section className="mt-8">
-        <h2 className="text-2xl font-bold mb-6 text-gray-100 hidden md:block">
+        <h2 className="text-2xl font-bold mb-6 text-white hidden md:block">
             Global Feed
         </h2>
 
         {isLoading ? (
-            <p className="text-gray-500">Loading tracks...</p>
+            <p className="text-neutral-500">Loading tracks...</p>
         ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
+            <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-40 md:pb-0 hide-scrollbar md:grid md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 md:overflow-visible">
                {tracks.length === 0 ? (
-                 <div className="col-span-full text-gray-500 py-8">
+                 <div className="col-span-full text-neutral-500 py-8">
                    No tracks have been uploaded to the platform yet. Be the first!
                  </div>
                ) : (
                  tracks.map(track => (
-                   <TrackCard key={track.id} track={track} />
+                   <div key={track.id} className="snap-start shrink-0 w-40 md:w-auto">
+                     <TrackCard track={track} />
+                   </div>
                  ))
                )}
             </div>

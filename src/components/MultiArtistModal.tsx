@@ -54,10 +54,10 @@ export default function MultiArtistModal({ isOpen, onClose, artists }: MultiArti
           </div>
 
           <div className="p-4 flex items-center justify-between border-b border-white/10">
-            <Dialog.Title className="text-sm font-semibold text-gray-400 uppercase tracking-wider ml-2">
+            <Dialog.Title className="text-sm font-semibold text-neutral-400 uppercase tracking-wider ml-2">
               Go to Artist
             </Dialog.Title>
-            <button onClick={onClose} className="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/10">
+            <button onClick={onClose} className="min-h-[44px] min-w-[44px] p-2 flex items-center justify-center text-neutral-400 active:text-white transition-colors rounded-full active:bg-white/10">
                <X className="w-5 h-5" />
             </button>
           </div>
@@ -68,19 +68,19 @@ export default function MultiArtistModal({ isOpen, onClose, artists }: MultiArti
                 key={idx}
                 onClick={() => handleArtistClick(artistName)}
                 disabled={loadingArtist === artistName}
-                className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/10 transition-colors group text-left"
+                className="w-full min-h-[44px] flex items-center justify-between p-4 rounded-xl active:bg-white/10 transition-colors group text-left"
               >
                 <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-12 h-12 rounded-full bg-gray-800 border border-white/5 flex items-center justify-center flex-shrink-0 group-hover:bg-gray-700 transition-colors">
+                  <div className="w-12 h-12 rounded-full bg-neutral-800 border border-white/5 flex items-center justify-center flex-shrink-0 active:bg-neutral-700 transition-colors">
                      {loadingArtist === artistName ? (
                          <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                      ) : (
-                         <Music className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
+                         <Music className="w-5 h-5 text-neutral-400 active:text-white transition-colors" />
                      )}
                   </div>
                   <span className="text-white font-medium truncate text-lg">{artistName}</span>
                 </div>
-                <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors flex-shrink-0" />
+                <ChevronRight className="w-5 h-5 text-neutral-500 active:text-white transition-colors flex-shrink-0" />
               </button>
             ))}
           </div>

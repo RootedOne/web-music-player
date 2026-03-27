@@ -108,60 +108,60 @@ export default function EditModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-[#121212] border border-[#282828] p-6 text-left align-middle shadow-2xl transition-all">
+              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-3xl bg-neutral-900/80 backdrop-blur-xl border border-white/10 p-6 text-left align-middle shadow-2xl transition-all">
                 <Dialog.Title as="h3" className="text-xl font-extrabold leading-6 text-white mb-6">
                   {title}
                 </Dialog.Title>
 
-                {error && <p className="text-red-400 text-sm mb-4 bg-red-900/20 p-3 rounded font-medium border border-red-900/50">{error}</p>}
+                {error && <p className="text-[#fa243c] text-sm mb-4 bg-[#fa243c]/10 p-3 rounded-2xl font-medium border border-[#fa243c]/20">{error}</p>}
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-bold text-white mb-2 uppercase tracking-wide">{nameFieldLabel}</label>
+                    <label className="block text-sm font-bold text-neutral-400 mb-2 uppercase tracking-wide">{nameFieldLabel}</label>
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full px-4 py-3 bg-[#242424] text-white rounded-md border border-transparent focus:outline-none focus:ring-2 focus:ring-white transition-all placeholder-gray-500"
+                      className="w-full px-4 min-h-[44px] bg-white/5 text-white rounded-2xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-white transition-all placeholder-neutral-500"
                       required
                     />
                   </div>
 
                   {secondaryNameFieldLabel && secondaryNameFieldKey && (
                     <div>
-                      <label className="block text-sm font-bold text-white mb-2 uppercase tracking-wide">{secondaryNameFieldLabel}</label>
+                      <label className="block text-sm font-bold text-neutral-400 mb-2 uppercase tracking-wide">{secondaryNameFieldLabel}</label>
                       <input
                         type="text"
                         value={secondaryName}
                         onChange={(e) => setSecondaryName(e.target.value)}
-                        className="w-full px-4 py-3 bg-[#242424] text-white rounded-md border border-transparent focus:outline-none focus:ring-2 focus:ring-white transition-all placeholder-gray-500"
+                        className="w-full px-4 min-h-[44px] bg-white/5 text-white rounded-2xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-white transition-all placeholder-neutral-500"
                       />
                     </div>
                   )}
 
                   {tertiaryNameFieldLabel && tertiaryNameFieldKey && (
                     <div>
-                      <label className="block text-sm font-bold text-white mb-2 uppercase tracking-wide">{tertiaryNameFieldLabel}</label>
+                      <label className="block text-sm font-bold text-neutral-400 mb-2 uppercase tracking-wide">{tertiaryNameFieldLabel}</label>
                       <input
                         type="text"
                         value={tertiaryName}
                         onChange={(e) => setTertiaryName(e.target.value)}
-                        className="w-full px-4 py-3 bg-[#242424] text-white rounded-md border border-transparent focus:outline-none focus:ring-2 focus:ring-white transition-all placeholder-gray-500"
+                        className="w-full px-4 min-h-[44px] bg-white/5 text-white rounded-2xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-white transition-all placeholder-neutral-500"
                       />
                     </div>
                   )}
 
                   <div>
-                    <label className="block text-sm font-bold text-white mb-2 uppercase tracking-wide">Custom Cover Image (Optional)</label>
-                    <div className="mt-1 flex justify-center rounded-md border border-dashed border-[#404040] bg-[#181818] px-6 py-8 hover:border-gray-400 transition-colors">
-                      <div className="text-center">
-                        <Upload className="mx-auto h-8 w-8 text-gray-400" aria-hidden="true" />
-                        <div className="mt-4 flex text-sm leading-6 text-gray-400 justify-center">
+                    <label className="block text-sm font-bold text-neutral-400 mb-2 uppercase tracking-wide">Custom Cover Image (Optional)</label>
+                    <div className="mt-1 flex justify-center rounded-2xl border border-dashed border-white/20 bg-white/5 px-6 py-8 active:bg-white/10 transition-colors">
+                      <div className="text-center w-full">
+                        <Upload className="mx-auto h-8 w-8 text-neutral-400" aria-hidden="true" />
+                        <div className="mt-4 flex flex-col items-center justify-center text-sm leading-6 text-neutral-400">
                           <label
                             htmlFor="file-upload"
-                            className="relative cursor-pointer rounded-md font-bold text-white focus-within:outline-none hover:underline"
+                            className="relative cursor-pointer rounded-2xl font-bold text-white focus-within:outline-none active:scale-95 transition-transform"
                           >
-                            <span>Upload a file</span>
+                            <span className="bg-white/10 px-4 py-2 rounded-full min-h-[44px] flex items-center justify-center">Upload a file</span>
                             <input
                               id="file-upload"
                               name="file-upload"
@@ -175,18 +175,17 @@ export default function EditModal({
                               }}
                             />
                           </label>
-                          <p className="pl-1">or drag and drop</p>
                         </div>
-                        <p className="text-xs leading-5 text-gray-500 mt-1">PNG, JPG, GIF up to 5MB</p>
-                        {coverFile && <p className="text-xs text-white mt-3 font-bold bg-[#282828] p-2 rounded truncate max-w-full">Selected: {coverFile.name}</p>}
+                        <p className="text-xs leading-5 text-neutral-500 mt-3">PNG, JPG, GIF up to 5MB</p>
+                        {coverFile && <p className="text-xs text-white mt-3 font-bold bg-white/10 p-2 rounded-xl truncate max-w-full">Selected: {coverFile.name}</p>}
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-[#282828]">
+                  <div className="mt-8 flex justify-end gap-3 pt-6 border-t border-white/10">
                     <button
                       type="button"
-                      className="inline-flex justify-center rounded-full bg-transparent px-6 py-2.5 text-sm font-bold text-white hover:scale-105 active:scale-95 transition focus:outline-none"
+                      className="inline-flex justify-center items-center min-h-[44px] min-w-[44px] rounded-full bg-transparent px-6 py-2.5 text-sm font-bold text-white active:scale-95 active:bg-white/10 transition focus:outline-none"
                       onClick={onClose}
                     >
                       Cancel
@@ -194,7 +193,7 @@ export default function EditModal({
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="inline-flex justify-center items-center rounded-full border border-transparent bg-white px-6 py-2.5 text-sm font-bold text-black hover:scale-105 active:scale-95 transition focus:outline-none disabled:opacity-50"
+                      className="inline-flex justify-center items-center min-h-[44px] min-w-[44px] rounded-full border border-transparent bg-white px-6 py-2.5 text-sm font-bold text-black active:scale-95 active:bg-gray-200 transition focus:outline-none disabled:opacity-50"
                     >
                       {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin text-black" /> : null}
                       Save Changes

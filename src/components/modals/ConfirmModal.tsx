@@ -63,13 +63,13 @@ export default function ConfirmModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-sm transform overflow-hidden rounded-2xl bg-[#121212] border border-[#282828] p-6 text-left align-middle shadow-2xl transition-all">
+              <Dialog.Panel className="w-full max-w-sm transform overflow-hidden rounded-3xl bg-neutral-900/80 backdrop-blur-xl border border-white/10 p-6 text-left align-middle shadow-2xl transition-all">
                 <Dialog.Title as="h3" className="text-xl font-extrabold leading-6 text-white mb-2">
                   {title}
                 </Dialog.Title>
 
                 <div className="mt-2">
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-neutral-400">
                     {description}
                   </p>
                 </div>
@@ -77,7 +77,7 @@ export default function ConfirmModal({
                 <div className="mt-8 flex justify-end gap-3">
                   <button
                     type="button"
-                    className="inline-flex justify-center rounded-full bg-transparent px-5 py-2 text-sm font-bold text-white hover:scale-105 active:scale-95 transition focus:outline-none"
+                    className="inline-flex justify-center items-center min-h-[44px] min-w-[44px] rounded-full bg-transparent px-5 py-2 text-sm font-bold text-white active:scale-95 active:bg-white/10 transition focus:outline-none"
                     onClick={onClose}
                     disabled={isLoading}
                   >
@@ -86,10 +86,10 @@ export default function ConfirmModal({
                   <button
                     type="button"
                     disabled={isLoading}
-                    className={`inline-flex justify-center items-center rounded-full border border-transparent px-5 py-2 text-sm font-bold hover:scale-105 active:scale-95 transition focus:outline-none disabled:opacity-50 ${
+                    className={`inline-flex justify-center items-center min-h-[44px] min-w-[44px] rounded-full border border-transparent px-5 py-2 text-sm font-bold active:scale-95 transition focus:outline-none disabled:opacity-50 ${
                       isDestructive
-                        ? "bg-red-500 text-white hover:bg-red-600"
-                        : "bg-white text-black hover:bg-gray-200"
+                        ? "bg-[#fa243c] text-white active:bg-[#d41b2f]"
+                        : "bg-white text-black active:bg-gray-200"
                     }`}
                     onClick={handleConfirm}
                   >

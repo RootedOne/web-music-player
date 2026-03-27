@@ -134,30 +134,30 @@ export default function LibraryPage() {
         <h1 className="text-4xl font-extrabold tracking-tight text-white drop-shadow-md">
           Your Library
         </h1>
-        <p className="text-gray-400 mt-2">Manage your uploaded tracks and playlists</p>
+        <p className="text-neutral-400 mt-2">Manage your uploaded tracks and playlists</p>
       </header>
 
       <section className="mb-12">
-        <h2 className="text-2xl font-bold mb-6 text-gray-100">Playlists</h2>
+        <h2 className="text-2xl font-bold mb-6 text-white">Playlists</h2>
         {isLoading ? (
-          <p className="text-gray-500">Loading playlists...</p>
+          <p className="text-neutral-500">Loading playlists...</p>
         ) : myPlaylists.length === 0 ? (
-          <p className="text-gray-500 bg-[#181818] p-6 rounded-lg text-center border border-[#282828] border-dashed">
+          <p className="text-neutral-500 bg-white/5 p-6 rounded-3xl text-center border border-white/10 border-dashed">
             You haven&apos;t created or saved any playlists yet.
           </p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 hide-scrollbar md:grid md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 md:overflow-visible">
             {myPlaylists.map((pl) => (
-              <Link key={pl.id} href={`/playlists/${pl.id}`} className="bg-[#181818] p-4 rounded-lg hover:bg-[#282828] transition cursor-pointer shadow-[0_8px_24px_rgba(0,0,0,0.5)] group">
-                <div className="w-full aspect-square bg-[#282828] rounded-md mb-4 flex items-center justify-center overflow-hidden shadow-inner relative">
+              <Link key={pl.id} href={`/playlists/${pl.id}`} className="snap-start shrink-0 w-40 md:w-auto bg-white/5 p-4 rounded-3xl active:scale-95 transition cursor-pointer shadow-[0_8px_24px_rgba(0,0,0,0.5)] group border border-white/10">
+                <div className="w-full aspect-square bg-neutral-800 rounded-2xl mb-4 flex items-center justify-center overflow-hidden shadow-inner relative">
                   {pl.coverUrl ? (
                      <img src={pl.coverUrl} alt="Cover" className="w-full h-full object-cover" />
                   ) : (
-                     <Music className="w-12 h-12 text-gray-600" />
+                     <Music className="w-12 h-12 text-neutral-600" />
                   )}
                 </div>
                 <h3 className="text-white font-semibold truncate">{pl.name}</h3>
-                <p className="text-gray-400 text-sm truncate">Playlist</p>
+                <p className="text-neutral-400 text-sm truncate">Playlist</p>
               </Link>
             ))}
           </div>
@@ -165,30 +165,30 @@ export default function LibraryPage() {
       </section>
 
       <section className="mb-12">
-        <h2 className="text-2xl font-bold mb-6 text-gray-100">Upload Music</h2>
+        <h2 className="text-2xl font-bold mb-6 text-white">Upload Music</h2>
 
-        {error && <div className="mb-4 text-red-400 bg-red-900/20 p-3 rounded font-medium border border-red-900/50">{error}</div>}
+        {error && <div className="mb-4 text-[#fa243c] bg-[#fa243c]/10 p-3 rounded-2xl font-medium border border-[#fa243c]/20">{error}</div>}
 
         <div
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-xl p-12 flex flex-col items-center justify-center transition-colors text-center
-            ${isDragging ? "border-blue-500 bg-blue-500/10" : "border-gray-700 hover:border-gray-500 bg-gray-800/50"}
+          className={`border border-dashed rounded-3xl p-12 flex flex-col items-center justify-center transition-colors text-center
+            ${isDragging ? "border-white bg-white/10" : "border-white/20 active:bg-white/5 bg-white/5"}
           `}
         >
           {isUploading ? (
-            <div className="flex flex-col items-center text-blue-400">
+            <div className="flex flex-col items-center text-white">
               <Loader2 className="w-12 h-12 mb-4 animate-spin" />
               <p className="font-semibold">{uploadProgress || "Uploading & parsing metadata..."}</p>
             </div>
           ) : (
             <>
-              <Upload className="w-12 h-12 text-gray-400 mb-4" />
-              <p className="text-gray-300 font-semibold mb-2">Drag and drop your audio files here</p>
-              <p className="text-gray-500 text-sm mb-6">Supports multiple .mp3 and .wav files</p>
+              <Upload className="w-12 h-12 text-neutral-400 mb-4" />
+              <p className="text-neutral-300 font-semibold mb-2">Drag and drop your audio files here</p>
+              <p className="text-neutral-500 text-sm mb-6">Supports multiple .mp3 and .wav files</p>
 
-              <label className="bg-white text-black px-8 py-3 rounded-full font-bold cursor-pointer hover:scale-105 transition-transform">
+              <label className="bg-white text-black px-8 py-3 min-h-[44px] flex items-center justify-center rounded-full font-bold cursor-pointer active:scale-95 active:bg-gray-200 transition-transform">
                 Browse Files
                 <input
                   type="file"
@@ -203,18 +203,20 @@ export default function LibraryPage() {
         </div>
       </section>
 
-      <section>
-        <h2 className="text-2xl font-bold mb-6 text-gray-100">Your Uploads</h2>
+      <section className="pb-40 md:pb-0">
+        <h2 className="text-2xl font-bold mb-6 text-white">Your Uploads</h2>
         {isLoading ? (
-          <p className="text-gray-500">Loading your music...</p>
+          <p className="text-neutral-500">Loading your music...</p>
         ) : myTracks.length === 0 ? (
-          <p className="text-gray-500 bg-gray-800/50 p-6 rounded-lg text-center border border-gray-700 border-dashed">
+          <p className="text-neutral-500 bg-white/5 p-6 rounded-3xl text-center border border-white/10 border-dashed">
             You haven&apos;t uploaded any tracks yet.
           </p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 hide-scrollbar md:grid md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 md:overflow-visible">
             {myTracks.map((track) => (
-               <TrackCard key={track.id} track={track} onUpdate={fetchMyTracks} onDelete={fetchMyTracks} />
+               <div key={track.id} className="snap-start shrink-0 w-40 md:w-auto">
+                 <TrackCard track={track} onUpdate={fetchMyTracks} onDelete={fetchMyTracks} />
+               </div>
             ))}
           </div>
         )}

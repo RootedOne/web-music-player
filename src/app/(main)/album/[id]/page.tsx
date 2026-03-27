@@ -47,11 +47,11 @@ export default function AlbumProfilePage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-black text-white pb-36 font-sans">
+    <div className="relative min-h-screen bg-black text-white pb-40 font-sans">
       <nav className="sticky top-0 z-50 w-full flex items-center p-4 bg-black/40 backdrop-blur-xl border-b border-white/5 transition-all">
         <button
            onClick={() => router.back()}
-           className="w-10 h-10 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/80 transition-colors text-white"
+           className="w-12 h-12 flex items-center justify-center rounded-full bg-black/50 active:bg-black/80 transition-colors text-white"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
@@ -76,13 +76,13 @@ export default function AlbumProfilePage() {
             <h1 className="text-5xl sm:text-7xl md:text-8xl font-extrabold tracking-tighter text-white drop-shadow-xl leading-none mb-2">
               {album.name}
             </h1>
-            <p className="text-xl sm:text-2xl text-gray-300 font-medium tracking-tight drop-shadow-md">{album.artist}</p>
+            <p className="text-xl sm:text-2xl text-neutral-300 font-medium tracking-tight drop-shadow-md">{album.artist}</p>
           </div>
           <button
             onClick={handlePlayAll}
-            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-blue-500 hover:bg-blue-400 hover:scale-105 transition-all flex items-center justify-center shadow-[0_8px_32px_rgba(59,130,246,0.5)] shrink-0 group"
+            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#fa243c] active:bg-[#d41b2f] active:scale-95 transition-all flex items-center justify-center shadow-[0_8px_32px_rgba(250,36,60,0.5)] shrink-0 group"
           >
-            <Play className="w-7 h-7 sm:w-8 sm:h-8 fill-black text-black ml-1 group-hover:scale-110 transition-transform" />
+            <Play className="w-7 h-7 sm:w-8 sm:h-8 fill-white text-white ml-1 group-hover:scale-110 transition-transform" />
           </button>
         </div>
       </div>
