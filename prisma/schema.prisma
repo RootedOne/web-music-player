@@ -11,6 +11,7 @@ model User {
   id        String   @id @default(cuid())
   username  String   @unique
   password  String
+  isBanned  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -50,6 +51,7 @@ model Track {
 model Playlist {
   id        String   @id @default(cuid())
   name      String
+  description String?
   coverUrl  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
