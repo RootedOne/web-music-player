@@ -81,31 +81,40 @@ export default function LibraryPage() {
     let failCount = 0;
     let lastError = "";
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      setUploadProgress(`Uploading ${i + 1} of ${files.length}: ${file.name}...`);
+    const CONCURRENCY_LIMIT = 3;
+    let currentIndex = 0;
 
-      const formData = new FormData();
-      formData.append("file", file);
+    const uploadWorker = async () => {
+      while (currentIndex < files.length) {
+        const i = currentIndex++;
+        const file = files[i];
+        setUploadProgress(`Uploading ${i + 1} of ${files.length}: ${file.name}...`);
 
-      try {
-        const res = await fetch("/api/tracks", {
-          method: "POST",
-          body: formData,
-        });
+        const formData = new FormData();
+        formData.append("file", file);
 
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || `Upload failed for ${file.name}`);
-        }
-        successCount++;
-      } catch (err: unknown) {
-        failCount++;
-        if (err instanceof Error) {
-          lastError = err.message;
+        try {
+          const res = await fetch("/api/tracks", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error || `Upload failed for ${file.name}`);
+          }
+          successCount++;
+        } catch (err: unknown) {
+          failCount++;
+          if (err instanceof Error) {
+            lastError = err.message;
+          }
         }
       }
-    }
+    };
+
+    const workers = Array.from({ length: Math.min(CONCURRENCY_LIMIT, files.length) }, uploadWorker);
+    await Promise.all(workers);
 
     if (failCount > 0) {
       setError(`Failed to upload ${failCount} file(s). Last error: ${lastError}`);
