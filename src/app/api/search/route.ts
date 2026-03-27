@@ -44,52 +44,31 @@ export async function GET(req: Request) {
     }
 
     if (!type || type === "Artists") {
-      // Prioritize the actual normalized Artist table
+      // Query the new Artist table, strictly avoiding extracting strings from Track.artist
       artistsPromise = prisma.artist.findMany({
         where: {
           name: { contains: query },
         },
         take: takeLimit,
         include: {
+          _count: {
+            select: { tracks: true }
+          },
           tracks: { take: 1, select: { coverUrl: true } }
+        },
+        orderBy: {
+          tracks: {
+            _count: "desc"
+          }
         }
-      }).then(async (normalizedArtists) => {
-         const foundNames = new Set(normalizedArtists.map(a => a.name.toLowerCase()));
-
-         const results = normalizedArtists.map(a => ({
+      }).then(normalizedArtists => {
+         // Transform and return clean entities
+         return normalizedArtists.map(a => ({
              id: a.id,
              name: a.name,
-             imageUrl: a.imageUrl || a.tracks[0]?.coverUrl || null
+             imageUrl: a.imageUrl || a.tracks[0]?.coverUrl || null,
+             trackCount: a._count.tracks
          }));
-
-         // Fallback padding: If we don't have enough limit from the new table, find legacy raw strings
-         if (results.length < takeLimit) {
-            const legacyGroups = await prisma.track.groupBy({
-                by: ["artist"],
-                where: { artist: { contains: query } },
-                _count: { id: true },
-                orderBy: { _count: { id: "desc" } },
-                take: takeLimit - results.length
-            });
-
-            for (const group of legacyGroups) {
-               if (!group.artist) continue;
-               if (!foundNames.has(group.artist.toLowerCase())) {
-                   const sampleTrack = await prisma.track.findFirst({
-                       where: { artist: group.artist },
-                       select: { coverUrl: true },
-                   });
-                   results.push({
-                       id: group.artist,
-                       name: group.artist,
-                       imageUrl: sampleTrack?.coverUrl || null
-                   });
-                   foundNames.add(group.artist.toLowerCase());
-               }
-            }
-         }
-
-         return results;
       });
     }
 

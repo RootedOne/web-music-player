@@ -149,7 +149,10 @@ function SearchContent() {
                   )}
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-                  {results.artists.map((artist) => (
+                  {results.artists
+                    // Safety deduplication by unique artist ID
+                    .filter((artist, index, self) => index === self.findIndex(a => a.id === artist.id))
+                    .map((artist) => (
                     <Link key={artist.id} href={`/artist/${encodeURIComponent(artist.id)}`} className="flex flex-col items-center group cursor-pointer">
                       <div className="w-full aspect-square rounded-full bg-neutral-800 overflow-hidden mb-4 shadow-lg group-hover:shadow-2xl transition-all">
                         {artist.imageUrl ? (
