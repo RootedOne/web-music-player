@@ -6,6 +6,7 @@ export type Track = {
   artist: string | null;
   artistId?: string | null;
   artistObj?: { id: string; name: string } | null;
+  artists?: { id: string; name: string }[];
   album: string | null;
   fileUrl: string;
   coverUrl: string | null;

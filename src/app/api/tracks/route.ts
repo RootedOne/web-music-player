@@ -103,15 +103,46 @@ export async function POST(req: Request) {
       );
     }
 
+    // 1. String Parsing (The Split)
+    const rawArtistString = artist || "Unknown Artist";
+    // Split on commas, ampersands, and keywords: feat., ft., featuring, x, X
+    const artistNames = rawArtistString
+      .split(/,|\s+&\s+|\s+feat\.?\s+|\s+ft\.?\s+|\s+featuring\s+|\s+[xX]\s+/i)
+      .map((name) => name.trim())
+      .filter((name) => name.length > 0);
+
+    // 2. Multi-Upsert Loop
+    const artistRecords = await Promise.all(
+      artistNames.map(async (name) => {
+        return prisma.artist.upsert({
+          where: { name },
+          update: {
+            // Update the image if the current track has a cover and the artist doesn't
+            ...(coverUrl ? { imageUrl: coverUrl } : {}),
+          },
+          create: {
+            name,
+            imageUrl: coverUrl,
+          },
+        });
+      })
+    );
+
     const track = await prisma.track.create({
       data: {
         title,
-        artist,
+        artist, // Keep legacy string for backward compatibility
         album,
         duration,
         fileUrl: `/uploads/${filename}`,
         coverUrl,
         userId: session.user.id as string,
+        artists: {
+          connect: artistRecords.map((a) => ({ id: a.id })),
+        },
+      },
+      include: {
+        artists: true,
       },
     });
 
@@ -151,6 +182,7 @@ export async function GET(req: Request) {
       where: whereClause,
       include: {
         user: { select: { username: true } },
+        artists: true,
       },
       orderBy: { createdAt: "desc" },
     });

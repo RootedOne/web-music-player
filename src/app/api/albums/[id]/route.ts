@@ -11,6 +11,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       },
       include: {
         user: { select: { username: true } },
+        artists: true,
       },
       orderBy: { createdAt: "desc" },
     });

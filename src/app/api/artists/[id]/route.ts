@@ -3,14 +3,44 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
-    const decodedName = decodeURIComponent(params.id);
+    const decodedParam = decodeURIComponent(params.id);
 
+    // Try to find the artist by ID first, then fallback to legacy name
+    const artistRecord = await prisma.artist.findFirst({
+      where: {
+        OR: [
+          { id: decodedParam },
+          { name: decodedParam }
+        ]
+      },
+      include: {
+        tracks: {
+          include: {
+            user: { select: { username: true } },
+            artists: true,
+          },
+          orderBy: { createdAt: "desc" },
+        }
+      }
+    });
+
+    if (artistRecord) {
+        return NextResponse.json({
+            id: artistRecord.id,
+            name: artistRecord.name,
+            imageUrl: artistRecord.imageUrl || artistRecord.tracks.find((t) => t.coverUrl)?.coverUrl || null,
+            tracks: artistRecord.tracks
+        }, { status: 200 });
+    }
+
+    // Fallback: If no Artist model exists yet (legacy data), search the raw string field
     const tracks = await prisma.track.findMany({
       where: {
-        artist: decodedName,
+        artist: decodedParam,
       },
       include: {
         user: { select: { username: true } },
+        artists: true,
       },
       orderBy: { createdAt: "desc" },
     });
@@ -20,8 +50,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     }
 
     const artistObj = {
-      id: decodedName,
-      name: decodedName,
+      id: decodedParam,
+      name: decodedParam,
       imageUrl: tracks.find((t) => t.coverUrl)?.coverUrl || null,
       tracks,
     };

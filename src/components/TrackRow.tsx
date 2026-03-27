@@ -3,6 +3,8 @@
 import { Track, usePlayerStore } from "@/store/playerStore";
 import { Play, Pause, Music } from "lucide-react";
 import TrackOptions from "./TrackOptions";
+import Link from "next/link";
+import { Fragment } from "react";
 
 interface TrackRowProps {
   track: Track;
@@ -72,7 +74,20 @@ export default function TrackRow({ track, index, queue }: TrackRowProps) {
           {track.title}
         </h3>
         <p className="text-sm text-gray-400 truncate">
-          {track.artistObj?.name || track.artist || "Unknown Artist"}
+            {track.artists && track.artists.length > 0 ? (
+              track.artists.map((artist, idx) => (
+                <Fragment key={artist.id}>
+                  <Link href={`/artist/${encodeURIComponent(artist.id)}`} className="hover:underline hover:text-white" onClick={(e) => e.stopPropagation()}>
+                    {artist.name}
+                  </Link>
+                  {idx < track.artists!.length - 1 ? ", " : ""}
+                </Fragment>
+              ))
+            ) : (
+               <Link href={`/artist/${encodeURIComponent(track.artistObj?.id || track.artist || "Unknown Artist")}`} className="hover:underline hover:text-white" onClick={(e) => e.stopPropagation()}>
+                  {track.artistObj?.name || track.artist || "Unknown Artist"}
+               </Link>
+            )}
         </p>
       </div>
 

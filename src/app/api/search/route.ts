@@ -38,47 +38,59 @@ export async function GET(req: Request) {
         take: takeLimit,
         include: {
           user: { select: { username: true } },
+          artists: true,
         },
       });
     }
 
-    // Artists: We query tracks and group them by artist string to simulate "Artists"
-    // In our schema, artist is a string field on Track.
     if (!type || type === "Artists") {
-      artistsPromise = prisma.track
-        .groupBy({
-          by: ["artist"],
-          where: {
-            artist: { contains: query },
-          },
-          _count: {
-            id: true,
-          },
-          orderBy: {
-            _count: {
-              id: "desc",
-            },
-          },
-          take: takeLimit,
-        })
-        .then(async (artistGroups) => {
-          // To get an image for the artist, we can fetch one track per artist
-          const artistsWithImages = await Promise.all(
-            artistGroups.map(async (group) => {
-              if (!group.artist) return null;
-              const sampleTrack = await prisma.track.findFirst({
-                where: { artist: group.artist },
-                select: { coverUrl: true },
-              });
-              return {
-                id: group.artist, // use name as ID for routing
-                name: group.artist,
-                imageUrl: sampleTrack?.coverUrl || null,
-              };
-            })
-          );
-          return artistsWithImages.filter(Boolean);
-        });
+      // Prioritize the actual normalized Artist table
+      artistsPromise = prisma.artist.findMany({
+        where: {
+          name: { contains: query },
+        },
+        take: takeLimit,
+        include: {
+          tracks: { take: 1, select: { coverUrl: true } }
+        }
+      }).then(async (normalizedArtists) => {
+         const foundNames = new Set(normalizedArtists.map(a => a.name.toLowerCase()));
+
+         const results = normalizedArtists.map(a => ({
+             id: a.id,
+             name: a.name,
+             imageUrl: a.imageUrl || a.tracks[0]?.coverUrl || null
+         }));
+
+         // Fallback padding: If we don't have enough limit from the new table, find legacy raw strings
+         if (results.length < takeLimit) {
+            const legacyGroups = await prisma.track.groupBy({
+                by: ["artist"],
+                where: { artist: { contains: query } },
+                _count: { id: true },
+                orderBy: { _count: { id: "desc" } },
+                take: takeLimit - results.length
+            });
+
+            for (const group of legacyGroups) {
+               if (!group.artist) continue;
+               if (!foundNames.has(group.artist.toLowerCase())) {
+                   const sampleTrack = await prisma.track.findFirst({
+                       where: { artist: group.artist },
+                       select: { coverUrl: true },
+                   });
+                   results.push({
+                       id: group.artist,
+                       name: group.artist,
+                       imageUrl: sampleTrack?.coverUrl || null
+                   });
+                   foundNames.add(group.artist.toLowerCase());
+               }
+            }
+         }
+
+         return results;
+      });
     }
 
     if (!type || type === "Playlists") {
@@ -123,12 +135,19 @@ export async function GET(req: Request) {
               if (!group.album) return null;
               const sampleTrack = await prisma.track.findFirst({
                 where: { album: group.album },
-                select: { coverUrl: true, artist: true },
+                select: { coverUrl: true, artist: true, artists: true },
               });
+
+              // Fallback to parsed artists from model if available
+              let displayArtist = sampleTrack?.artist || "Unknown Artist";
+              if (sampleTrack?.artists && sampleTrack.artists.length > 0) {
+                 displayArtist = sampleTrack.artists.map(a => a.name).join(", ");
+              }
+
               return {
                 id: group.album,
                 name: group.album,
-                artist: sampleTrack?.artist || "Unknown Artist",
+                artist: displayArtist,
                 imageUrl: sampleTrack?.coverUrl || null,
               };
             })
