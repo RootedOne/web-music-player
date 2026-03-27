@@ -21,6 +21,11 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
         return NextResponse.json({ error: "Playlist not found or forbidden" }, { status: 403 });
     }
 
+    if (playlist.coverUrl) {
+      const picFilepath = path.join(process.cwd(), "public", playlist.coverUrl);
+      await fs.unlink(picFilepath).catch((err) => console.error("Failed to delete playlist cover:", err));
+    }
+
     await prisma.playlist.delete({
       where: { id: playlistId },
     });
@@ -96,6 +101,12 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       const picFilepath = path.join(uploadDir, picFilename);
 
       await fs.writeFile(picFilepath, buffer);
+
+      if (playlist.coverUrl) {
+        const oldPicFilepath = path.join(process.cwd(), "public", playlist.coverUrl);
+        await fs.unlink(oldPicFilepath).catch((err) => console.error("Failed to delete old playlist cover:", err));
+      }
+
       coverUrl = `/uploads/${picFilename}`;
     }
 
