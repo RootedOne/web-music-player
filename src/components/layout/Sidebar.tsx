@@ -1,16 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Library, Search, Plus, LogOut, Music, Compass, ListMusic, Home, Mic } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 
 type Playlist = { id: string; name: string };
 
-export function Sidebar() {
+function SidebarContent() {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
@@ -20,6 +21,21 @@ export function Sidebar() {
   useEffect(() => {
     fetchPlaylists();
   }, []);
+
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q !== null && q !== searchQuery) {
+      setSearchQuery(q);
+      setSearchMode(true);
+    } else if (q === null && pathname === '/search') {
+      setSearchQuery("");
+      setSearchMode(true);
+    } else if (pathname !== '/search') {
+      setSearchMode(false);
+      setSearchQuery("");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, pathname]);
 
   const fetchPlaylists = async () => {
     try {
@@ -57,7 +73,11 @@ export function Sidebar() {
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setSearchQuery(val);
-    router.push(`/?q=${encodeURIComponent(val)}`);
+    if (val.trim()) {
+      router.push(`/search?q=${encodeURIComponent(val)}`);
+    } else {
+      router.push(`/search`);
+    }
   };
 
   return (
@@ -185,7 +205,7 @@ export function Sidebar() {
 
            {/* STATE B: Search Bar (Expands) */}
            <div
-             className={`flex items-center h-full bg-neutral-800/40 backdrop-blur-2xl saturate-[180%] border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] rounded-full px-4 overflow-hidden transition-all duration-300 cubic-bezier-[0.32,0.72,0,1] ease-out flex-grow origin-right ${searchMode ? 'opacity-100 scale-100 relative' : 'opacity-0 scale-95 pointer-events-none absolute right-16 w-[80%]'}`}
+             className={`flex items-center h-full bg-neutral-800/40 backdrop-blur-2xl saturate-[180%] border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] rounded-full px-4 overflow-hidden transition-all duration-300 cubic-bezier-[0.32,0.72,0,1] ease-out flex-grow origin-right ${searchMode ? 'opacity-100 scale-100 relative' : 'opacity-0 scale-95 pointer-events-none absolute end-16 w-[80%]'}`}
            >
               <Search className="w-5 h-5 text-neutral-400 shrink-0" />
               <input
@@ -201,13 +221,21 @@ export function Sidebar() {
 
            {/* STATE A: Search Trigger Button (Right) */}
            <button
-             onClick={() => { setSearchMode(true); router.push("/"); }}
-             className={`flex items-center justify-center h-full bg-neutral-800/40 backdrop-blur-2xl saturate-[180%] border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] rounded-full shrink-0 transition-all duration-300 cubic-bezier-[0.32,0.72,0,1] ease-out hover:bg-white/5 ${!searchMode ? 'w-[64px] opacity-100 scale-100 relative' : 'opacity-0 scale-95 pointer-events-none absolute right-0 w-[64px]'}`}
+             onClick={() => { setSearchMode(true); router.push("/search"); }}
+             className={`flex items-center justify-center h-full bg-neutral-800/40 backdrop-blur-2xl saturate-[180%] border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] rounded-full shrink-0 transition-all duration-300 cubic-bezier-[0.32,0.72,0,1] ease-out hover:bg-white/5 ${!searchMode ? 'w-[64px] opacity-100 scale-100 relative' : 'opacity-0 scale-95 pointer-events-none absolute end-0 w-[64px]'}`}
            >
               <Search className="w-6 h-6 text-white" />
            </button>
         </div>
       </div>
     </>
+  );
+}
+
+export function Sidebar() {
+  return (
+    <Suspense fallback={null}>
+      <SidebarContent />
+    </Suspense>
   );
 }

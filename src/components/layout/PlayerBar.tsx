@@ -9,6 +9,7 @@ import TrackOptions from "@/components/TrackOptions";
 import { parseArtists } from "@/lib/utils";
 import MultiArtistModal from "@/components/MultiArtistModal";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export function PlayerBar() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -128,22 +129,21 @@ export function PlayerBar() {
     e.stopPropagation();
     if (!currentTrack) return;
 
-    // Attempt parsing multiple artists
-    const parsedArtists = parseArtists(currentTrack.artistObj?.name || currentTrack.artist);
-
-    if (parsedArtists.length > 1) {
-       // Multi Artist Array
-       setIsMultiArtistModalOpen(true);
+    if (currentTrack.artists && currentTrack.artists.length > 1) {
+        setIsMultiArtistModalOpen(true);
+    } else if (currentTrack.artists && currentTrack.artists.length === 1) {
+        setIsExpanded(false);
+        router.push(`/artist/${encodeURIComponent(currentTrack.artists[0].id)}`);
     } else {
-       // Single Artist Flow
-       setIsExpanded(false);
-       if (currentTrack.artistId) {
-           router.push(`/artist/${currentTrack.artistId}`);
-       } else {
-           // Fallback to global search if no ID exists
+        // Fallback for older tracks
+        const parsedArtists = parseArtists(currentTrack.artistObj?.name || currentTrack.artist);
+        if (parsedArtists.length > 1) {
+           setIsMultiArtistModalOpen(true);
+        } else {
+           setIsExpanded(false);
            const artistName = parsedArtists[0];
-           router.push(`/?q=${encodeURIComponent(artistName)}`);
-       }
+           router.push(`/artist/${encodeURIComponent(artistName)}`);
+        }
     }
   };
 
@@ -207,7 +207,18 @@ export function PlayerBar() {
             </div>
             <div className="flex flex-col min-w-0 pr-2">
               <p className="text-white text-sm font-semibold truncate leading-tight tracking-wide">{currentTrack.title || "Unknown Title"}</p>
-              <p className="text-neutral-400 text-xs truncate leading-tight mt-0.5">{currentTrack.artist || "Unknown Artist"}</p>
+              <p className="text-neutral-400 text-xs truncate leading-tight mt-0.5">
+                {currentTrack.artists && currentTrack.artists.length > 0 ? (
+                  currentTrack.artists.map((artist, idx) => (
+                    <Fragment key={artist.id}>
+                      <span>{artist.name}</span>
+                      {idx < currentTrack.artists!.length - 1 ? ", " : ""}
+                    </Fragment>
+                  ))
+                ) : (
+                  currentTrack.artist || "Unknown Artist"
+                )}
+              </p>
             </div>
           </div>
 
@@ -240,7 +251,22 @@ export function PlayerBar() {
           </div>
           <div className="truncate pr-4">
             <p className="text-white text-base font-medium truncate">{currentTrack.title || "Unknown Title"}</p>
-            <p className="text-gray-400 text-sm truncate">{currentTrack.artist || "Unknown Artist"}</p>
+            <p className="text-gray-400 text-sm truncate">
+                {currentTrack.artists && currentTrack.artists.length > 0 ? (
+                  currentTrack.artists.map((artist, idx) => (
+                    <Fragment key={artist.id}>
+                      <Link href={`/artist/${encodeURIComponent(artist.id)}`} className="hover:underline hover:text-white" onClick={(e) => e.stopPropagation()}>
+                        {artist.name}
+                      </Link>
+                      {idx < currentTrack.artists!.length - 1 ? ", " : ""}
+                    </Fragment>
+                  ))
+                ) : (
+                   <Link href={`/artist/${encodeURIComponent(currentTrack.artistObj?.id || currentTrack.artist || "Unknown Artist")}`} className="hover:underline hover:text-white" onClick={(e) => e.stopPropagation()}>
+                      {currentTrack.artistObj?.name || currentTrack.artist || "Unknown Artist"}
+                   </Link>
+                )}
+            </p>
           </div>
         </div>
 
@@ -348,12 +374,28 @@ export function PlayerBar() {
               <div className="flex items-center justify-between mb-8 shrink-0">
                  <div className="flex flex-col min-w-0 pr-4">
                    <h2 className="text-white text-2xl font-bold truncate tracking-tight">{currentTrack.title || "Unknown Title"}</h2>
-                   <button
-                     onClick={handleArtistClick}
-                     className="text-gray-400 hover:text-white text-base font-medium truncate mt-1 text-left block w-full transition-colors focus:outline-none"
-                   >
-                     {currentTrack.artistObj?.name || currentTrack.artist || "Unknown Artist"}
-                   </button>
+                   <div className="text-gray-400 text-base font-medium truncate mt-1 text-left w-full">
+                      {currentTrack.artists && currentTrack.artists.length > 0 ? (
+                        currentTrack.artists.map((artist, idx) => (
+                          <Fragment key={artist.id}>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setIsExpanded(false); router.push(`/artist/${encodeURIComponent(artist.id)}`); }}
+                              className="hover:text-white transition-colors focus:outline-none hover:underline inline"
+                            >
+                              {artist.name}
+                            </button>
+                            {idx < currentTrack.artists!.length - 1 ? ", " : ""}
+                          </Fragment>
+                        ))
+                      ) : (
+                        <button
+                          onClick={handleArtistClick}
+                          className="hover:text-white transition-colors focus:outline-none hover:underline inline block w-full text-left"
+                        >
+                          {currentTrack.artistObj?.name || currentTrack.artist || "Unknown Artist"}
+                        </button>
+                      )}
+                   </div>
                  </div>
                  <div className="flex items-center gap-3 shrink-0">
                    <button
@@ -455,7 +497,7 @@ export function PlayerBar() {
          <MultiArtistModal
             isOpen={isMultiArtistModalOpen}
             onClose={() => setIsMultiArtistModalOpen(false)}
-            artists={parseArtists(currentTrack.artistObj?.name || currentTrack.artist)}
+            artists={currentTrack.artists ? currentTrack.artists.map(a => a.name) : parseArtists(currentTrack.artistObj?.name || currentTrack.artist)}
          />
       )}
 

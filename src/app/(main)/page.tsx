@@ -2,18 +2,17 @@
 
 import TrackCard from "@/components/TrackCard";
 import { useSession } from "next-auth/react";
-import { redirect, useSearchParams } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import { Track } from "@/store/playerStore";
 import { Search as SearchIcon, Music } from "lucide-react";
 
 function HomeContent() {
   const { data: session, status } = useSession();
-  const searchParams = useSearchParams();
-  const urlQuery = searchParams.get('q') || "";
   const [tracks, setTracks] = useState<Track[]>([]);
-  const [query, setQuery] = useState(urlQuery);
+  const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -22,25 +21,23 @@ function HomeContent() {
   }, [status]);
 
   useEffect(() => {
-    if (urlQuery !== query) {
-      setQuery(urlQuery);
+    fetchTracks();
+  }, []);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setQuery(val);
+    if (val.trim()) {
+      router.push(`/search?q=${encodeURIComponent(val)}`);
+    } else {
+      router.push(`/search`);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlQuery]);
+  };
 
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      fetchTracks(query);
-    }, 300);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [query]);
-
-  const fetchTracks = async (searchQuery: string = "") => {
+  const fetchTracks = async () => {
     setIsLoading(true);
     try {
-      const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : '';
-      const res = await fetch(`/api/tracks?filter=global${searchParam}`);
+      const res = await fetch(`/api/tracks?filter=global`);
       if (res.ok) {
         const data = await res.json();
         setTracks(data.tracks);
@@ -70,15 +67,15 @@ function HomeContent() {
 
         {/* Global Search Bar (Hidden on mobile where floating nav takes over) */}
         <div className="relative w-full max-w-md hidden md:block">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div className="absolute inset-y-0 start-0 ps-3 flex items-center pointer-events-none">
             <SearchIcon className="h-5 w-5 text-gray-400" />
           </div>
           <input
             type="text"
-            className="block w-full pl-10 pr-4 py-2.5 bg-[#282828] border-none rounded-full text-white placeholder-gray-400 focus:ring-2 focus:ring-white shadow-md text-sm outline-none transition-all"
+            className="block w-full ps-10 pe-4 py-2.5 bg-[#282828] border-none rounded-full text-white placeholder-gray-400 focus:ring-2 focus:ring-white shadow-md text-sm outline-none transition-all"
             placeholder="Search all songs and artists..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={handleSearchChange}
           />
         </div>
 
@@ -91,7 +88,7 @@ function HomeContent() {
 
       <section className="mt-8">
         <h2 className="text-2xl font-bold mb-6 text-gray-100 hidden md:block">
-            {query ? `Search Results for "${query}"` : "Global Feed"}
+            Global Feed
         </h2>
 
         {isLoading ? (
@@ -100,7 +97,7 @@ function HomeContent() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
                {tracks.length === 0 ? (
                  <div className="col-span-full text-gray-500 py-8">
-                   {query ? "No matching tracks found." : "No tracks have been uploaded to the platform yet. Be the first!"}
+                   No tracks have been uploaded to the platform yet. Be the first!
                  </div>
                ) : (
                  tracks.map(track => (

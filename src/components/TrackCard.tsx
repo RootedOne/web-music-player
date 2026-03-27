@@ -4,8 +4,9 @@ import { usePlayerStore, Track } from "@/store/playerStore";
 import { Play } from "lucide-react";
 import TrackOptions from "./TrackOptions";
 
-import React, { useState } from "react";
+import React, { useState, Fragment } from "react";
 import EditModal from "./EditModal";
+import Link from "next/link";
 
 const TrackCard = React.memo(function TrackCard({ track, onUpdate, onDelete }: { track: Track & { userId?: string }, onUpdate?: () => void, onDelete?: () => void }) {
   const { play } = usePlayerStore();
@@ -36,7 +37,22 @@ const TrackCard = React.memo(function TrackCard({ track, onUpdate, onDelete }: {
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-col min-w-0">
           <h3 className="text-white font-semibold truncate mb-1" title={track.title}>{track.title}</h3>
-          <p className="text-gray-400 text-sm truncate" title={track.artist || "Unknown Artist"}>{track.artist || "Unknown Artist"}</p>
+          <p className="text-gray-400 text-sm truncate">
+            {track.artists && track.artists.length > 0 ? (
+              track.artists.map((artist, idx) => (
+                <Fragment key={artist.id}>
+                  <Link href={`/artist/${encodeURIComponent(artist.id)}`} className="hover:underline hover:text-white" onClick={(e) => e.stopPropagation()}>
+                    {artist.name}
+                  </Link>
+                  {idx < track.artists!.length - 1 ? ", " : ""}
+                </Fragment>
+              ))
+            ) : (
+               <Link href={`/artist/${encodeURIComponent(track.artist || "Unknown Artist")}`} className="hover:underline hover:text-white" onClick={(e) => e.stopPropagation()}>
+                  {track.artist || "Unknown Artist"}
+               </Link>
+            )}
+          </p>
         </div>
         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
            <TrackOptions

@@ -19,10 +19,20 @@ model User {
   savedPlaylists SavedPlaylist[] // Playlists saved by the user
 }
 
+model Artist {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tracks    Track[]  @relation("ArtistToTrack")
+}
+
 model Track {
   id        String   @id @default(cuid())
   title     String
-  artist    String?
+  artist    String?  // Legacy raw string field (kept for backwards compat)
   album     String?
   duration  Float?
   fileUrl   String
@@ -34,6 +44,7 @@ model Track {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   playlists PlaylistTrack[]
+  artists   Artist[] @relation("ArtistToTrack")
 }
 
 model Playlist {

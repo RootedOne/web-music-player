@@ -16,6 +16,12 @@
 # production
 /build
 
+# local dev
+*.db
+*.db-journal
+*.log
+.env
+
 # misc
 .DS_Store
 *.pem

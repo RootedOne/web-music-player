@@ -20,26 +20,20 @@ export default function MultiArtistModal({ isOpen, onClose, artists }: MultiArti
 
     // Attempt to resolve the artist ID from our database by name
     try {
-      const res = await fetch(`/api/artists?q=${encodeURIComponent(artistName)}`);
+      const res = await fetch(`/api/artists/${encodeURIComponent(artistName)}`);
       if (res.ok) {
-        const foundArtists = await res.json();
-        // Exact case-insensitive match
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const exactMatch = foundArtists.find((a: any) => a.name.toLowerCase() === artistName.toLowerCase());
-
+        const exactMatch = await res.json();
         onClose(); // Close modal immediately before navigation
-
-        if (exactMatch) {
-            router.push(`/artist/${exactMatch.id}`);
-        } else {
-            // Fallback to global search
-            router.push(`/?q=${encodeURIComponent(artistName)}`);
-        }
+        router.push(`/artist/${encodeURIComponent(exactMatch.id)}`);
+      } else {
+        // Fallback to global search
+        onClose();
+        router.push(`/search?q=${encodeURIComponent(artistName)}`);
       }
     } catch (err) {
       console.error(err);
       onClose();
-      router.push(`/?q=${encodeURIComponent(artistName)}`);
+      router.push(`/search?q=${encodeURIComponent(artistName)}`);
     } finally {
       setLoadingArtist(null);
     }
