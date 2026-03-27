@@ -88,10 +88,14 @@ export async function POST(req: Request) {
 
     if (isDuplicate) {
       // Cleanup saved files to prevent orphan files
-      await fs.unlink(filepath).catch(() => {});
+      await fs.unlink(filepath).catch((err) => {
+        console.error(`Failed to delete duplicate track file at ${filepath}:`, err);
+      });
       if (coverUrl) {
         const picFilepath = path.join(process.cwd(), "public", coverUrl);
-        await fs.unlink(picFilepath).catch(() => {});
+        await fs.unlink(picFilepath).catch((err) => {
+          console.error(`Failed to delete duplicate cover file at ${picFilepath}:`, err);
+        });
       }
       return NextResponse.json(
         { error: "A track with this title and artist already exists in your library." },
