@@ -1,7 +1,7 @@
 "use client";
 
 import { Track, usePlayerStore } from "@/store/playerStore";
-import { Play, Pause, Music } from "lucide-react";
+import { Music } from "lucide-react";
 import TrackOptions from "./TrackOptions";
 import Link from "next/link";
 import { Fragment } from "react";
@@ -17,7 +17,16 @@ export default function TrackRow({ track, index, queue }: TrackRowProps) {
   const currentTrack = globalQueue[currentTrackIndex];
   const isThisTrackPlaying = currentTrack?.id === track.id;
 
-  const handlePlay = () => {
+  const handlePlay = (e?: React.MouseEvent) => {
+    // Optional click event from row
+    if (e) {
+      // Don't play if clicking on links or options
+      const target = e.target as HTMLElement;
+      if (target.closest('a') || target.closest('button')) {
+        return;
+      }
+    }
+
     if (isThisTrackPlaying) {
       if (isPlaying) {
         pause();
@@ -29,51 +38,34 @@ export default function TrackRow({ track, index, queue }: TrackRowProps) {
     }
   };
 
-  const formatDuration = (seconds?: number | null) => {
-    if (!seconds) return "--:--";
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${m}:${s < 10 ? "0" : ""}${s}`;
-  };
-
   return (
     <div
-      onDoubleClick={handlePlay}
-      className="flex items-center gap-4 px-4 py-3 hover:bg-white/5 transition group border-b border-white/5 last:border-0 rounded-lg cursor-pointer"
+      onClick={handlePlay}
+      className="flex items-center w-full gap-3 p-2 h-16 rounded-xl active:bg-white/10 transition-colors cursor-pointer group"
     >
-      <div className="w-8 text-center text-gray-500 text-sm group-hover:hidden">
-        {isThisTrackPlaying && isPlaying ? (
-            <div className="flex gap-1 items-end justify-center h-4 w-4 mx-auto">
-              <div className="w-1 bg-[#fa243c] animate-[bounce_1s_infinite_0ms]" />
-              <div className="w-1 bg-[#fa243c] animate-[bounce_1s_infinite_200ms]" />
-              <div className="w-1 bg-[#fa243c] animate-[bounce_1s_infinite_400ms]" />
-            </div>
-        ) : (
-            index + 1
-        )}
-      </div>
-
-      <button
-        onClick={handlePlay}
-        className="w-8 hidden group-hover:flex items-center justify-center text-white"
-      >
-        {isThisTrackPlaying && isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-1" />}
-      </button>
-
-      <div className="w-10 h-10 rounded bg-[#282828] flex-shrink-0 overflow-hidden shadow-md flex items-center justify-center relative">
+      <div className="w-12 h-12 flex-shrink-0 rounded-md bg-[#282828] overflow-hidden flex items-center justify-center relative shadow-sm">
         {track.coverUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={track.coverUrl} alt="Cover" className="w-full h-full object-cover" />
+          <img src={track.coverUrl} alt={track.title} className="w-full h-full object-cover" />
         ) : (
-          <Music className="w-5 h-5 text-gray-500" />
+          <Music className="w-6 h-6 text-gray-500" />
+        )}
+
+        {/* Playing Indicator Overlay */}
+        {isThisTrackPlaying && isPlaying && (
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-1">
+              <div className="w-1 h-3 bg-[#fa243c] animate-[bounce_1s_infinite_0ms]" />
+              <div className="w-1 h-3 bg-[#fa243c] animate-[bounce_1s_infinite_200ms]" />
+              <div className="w-1 h-3 bg-[#fa243c] animate-[bounce_1s_infinite_400ms]" />
+            </div>
         )}
       </div>
 
-      <div className="flex-1 min-w-0">
-        <h3 className={`font-semibold truncate ${isThisTrackPlaying ? "text-[#fa243c]" : "text-white"}`}>
+      <div className="flex-1 min-w-0 flex flex-col justify-center">
+        <h3 className={`truncate font-medium text-base ${isThisTrackPlaying ? "text-[#fa243c]" : "text-white"}`}>
           {track.title}
         </h3>
-        <p className="text-sm text-gray-400 truncate">
+        <p className="truncate text-neutral-400 text-sm mt-0.5">
             {track.artists && track.artists.length > 0 ? (
               track.artists.map((artist, idx) => (
                 <Fragment key={artist.id}>
@@ -91,15 +83,10 @@ export default function TrackRow({ track, index, queue }: TrackRowProps) {
         </p>
       </div>
 
-      <div className="hidden md:block flex-1 min-w-0 text-sm text-gray-400 truncate">
-        {track.album || "Unknown Album"}
-      </div>
-
-      <div className="text-sm text-gray-400 w-12 text-right tabular-nums">
-        {formatDuration(track.duration)}
-      </div>
-
-      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+      <div
+        className="flex-shrink-0 ms-auto w-10 h-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={(e) => e.stopPropagation()}
+      >
         <TrackOptions
           trackId={track.id}
           trackOwnerId={track.userId || ""}

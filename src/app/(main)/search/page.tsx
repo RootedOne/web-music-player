@@ -274,8 +274,10 @@ function SearchContent() {
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-white">Loading Search...</div>}>
-      <SearchContent />
-    </Suspense>
+    <div className="pb-36">
+      <Suspense fallback={<div className="p-8 text-white">Loading Search...</div>}>
+        <SearchContent />
+      </Suspense>
+    </div>
   );
 }
