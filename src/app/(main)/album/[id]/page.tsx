@@ -80,7 +80,7 @@ export default function AlbumProfilePage() {
           </div>
           <button
             onClick={handlePlayAll}
-            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-blue-500 hover:bg-blue-400 hover:scale-105 transition-all flex items-center justify-center shadow-[0_8px_32px_rgba(59,130,246,0.5)] shrink-0 group"
+            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#fa243c] hover:bg-[#ff3b53] hover:scale-105 transition-all flex items-center justify-center shadow-[0_8px_32px_rgba(250,36,60,0.5)] shrink-0 group"
           >
             <Play className="w-7 h-7 sm:w-8 sm:h-8 fill-black text-black ml-1 group-hover:scale-110 transition-transform" />
           </button>

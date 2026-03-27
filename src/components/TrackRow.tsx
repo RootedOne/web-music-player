@@ -44,9 +44,9 @@ export default function TrackRow({ track, index, queue }: TrackRowProps) {
       <div className="w-8 text-center text-gray-500 text-sm group-hover:hidden">
         {isThisTrackPlaying && isPlaying ? (
             <div className="flex gap-1 items-end justify-center h-4 w-4 mx-auto">
-              <div className="w-1 bg-blue-500 animate-[bounce_1s_infinite_0ms]" />
-              <div className="w-1 bg-blue-500 animate-[bounce_1s_infinite_200ms]" />
-              <div className="w-1 bg-blue-500 animate-[bounce_1s_infinite_400ms]" />
+              <div className="w-1 bg-[#fa243c] animate-[bounce_1s_infinite_0ms]" />
+              <div className="w-1 bg-[#fa243c] animate-[bounce_1s_infinite_200ms]" />
+              <div className="w-1 bg-[#fa243c] animate-[bounce_1s_infinite_400ms]" />
             </div>
         ) : (
             index + 1
@@ -70,7 +70,7 @@ export default function TrackRow({ track, index, queue }: TrackRowProps) {
       </div>
 
       <div className="flex-1 min-w-0">
-        <h3 className={`font-semibold truncate ${isThisTrackPlaying ? "text-blue-500" : "text-white"}`}>
+        <h3 className={`font-semibold truncate ${isThisTrackPlaying ? "text-[#fa243c]" : "text-white"}`}>
           {track.title}
         </h3>
         <p className="text-sm text-gray-400 truncate">

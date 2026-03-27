@@ -61,11 +61,11 @@ export default function ArtistProfilePage() {
 
   return (
     <div className="relative min-h-screen bg-black text-white pb-36 font-sans">
-      {/* 1. Sticky Nav */}
-      <nav className="fixed top-0 inset-x-0 z-50 w-full flex items-center p-4 bg-black/50 backdrop-blur-md border-b border-white/10 transition-all">
+      {/* 1. Glassmorphism Top Bar */}
+      <nav className="fixed top-0 inset-x-0 z-[100] bg-black/60 backdrop-blur-2xl border-b border-white/5 pt-safe transition-all">
         <button
            onClick={() => router.back()}
-           className="w-10 h-10 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/80 transition-colors text-white"
+           className="flex items-center justify-center w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all ms-4 mt-2 mb-2 text-white"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
@@ -95,7 +95,7 @@ export default function ArtistProfilePage() {
           </h1>
           <button
             onClick={handlePlayAll}
-            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-blue-500 hover:bg-blue-400 hover:scale-105 transition-all flex items-center justify-center shadow-[0_8px_32px_rgba(59,130,246,0.5)] shrink-0 group"
+            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#fa243c] hover:bg-[#ff3b53] hover:scale-105 transition-all flex items-center justify-center shadow-[0_8px_32px_rgba(250,36,60,0.5)] shrink-0 group"
           >
             <Play className="w-7 h-7 sm:w-8 sm:h-8 fill-black text-black ml-1 group-hover:scale-110 transition-transform" />
           </button>
@@ -149,7 +149,7 @@ export default function ArtistProfilePage() {
                       <div className="w-full h-full flex items-center justify-center"><Music className="w-10 h-10 text-neutral-600" /></div>
                     )}
                   </div>
-                  <h3 className="text-white font-semibold text-sm sm:text-base truncate group-hover:text-blue-400 transition-colors">
+                  <h3 className="text-white font-semibold text-sm sm:text-base truncate group-hover:text-[#fa243c] transition-colors">
                     {track.album}
                   </h3>
                   <p className="text-gray-400 text-xs sm:text-sm mt-0.5">
@@ -181,7 +181,7 @@ export default function ArtistProfilePage() {
                       <div className="w-full h-full flex items-center justify-center"><Music className="w-10 h-10 text-neutral-600" /></div>
                     )}
                   </div>
-                  <h3 className="text-white font-semibold text-sm sm:text-base truncate group-hover:text-blue-400 transition-colors">
+                  <h3 className="text-white font-semibold text-sm sm:text-base truncate group-hover:text-[#fa243c] transition-colors">
                     {track.title}
                   </h3>
                   <p className="text-gray-400 text-xs sm:text-sm mt-0.5">

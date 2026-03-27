@@ -72,7 +72,7 @@ export default function ArtistAlbumsPage() {
                       <div className="w-full h-full flex items-center justify-center"><Music className="w-10 h-10 text-neutral-600" /></div>
                     )}
                   </div>
-                  <h3 className="text-white font-semibold text-sm sm:text-base truncate group-hover:text-blue-400 transition-colors">
+                  <h3 className="text-white font-semibold text-sm sm:text-base truncate group-hover:text-[#fa243c] transition-colors">
                     {track.album}
                   </h3>
                   <p className="text-gray-400 text-xs sm:text-sm mt-0.5">

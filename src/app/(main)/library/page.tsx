@@ -174,11 +174,11 @@ export default function LibraryPage() {
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           className={`border-2 border-dashed rounded-xl p-12 flex flex-col items-center justify-center transition-colors text-center
-            ${isDragging ? "border-blue-500 bg-blue-500/10" : "border-gray-700 hover:border-gray-500 bg-gray-800/50"}
+            ${isDragging ? "border-[#fa243c] bg-[#fa243c]/10" : "border-gray-700 hover:border-gray-500 bg-gray-800/50"}
           `}
         >
           {isUploading ? (
-            <div className="flex flex-col items-center text-blue-400">
+            <div className="flex flex-col items-center text-[#fa243c]">
               <Loader2 className="w-12 h-12 mb-4 animate-spin" />
               <p className="font-semibold">{uploadProgress || "Uploading & parsing metadata..."}</p>
             </div>

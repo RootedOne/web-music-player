@@ -420,7 +420,7 @@ export default function PlaylistPage() {
                  value={searchQuery}
                  onChange={(e) => setSearchQuery(e.target.value)}
                  autoFocus
-                 className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-4 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                 className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#fa243c] transition-colors"
                />
             )}
         </div>
