@@ -6,13 +6,19 @@ async function main() {
   const user = await prisma.user.findFirst();
   if (!user) return;
 
-  const drake = await prisma.artist.create({ data: { name: "Drake" } });
+  const drake = await prisma.artist.upsert({
+    where: { name: "Drake" },
+    update: {},
+    create: { name: "Drake" }
+  });
 
   await prisma.track.create({
       data: {
           title: "Artist Page Seed Song",
           artist: "Drake",
-          artistId: drake.id,
+        artists: {
+          connect: { id: drake.id }
+        },
           duration: 180,
           fileUrl: "/dummy.mp3",
           userId: user.id

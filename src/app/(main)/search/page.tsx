@@ -162,7 +162,7 @@ function SearchContent() {
                           <div className="w-full h-full flex items-center justify-center"><Music className="w-12 h-12 text-neutral-600" /></div>
                         )}
                       </div>
-                      <h3 className="text-white font-semibold text-center truncate w-full group-hover:text-blue-400 transition-colors">{artist.name}</h3>
+                      <h3 className="text-white font-semibold text-center truncate w-full group-hover:text-[#fa243c] transition-colors">{artist.name}</h3>
                       <p className="text-sm text-gray-400">Artist</p>
                     </Link>
                   ))}
@@ -220,7 +220,7 @@ function SearchContent() {
                           <Music className="w-10 h-10 text-gray-600" />
                         )}
                       </div>
-                      <h3 className="text-white font-semibold truncate group-hover:text-blue-400 transition-colors">{album.name}</h3>
+                      <h3 className="text-white font-semibold truncate group-hover:text-[#fa243c] transition-colors">{album.name}</h3>
                       <p className="text-gray-400 text-sm truncate">{album.artist || "Unknown Artist"}</p>
                     </Link>
                   ))}
@@ -248,7 +248,7 @@ function SearchContent() {
                           <Music className="w-10 h-10 text-gray-600" />
                         )}
                       </div>
-                      <h3 className="text-white font-semibold truncate group-hover:text-blue-400 transition-colors">{pl.name}</h3>
+                      <h3 className="text-white font-semibold truncate group-hover:text-[#fa243c] transition-colors">{pl.name}</h3>
                       <p className="text-gray-400 text-sm truncate">Playlist</p>
                     </Link>
                   ))}
@@ -274,8 +274,10 @@ function SearchContent() {
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-white">Loading Search...</div>}>
-      <SearchContent />
-    </Suspense>
+    <div className="pb-36">
+      <Suspense fallback={<div className="p-8 text-white">Loading Search...</div>}>
+        <SearchContent />
+      </Suspense>
+    </div>
   );
 }
