@@ -60,6 +60,12 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       const picFilepath = path.join(uploadDir, picFilename);
 
       await fs.writeFile(picFilepath, buffer);
+
+      if (track.coverUrl) {
+        const oldPicFilepath = path.join(process.cwd(), "public", track.coverUrl);
+        await fs.unlink(oldPicFilepath).catch((err) => console.error("Failed to delete old track cover:", err));
+      }
+
       coverUrl = `/uploads/${picFilename}`;
     }
 
@@ -92,6 +98,16 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
 
     if (!track || track.userId !== session.user.id) {
        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    if (track.fileUrl) {
+      const filepath = path.join(process.cwd(), "public", track.fileUrl);
+      await fs.unlink(filepath).catch((err) => console.error("Failed to delete track file:", err));
+    }
+
+    if (track.coverUrl) {
+      const picFilepath = path.join(process.cwd(), "public", track.coverUrl);
+      await fs.unlink(picFilepath).catch((err) => console.error("Failed to delete track cover:", err));
     }
 
     await prisma.track.delete({
