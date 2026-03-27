@@ -62,17 +62,17 @@ export default function ArtistProfilePage() {
   return (
     <div className="relative min-h-screen bg-black text-white pb-36 font-sans">
       {/* 1. Sticky Nav */}
-      <nav className="sticky top-0 z-50 w-full flex items-center p-4 bg-black/40 backdrop-blur-xl border-b border-white/5 transition-all">
+      <nav className="sticky top-0 z-50 w-full flex items-center px-4 py-4 md:py-6 bg-black/50 backdrop-blur-md transition-all pt-safe">
         <button
            onClick={() => router.back()}
-           className="w-10 h-10 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/80 transition-colors text-white"
+           className="w-10 h-10 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 transition-colors text-white backdrop-blur-md"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
       </nav>
 
       {/* 1. Hero Header */}
-      <div className="relative w-full h-[50vh] sm:h-[60vh] max-h-[600px] overflow-hidden -mt-[73px]">
+      <div className="relative w-full h-[50vh] sm:h-[60vh] max-h-[600px] overflow-hidden -mt-[72px] md:-mt-[88px]">
         {/* Full Bleed Background Image */}
         {artist.imageUrl ? (
           <div

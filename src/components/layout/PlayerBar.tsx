@@ -456,6 +456,7 @@ export function PlayerBar() {
             isOpen={isMultiArtistModalOpen}
             onClose={() => setIsMultiArtistModalOpen(false)}
             artists={parseArtists(currentTrack.artistObj?.name || currentTrack.artist)}
+            closePlayer={() => setIsExpanded(false)}
          />
       )}
 

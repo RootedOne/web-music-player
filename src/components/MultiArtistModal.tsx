@@ -9,9 +9,10 @@ interface MultiArtistModalProps {
   isOpen: boolean;
   onClose: () => void;
   artists: string[];
+  closePlayer?: () => void;
 }
 
-export default function MultiArtistModal({ isOpen, onClose, artists }: MultiArtistModalProps) {
+export default function MultiArtistModal({ isOpen, onClose, artists, closePlayer }: MultiArtistModalProps) {
   const router = useRouter();
   const [loadingArtist, setLoadingArtist] = useState<string | null>(null);
 
@@ -28,18 +29,28 @@ export default function MultiArtistModal({ isOpen, onClose, artists }: MultiArti
         const exactMatch = foundArtists.find((a: any) => a.name.toLowerCase() === artistName.toLowerCase());
 
         onClose(); // Close modal immediately before navigation
-
-        if (exactMatch) {
-            router.push(`/artist/${exactMatch.id}`);
-        } else {
-            // Fallback to global search
-            router.push(`/?q=${encodeURIComponent(artistName)}`);
+        if (closePlayer) {
+            closePlayer();
         }
+
+        setTimeout(() => {
+            if (exactMatch) {
+                router.push(`/artist/${exactMatch.id}`);
+            } else {
+                // Fallback to global search
+                router.push(`/?q=${encodeURIComponent(artistName)}`);
+            }
+        }, 300);
       }
     } catch (err) {
       console.error(err);
       onClose();
-      router.push(`/?q=${encodeURIComponent(artistName)}`);
+      if (closePlayer) {
+          closePlayer();
+      }
+      setTimeout(() => {
+        router.push(`/?q=${encodeURIComponent(artistName)}`);
+      }, 300);
     } finally {
       setLoadingArtist(null);
     }

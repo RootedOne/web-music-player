@@ -103,10 +103,38 @@ export async function POST(req: Request) {
       );
     }
 
+    // Attempt to parse main artist to find or create
+    let primaryArtistId = null;
+    const parsedArtists = artist.split(/[,&]+/).map(a => a.trim()).filter(Boolean);
+    if (parsedArtists.length > 0) {
+      const primaryArtistName = parsedArtists[0];
+      try {
+        // Upsert the main artist (case-insensitive finding is not fully supported in SQLite Prisma without extra queries)
+        // Since we want to ensure exact matching or creating, we can do a quick search first if case-insensitive matters,
+        // but simple upsert on name works if we standardize or just rely on exact match.
+        // Actually, SQLite is case-preserving. Let's do a case-insensitive find first.
+        const existingArtist = await prisma.artist.findFirst({
+            where: { name: { equals: primaryArtistName } }
+        });
+
+        if (existingArtist) {
+            primaryArtistId = existingArtist.id;
+        } else {
+            const newArtist = await prisma.artist.create({
+                data: { name: primaryArtistName }
+            });
+            primaryArtistId = newArtist.id;
+        }
+      } catch (err) {
+        console.error("Failed to upsert artist", err);
+      }
+    }
+
     const track = await prisma.track.create({
       data: {
         title,
         artist,
+        artistId: primaryArtistId,
         album,
         duration,
         fileUrl: `/uploads/${filename}`,
