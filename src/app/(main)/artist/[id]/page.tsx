@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { Track, usePlayerStore } from "@/store/playerStore";
 import TrackRow from "@/components/TrackRow";
-import { Play, Music, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Play, Music, ChevronLeft, ChevronRight } from "lucide-react";
 
 type ArtistData = {
   id: string;
@@ -47,7 +48,6 @@ export default function ArtistProfilePage() {
 
   // Group tracks for layout logic
   // Typically an API would separate singles/albums, but we'll mock it for now based on track list
-  const latestRelease = artist.tracks.length > 0 ? artist.tracks[0] : null;
   const topSongs = artist.tracks.slice(0, 5);
 
   // Deduping by album for the carousels
@@ -62,7 +62,7 @@ export default function ArtistProfilePage() {
   return (
     <div className="relative min-h-screen bg-black text-white pb-36 font-sans">
       {/* 1. Sticky Nav */}
-      <nav className="sticky top-0 z-50 w-full flex items-center p-4 bg-black/40 backdrop-blur-xl border-b border-white/5 transition-all">
+      <nav className="fixed top-0 inset-x-0 z-50 w-full flex items-center p-4 bg-black/50 backdrop-blur-md border-b border-white/10 transition-all">
         <button
            onClick={() => router.back()}
            className="w-10 h-10 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/80 transition-colors text-white"
@@ -72,7 +72,7 @@ export default function ArtistProfilePage() {
       </nav>
 
       {/* 1. Hero Header */}
-      <div className="relative w-full h-[50vh] sm:h-[60vh] max-h-[600px] overflow-hidden -mt-[73px]">
+      <div className="relative w-full h-[50vh] sm:h-[60vh] max-h-[600px] overflow-hidden">
         {/* Full Bleed Background Image */}
         {artist.imageUrl ? (
           <div
@@ -103,46 +103,14 @@ export default function ArtistProfilePage() {
       </div>
 
       <div className="px-6 mx-auto max-w-7xl mt-6 space-y-12">
-        {/* 2. Latest Release Section */}
-        {latestRelease && (
-          <section>
-            <h2 className="text-xl font-bold mb-4 text-white/90 tracking-tight">Latest Release</h2>
-            <div className="flex bg-neutral-900/40 backdrop-blur-lg border border-white/5 rounded-xl p-4 gap-4 items-center hover:bg-neutral-800/60 transition-colors group cursor-pointer">
-               {/* Left: Artwork */}
-               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-md bg-neutral-800 overflow-hidden shrink-0 shadow-lg">
-                 {latestRelease.coverUrl ? (
-                   // eslint-disable-next-line @next/next/no-img-element
-                   <img src={latestRelease.coverUrl} alt={latestRelease.album || latestRelease.title} className="w-full h-full object-cover" />
-                 ) : (
-                   <div className="w-full h-full flex items-center justify-center"><Music className="w-8 h-8 text-neutral-600" /></div>
-                 )}
-               </div>
-
-               {/* Right: Info */}
-               <div className="flex-1 min-w-0 flex flex-col justify-center">
-                 <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">
-                   {latestRelease.createdAt ? new Date(latestRelease.createdAt).getFullYear() : ""}
-                 </p>
-                 <h3 className="text-white font-bold text-lg truncate">
-                   {latestRelease.album || latestRelease.title} <span className="font-normal text-gray-400">- {latestRelease.album ? 'Album' : 'Single'}</span>
-                 </h3>
-                 <p className="text-sm text-gray-500 mt-0.5">1 Song</p>
-               </div>
-
-               {/* Right: + Button */}
-               <button className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center shrink-0 transition-colors text-white">
-                 <Plus className="w-5 h-5" />
-               </button>
-            </div>
-          </section>
-        )}
-
         {/* 3. Top Songs List (Vertical) */}
         {topSongs.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-4 group cursor-pointer">
               <h2 className="text-xl font-bold text-white/90 tracking-tight group-hover:text-white transition-colors">Top Songs</h2>
-              <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
+              <Link href={`/artist/${id}/songs`}>
+                <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
+              </Link>
             </div>
             <div className="flex flex-col gap-1">
               {topSongs.map((track, idx) => (
@@ -164,7 +132,9 @@ export default function ArtistProfilePage() {
           <section>
             <div className="flex items-center justify-between mb-4 group cursor-pointer">
               <h2 className="text-xl font-bold text-white/90 tracking-tight group-hover:text-white transition-colors">Albums</h2>
-              <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
+              <Link href={`/artist/${id}/albums`}>
+                <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
+              </Link>
             </div>
 
             {/* Horizontal Scroll Container */}
