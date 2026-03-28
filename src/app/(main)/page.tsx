@@ -54,7 +54,7 @@ function HomeContent() {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-black text-white pb-36 md:pb-8">
       <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <h1 className="text-4xl font-extrabold tracking-tight text-white drop-shadow-md">
           Discover
@@ -72,7 +72,7 @@ function HomeContent() {
           </div>
           <input
             type="text"
-            className="block w-full ps-10 pe-4 py-2.5 bg-[#282828] border-none rounded-full text-white placeholder-gray-400 focus:ring-2 focus:ring-white shadow-md text-sm outline-none transition-all"
+            className="block w-full ps-10 pe-4 py-2.5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-[#fa243c] shadow-md text-sm outline-none transition-all"
             placeholder="Search all songs and artists..."
             value={query}
             onChange={handleSearchChange}
@@ -80,7 +80,7 @@ function HomeContent() {
         </div>
 
         <div className="hidden md:flex items-center gap-4">
-          <div className="bg-gray-800 rounded-full w-10 h-10 flex items-center justify-center font-bold text-gray-300 shadow-md border border-gray-700">
+          <div className="bg-white/5 backdrop-blur-xl rounded-full w-10 h-10 flex items-center justify-center font-bold text-gray-300 shadow-md border border-white/10">
             {session?.user?.name?.[0]?.toUpperCase() || "?"}
           </div>
         </div>
@@ -107,13 +107,13 @@ function HomeContent() {
             </div>
         )}
       </section>
-    </>
+    </div>
   );
 }
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="p-8 text-white">Loading Discover...</div>}>
+    <Suspense fallback={<div className="p-8 text-white min-h-screen bg-black">Loading Discover...</div>}>
       <HomeContent />
     </Suspense>
   );
