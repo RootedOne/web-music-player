@@ -54,7 +54,7 @@ function HomeContent() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white pb-36 md:pb-8">
+    <div className="min-h-full bg-transparent flex-1 text-white pb-36 md:pb-8">
       <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <h1 className="text-4xl font-extrabold tracking-tight text-white drop-shadow-md">
           Discover
@@ -113,7 +113,7 @@ function HomeContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="p-8 text-white min-h-screen bg-black">Loading Discover...</div>}>
+    <Suspense fallback={<div className="p-8 text-white min-h-full bg-transparent">Loading Discover...</div>}>
       <HomeContent />
     </Suspense>
   );
