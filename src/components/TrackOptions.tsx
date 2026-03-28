@@ -174,13 +174,13 @@ export default function TrackOptions({ trackId, trackOwnerId, fileUrl, trackTitl
           leaveFrom="transform opacity-100 scale-100"
           leaveTo="transform opacity-0 scale-95"
         >
-          <Menu.Items className="absolute right-0 bottom-full mb-2 w-48 origin-bottom-right rounded-md bg-gray-800 shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none z-50 overflow-hidden divide-y divide-gray-700">
+          <Menu.Items className="absolute right-0 bottom-full mb-2 w-48 origin-bottom-right rounded-xl bg-zinc-900/80 backdrop-blur-xl border border-white/10 shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none z-50 overflow-hidden divide-y divide-white/10">
             <div className="py-1">
               <Menu.Item>
                 {({ active }) => (
                   <button
                     onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}
-                    className={`${active ? "bg-gray-700 text-white" : "text-gray-300"} group flex w-full items-center px-4 py-2.5 text-sm font-medium transition-colors`}
+                    className={`${active ? "bg-[#fa243c] text-white" : "text-gray-300"} group flex w-full items-center px-4 py-2.5 text-sm font-medium transition-colors`}
                   >
                     <Plus className="mr-3 h-4 w-4" />
                     Add to Playlist
@@ -191,7 +191,7 @@ export default function TrackOptions({ trackId, trackOwnerId, fileUrl, trackTitl
                 {({ active }) => (
                   <button
                     onClick={(e) => { e.stopPropagation(); copyShareLink(); }}
-                    className={`${active ? "bg-gray-700 text-white" : "text-gray-300"} group flex w-full items-center px-4 py-2.5 text-sm font-medium transition-colors`}
+                    className={`${active ? "bg-[#fa243c] text-white" : "text-gray-300"} group flex w-full items-center px-4 py-2.5 text-sm font-medium transition-colors`}
                   >
                     <Share2 className="mr-3 h-4 w-4" />
                     Share Track
@@ -202,7 +202,7 @@ export default function TrackOptions({ trackId, trackOwnerId, fileUrl, trackTitl
                 {({ active }) => (
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDownload(); }}
-                    className={`${active ? "bg-gray-700 text-white" : "text-gray-300"} group flex w-full items-center px-4 py-2.5 text-sm font-medium transition-colors`}
+                    className={`${active ? "bg-[#fa243c] text-white" : "text-gray-300"} group flex w-full items-center px-4 py-2.5 text-sm font-medium transition-colors`}
                   >
                     <Download className="mr-3 h-4 w-4" />
                     Download
@@ -218,7 +218,7 @@ export default function TrackOptions({ trackId, trackOwnerId, fileUrl, trackTitl
                   {({ active }) => (
                     <button
                       onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                      className={`${active ? "bg-gray-700 text-white" : "text-gray-300"} group flex w-full items-center px-4 py-2.5 text-sm font-medium transition-colors`}
+                      className={`${active ? "bg-[#fa243c] text-white" : "text-gray-300"} group flex w-full items-center px-4 py-2.5 text-sm font-medium transition-colors`}
                     >
                       <Edit2 className="mr-3 h-4 w-4" />
                       Edit Details
@@ -231,7 +231,7 @@ export default function TrackOptions({ trackId, trackOwnerId, fileUrl, trackTitl
                     {({ active }) => (
                       <button
                         onClick={(e) => { e.stopPropagation(); setIsDeleteConfirmOpen(true); }}
-                        className={`${active ? "bg-red-900/50 text-red-400" : "text-red-500"} group flex w-full items-center px-4 py-2.5 text-sm font-medium transition-colors`}
+                        className={`${active ? "bg-red-900/80 text-white" : "text-red-500"} group flex w-full items-center px-4 py-2.5 text-sm font-medium transition-colors`}
                       >
                         <Trash2 className="mr-3 h-4 w-4" />
                         Delete Track
@@ -248,7 +248,7 @@ export default function TrackOptions({ trackId, trackOwnerId, fileUrl, trackTitl
                    {({ active }) => (
                      <button
                        onClick={(e) => { e.stopPropagation(); setIsRemoveConfirmOpen(true); }}
-                       className={`${active ? "bg-red-900/50 text-red-400" : "text-gray-400 hover:text-white"} group flex w-full items-center px-4 py-2.5 text-sm font-medium transition-colors`}
+                       className={`${active ? "bg-red-900/80 text-white" : "text-gray-400 hover:text-white"} group flex w-full items-center px-4 py-2.5 text-sm font-medium transition-colors`}
                      >
                        <X className="mr-3 h-4 w-4" />
                        Remove from Playlist

@@ -370,97 +370,100 @@ export function PlayerBar() {
                  )}
               </div>
 
-              {/* Track Info & Actions Row */}
-              <div className="flex items-center justify-between mb-8 shrink-0">
-                 <div className="flex flex-col min-w-0 pr-4">
-                   <h2 className="text-white text-2xl font-bold truncate tracking-tight">{currentTrack.title || "Unknown Title"}</h2>
-                   <div className="text-gray-400 text-base font-medium truncate mt-1 text-left w-full">
-                      {currentTrack.artists && currentTrack.artists.length > 0 ? (
-                        currentTrack.artists.map((artist, idx) => (
-                          <Fragment key={artist.id}>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setIsExpanded(false); router.push(`/artist/${encodeURIComponent(artist.id)}`); }}
-                              className="hover:text-white transition-colors focus:outline-none hover:underline inline"
-                            >
-                              {artist.name}
-                            </button>
-                            {idx < currentTrack.artists!.length - 1 ? ", " : ""}
-                          </Fragment>
-                        ))
-                      ) : (
-                        <button
-                          onClick={handleArtistClick}
-                          className="hover:text-white transition-colors focus:outline-none hover:underline inline block w-full text-left"
-                        >
-                          {currentTrack.artistObj?.name || currentTrack.artist || "Unknown Artist"}
-                        </button>
-                      )}
-                   </div>
-                 </div>
-                 <div className="flex items-center gap-3 shrink-0">
-                   <button
-                     onClick={handleGlobalShufflePlay}
-                     className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors relative ${isShuffle ? 'bg-white/20 text-white' : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'}`}
-                   >
-                     <Shuffle className="w-5 h-5" />
-                     {isShuffle && <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full"></span>}
-                   </button>
-                   <TrackOptions
-                      trackId={currentTrack.id}
-                      trackOwnerId={currentTrack.id} // Not ideal, but track owner ID isn't easily exposed in PlayerStore currently. Will use track ID to bypass Type errors, backend still checks ownership.
-                      fileUrl={currentTrack.fileUrl}
-                      trackTitle={currentTrack.title}
-                   />
-                 </div>
-              </div>
-
-              {/* Scrubber */}
-              <div className="flex flex-col mb-8 shrink-0">
-                <div className="relative w-full flex items-center group h-6">
-                  <input
-                    type="range"
-                    min={0}
-                    max={duration || 100}
-                    value={progress}
-                    onChange={handleSeek}
-                    className="absolute z-20 w-full h-full opacity-0 cursor-pointer"
-                  />
-                  <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden pointer-events-none">
-                    <div
-                      className="h-full bg-[#fa243c] rounded-full pointer-events-none"
-                      style={{ width: `${(progress / (duration || 1)) * 100}%` }}
+              {/* Info, Scrubber, and Controls Wrapper */}
+              <div className="flex flex-col mt-auto pb-12">
+                {/* Track Info & Actions Row */}
+                <div className="flex items-center justify-between mb-8 shrink-0">
+                  <div className="flex flex-col min-w-0 pr-4">
+                    <h2 className="text-white text-2xl font-bold truncate tracking-tight">{currentTrack.title || "Unknown Title"}</h2>
+                    <div className="text-gray-400 text-base font-medium truncate mt-1 text-left w-full">
+                        {currentTrack.artists && currentTrack.artists.length > 0 ? (
+                          currentTrack.artists.map((artist, idx) => (
+                            <Fragment key={artist.id}>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setIsExpanded(false); router.push(`/artist/${encodeURIComponent(artist.id)}`); }}
+                                className="hover:text-white transition-colors focus:outline-none hover:underline inline"
+                              >
+                                {artist.name}
+                              </button>
+                              {idx < currentTrack.artists!.length - 1 ? ", " : ""}
+                            </Fragment>
+                          ))
+                        ) : (
+                          <button
+                            onClick={handleArtistClick}
+                            className="hover:text-white transition-colors focus:outline-none hover:underline inline block w-full text-left"
+                          >
+                            {currentTrack.artistObj?.name || currentTrack.artist || "Unknown Artist"}
+                          </button>
+                        )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <button
+                      onClick={handleGlobalShufflePlay}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors relative ${isShuffle ? 'bg-white/20 text-white' : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'}`}
+                    >
+                      <Shuffle className="w-5 h-5" />
+                      {isShuffle && <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full"></span>}
+                    </button>
+                    <TrackOptions
+                        trackId={currentTrack.id}
+                        trackOwnerId={currentTrack.id} // Not ideal, but track owner ID isn't easily exposed in PlayerStore currently. Will use track ID to bypass Type errors, backend still checks ownership.
+                        fileUrl={currentTrack.fileUrl}
+                        trackTitle={currentTrack.title}
                     />
                   </div>
-                  {/* Thumb indicator visible on drag/hover (simulated via group-hover in CSS) */}
-                  <div
-                    className="absolute h-3 w-3 bg-[#fa243c] rounded-full shadow pointer-events-none z-10 transition-transform scale-0 group-hover:scale-100"
-                    style={{ left: `calc(${(progress / (duration || 1)) * 100}% - 6px)` }}
-                  />
                 </div>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-white/50 font-medium tabular-nums">{formatTime(progress)}</span>
-                  <span className="text-xs text-white/50 font-medium tabular-nums">{formatTime(duration)}</span>
-                </div>
-              </div>
 
-              {/* Main Controls */}
-              <div className="flex items-center justify-center gap-8 shrink-0 mt-auto pb-12">
-                <button onClick={prev} className="text-white/70 hover:text-white transition-colors p-2 active:scale-90">
-                  <SkipBack className="w-10 h-10 fill-current" />
-                </button>
-                <button
-                  onClick={togglePlayPause}
-                  className="w-20 h-20 flex items-center justify-center bg-[#fa243c] text-white rounded-full hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(250,36,60,0.3)]"
-                >
-                  {isPlaying ? (
-                    <Pause className="w-10 h-10 fill-current" />
-                  ) : (
-                    <Play className="w-10 h-10 ml-2 fill-current" />
-                  )}
-                </button>
-                <button onClick={next} className="text-white/70 hover:text-white transition-colors p-2 active:scale-90">
-                  <SkipForward className="w-10 h-10 fill-current" />
-                </button>
+                {/* Scrubber */}
+                <div className="flex flex-col mb-4 shrink-0">
+                  <div className="relative w-full flex items-center group h-6">
+                    <input
+                      type="range"
+                      min={0}
+                      max={duration || 100}
+                      value={progress}
+                      onChange={handleSeek}
+                      className="absolute z-20 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden pointer-events-none">
+                      <div
+                        className="h-full bg-[#fa243c] rounded-full pointer-events-none"
+                        style={{ width: `${(progress / (duration || 1)) * 100}%` }}
+                      />
+                    </div>
+                    {/* Thumb indicator visible on drag/hover (simulated via group-hover in CSS) */}
+                    <div
+                      className="absolute h-3 w-3 bg-[#fa243c] rounded-full shadow pointer-events-none z-10 transition-transform scale-0 group-hover:scale-100"
+                      style={{ left: `calc(${(progress / (duration || 1)) * 100}% - 6px)` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs text-white/50 font-medium tabular-nums">{formatTime(progress)}</span>
+                    <span className="text-xs text-white/50 font-medium tabular-nums">{formatTime(duration)}</span>
+                  </div>
+                </div>
+
+                {/* Main Controls */}
+                <div className="flex items-center justify-center gap-8 shrink-0">
+                  <button onClick={prev} className="text-white/70 hover:text-white transition-colors p-2 active:scale-90">
+                    <SkipBack className="w-10 h-10 fill-current" />
+                  </button>
+                  <button
+                    onClick={togglePlayPause}
+                    className="w-20 h-20 flex items-center justify-center bg-[#fa243c] text-white rounded-full hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(250,36,60,0.3)]"
+                  >
+                    {isPlaying ? (
+                      <Pause className="w-10 h-10 fill-current" />
+                    ) : (
+                      <Play className="w-10 h-10 ml-2 fill-current" />
+                    )}
+                  </button>
+                  <button onClick={next} className="text-white/70 hover:text-white transition-colors p-2 active:scale-90">
+                    <SkipForward className="w-10 h-10 fill-current" />
+                  </button>
+                </div>
               </div>
 
             </div>

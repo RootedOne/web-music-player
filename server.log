@@ -7,125 +7,106 @@
   - Environments: .env
 
  ✓ Starting...
- ✓ Ready in 2.8s
+ ✓ Ready in 3.2s
  ○ Compiling /src/middleware ...
- ✓ Compiled /src/middleware in 1688ms (174 modules)
+ ✓ Compiled /src/middleware in 1579ms (174 modules)
  ○ Compiling /api/auth/[...nextauth] ...
- ✓ Compiled /api/auth/[...nextauth] in 1839ms (268 modules)
+ ✓ Compiled /api/auth/[...nextauth] in 1662ms (268 modules)
 [next-auth][warn][NEXTAUTH_URL]
 https://next-auth.js.org/warnings#nextauth_url
- GET /api/auth/signin?callbackUrl=%2F 302 in 3116ms
+ GET /api/auth/signin?callbackUrl=%2F 302 in 2856ms
  ○ Compiling /login ...
- ✓ Compiled /login in 8.3s (884 modules)
- GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F 200 in 9025ms
- ✓ Compiled in 726ms (309 modules)
+ ✓ Compiled /login in 8.4s (884 modules)
+ GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F 200 in 9144ms
+ ✓ Compiled in 686ms (309 modules)
+ GET /login? 200 in 64ms
 [next-auth][warn][NEXTAUTH_URL]
 https://next-auth.js.org/warnings#nextauth_url
- GET /api/auth/session 200 in 142ms
- GET /api/auth/session 200 in 56ms
- GET /api/auth/signin?callbackUrl=%2Fartist%2F1 302 in 30ms
- GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2Fartist%2F1 200 in 65ms
- GET /api/auth/session 200 in 29ms
+ GET /api/auth/session 200 in 83ms
  GET /api/auth/session 200 in 13ms
- ○ Compiling /register ...
- ✓ Compiled /register in 786ms (858 modules)
- GET /register 200 in 964ms
+ GET /api/auth/signin?callbackUrl=%2F 302 in 29ms
+ GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F 200 in 46ms
+ GET /api/auth/session 200 in 27ms
+ GET /api/auth/session 200 in 14ms
+ GET /api/auth/providers 200 in 35ms
+ GET /api/auth/csrf 200 in 25ms
+ POST /api/auth/callback/credentials 200 in 228ms
+ GET /api/auth/session 200 in 17ms
+ ○ Compiling / ...
+ ✓ Compiled / in 3.1s (1318 modules)
+ ✓ Compiled /api/tracks in 393ms (817 modules)
+ ✓ Compiled (924 modules)
 [next-auth][warn][NEXTAUTH_URL]
 https://next-auth.js.org/warnings#nextauth_url
- GET /api/auth/session 200 in 63ms
- GET /api/auth/session 200 in 15ms
- ✓ Compiled /api/auth/register in 430ms (585 modules)
- POST /api/auth/register 400 in 554ms
- GET /login 200 in 119ms
-[next-auth][warn][NEXTAUTH_URL]
-https://next-auth.js.org/warnings#nextauth_url
- GET /api/auth/session 200 in 44ms
- GET /api/auth/session 200 in 19ms
- GET /api/auth/providers 200 in 42ms
- GET /api/auth/csrf 200 in 30ms
+ GET /api/auth/signin?callbackUrl=%2F 302 in 44ms
+ GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F 200 in 170ms
+ GET /api/auth/session 200 in 53ms
+ GET /api/auth/session 200 in 23ms
+ GET /api/auth/providers 200 in 40ms
+ GET /api/auth/csrf 200 in 36ms
  POST /api/auth/callback/credentials 200 in 213ms
- GET /api/auth/session 200 in 28ms
- ○ Compiling / ...
- ✓ Compiled / in 2.9s (1348 modules)
- ○ Compiling /api/tracks ...
- ✓ Compiled /artist/[id] in 5.1s (823 modules)
- ✓ Compiled in 458ms (533 modules)
-[next-auth][warn][NEXTAUTH_URL]
-https://next-auth.js.org/warnings#nextauth_url
- GET /api/tracks?filter=global 200 in 6505ms
- GET /api/playlists 200 in 6523ms
- GET /api/tracks?filter=global 200 in 65ms
- GET /api/playlists 200 in 64ms
- GET /api/playlists 200 in 55ms
- GET /api/playlists 200 in 35ms
- GET /artist/1 200 in 4965ms
- ✓ Compiled /api/artists/[id] in 262ms (940 modules)
-[next-auth][warn][NEXTAUTH_URL]
-https://next-auth.js.org/warnings#nextauth_url
- GET /api/auth/session 200 in 553ms
- GET /api/playlists 200 in 571ms
- GET /api/auth/session 200 in 89ms
- GET /api/playlists 200 in 58ms
- GET /api/playlists 200 in 38ms
+ GET /api/auth/session 200 in 16ms
+ GET /api/playlists 200 in 31ms
+ GET /api/tracks?filter=global 200 in 34ms
+ GET /api/playlists 200 in 24ms
+ GET /api/tracks?filter=global 200 in 30ms
  GET /api/playlists 200 in 21ms
- GET /api/artists/1 404 in 1374ms
- GET /api/artists/1 404 in 37ms
- ✓ Compiled in 11.4s (1100 modules)
- ✓ Compiled in 928ms (1100 modules)
- ✓ Compiled in 721ms (1100 modules)
- ○ Compiling /api/auth/[...nextauth] ...
- ✓ Compiled /api/auth/[...nextauth] in 769ms (791 modules)
-[next-auth][warn][NEXTAUTH_URL]
-https://next-auth.js.org/warnings#nextauth_url
- GET /api/auth/signin?callbackUrl=%2F 302 in 1326ms
- GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F 200 in 245ms
- GET /api/auth/session 200 in 62ms
- GET /api/auth/session 200 in 21ms
- GET /api/auth/signin?callbackUrl=%2F 302 in 146ms
- GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F 200 in 50ms
- GET /api/auth/session 200 in 51ms
- GET /api/auth/session 200 in 17ms
- GET /api/auth/signin?callbackUrl=%2F 302 in 43ms
- GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F 200 in 44ms
- GET /api/auth/session 200 in 38ms
- GET /api/auth/session 200 in 17ms
- GET /api/auth/signin?callbackUrl=%2F 302 in 36ms
- GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F 200 in 54ms
- GET /api/auth/session 200 in 41ms
- GET /api/auth/session 200 in 17ms
- GET /api/auth/providers 200 in 52ms
- GET /api/auth/csrf 200 in 18ms
- POST /api/auth/callback/credentials 200 in 235ms
- GET /api/auth/session 200 in 24ms
- ○ Compiling / ...
- ✓ Compiled / in 864ms (801 modules)
- ✓ Compiled /api/tracks in 495ms (825 modules)
- ✓ Compiled (932 modules)
-[next-auth][warn][NEXTAUTH_URL]
-https://next-auth.js.org/warnings#nextauth_url
- GET /api/tracks?filter=global 200 in 1102ms
- GET /api/playlists 200 in 1114ms
- GET /api/tracks?filter=global 200 in 48ms
- GET /api/playlists 200 in 38ms
- GET /api/playlists 200 in 52ms
- GET /api/playlists 200 in 21ms
- ○ Compiling /_not-found ...
- ✓ Compiled /_not-found in 1101ms (1468 modules)
- GET /dummy.mp3 404 in 1250ms
-[next-auth][warn][NEXTAUTH_URL]
-https://next-auth.js.org/warnings#nextauth_url
- GET /api/auth/signin?callbackUrl=%2F 302 in 103ms
- GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F 200 in 100ms
- GET /api/auth/session 200 in 45ms
- GET /api/auth/session 200 in 18ms
- GET /api/auth/providers 200 in 98ms
- GET /api/auth/csrf 200 in 39ms
- POST /api/auth/callback/credentials 200 in 280ms
- GET /api/auth/session 200 in 35ms
- GET /api/playlists 200 in 205ms
- GET /api/tracks?filter=global 200 in 194ms
- GET /api/playlists 200 in 66ms
- GET /api/tracks?filter=global 200 in 76ms
- GET /api/playlists 200 in 56ms
- GET /api/playlists 200 in 49ms
- GET /dummy.mp3 404 in 40ms
+ GET /api/playlists 200 in 22ms
+ ⨯ ./src/components/TrackOptions.tsx
+Error:
+  [31mx[0m Expression expected
+     ,-[[36;1;4m/app/src/components/TrackOptions.tsx[0m:154:1]
+ [2m154[0m |   };
+ [2m155[0m |
+ [2m156[0m |   return (
+ [2m157[0m |     <>
+     : [31;1m     ^[0m
+ [2m158[0m |       <Menu as="div" className="relative inline-block text-left">
+ [2m159[0m |         <div>
+ [2m160[0m |           <Menu.Button
+     `----
+
+  [31mx[0m Expected a semicolon
+     ,-[[36;1;4m/app/src/components/TrackOptions.tsx[0m:213:1]
+ [2m213[0m |
+ [2m214[0m |             {isOwner && isLibraryPage && (
+ [2m215[0m |
+ [2m216[0m |                 {onEdit && (
+     : [31;1m                        ^^[0m
+ [2m217[0m |                 <Menu.Item>
+ [2m218[0m |                   {({ active }) => (
+ [2m219[0m |                     <button
+     `----
+
+  [31mx[0m Expression expected
+     ,-[[36;1;4m/app/src/components/TrackOptions.tsx[0m:213:1]
+ [2m213[0m |
+ [2m214[0m |             {isOwner && isLibraryPage && (
+ [2m215[0m |
+ [2m216[0m |                 {onEdit && (
+     : [31;1m                        ^^[0m
+ [2m217[0m |                 <Menu.Item>
+ [2m218[0m |                   {({ active }) => (
+ [2m219[0m |                     <button
+     `----
+
+  [31mx[0m Expected ',', got '}'
+     ,-[[36;1;4m/app/src/components/TrackOptions.tsx[0m:225:1]
+ [2m225[0m |                     </button>
+ [2m226[0m |                   )}
+ [2m227[0m |                 </Menu.Item>
+ [2m228[0m |                 )}
+     : [31;1m                 ^[0m
+ [2m229[0m |                 {onDelete && (
+ [2m230[0m |                   <Menu.Item>
+ [2m231[0m |                     {({ active }) => (
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/TrackOptions.tsx
+./src/components/layout/PlayerBar.tsx
+ ✓ Compiled in 918ms (1094 modules)
+ ✓ Compiled in 471ms (1094 modules)
