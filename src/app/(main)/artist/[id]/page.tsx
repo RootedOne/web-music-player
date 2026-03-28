@@ -37,8 +37,8 @@ export default function ArtistProfilePage() {
     if (id) fetchArtist();
   }, [id]);
 
-  if (isLoading) return <div className="p-8 text-white min-h-screen bg-black">Loading Artist...</div>;
-  if (!artist) return <div className="p-8 text-white min-h-screen bg-black">Artist not found.</div>;
+  if (isLoading) return <div className="p-8 text-white min-h-full bg-transparent">Loading Artist...</div>;
+  if (!artist) return <div className="p-8 text-white min-h-full bg-transparent">Artist not found.</div>;
 
   const handlePlayAll = () => {
     if (artist.tracks.length > 0) {
@@ -60,7 +60,7 @@ export default function ArtistProfilePage() {
   const singlesList = artist.tracks.filter(t => !t.album || t.album === "Unknown Album" || t.album === "Single");
 
   return (
-    <div className="relative min-h-screen bg-black text-white pb-36 font-sans">
+    <div className="relative min-h-full flex-1 bg-transparent text-white pb-36 font-sans">
       {/* 1. Glassmorphism Top Bar */}
       <nav className="fixed top-0 inset-x-0 z-[100] bg-black/60 backdrop-blur-2xl border-b border-white/5 pt-safe transition-all">
         <button
