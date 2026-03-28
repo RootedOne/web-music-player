@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import { AdminModal } from "@/components/admin/AdminModal";
 import { Music, Edit2, Trash2, Image as ImageIcon } from "lucide-react";
 import toast from "react-hot-toast";
+import { useSearchParams, useRouter } from "next/navigation";
 
 interface Track {
   id: string;
@@ -21,6 +22,22 @@ interface ArtistOption {
 }
 
 export default function AdminTracksPage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full flex justify-center py-10">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-[#fa243c]"></div>
+      </div>
+    }>
+      <AdminTracksContent />
+    </Suspense>
+  );
+}
+
+function AdminTracksContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const requestedId = searchParams.get("id");
+
   const [tracks, setTracks] = useState<Track[]>([]);
   const [artistsList, setArtistsList] = useState<ArtistOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,21 +53,37 @@ export default function AdminTracksPage() {
   const [editCoverFile, setEditCoverFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const [hasAutoOpened, setHasAutoOpened] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       // Parallel fetch tracks and available artists for the edit modal
+      // If requestedId exists, it passes it to the backend to ensure it's in the list
+      const fetchUrl = requestedId ? `/api/admin/tracks?id=${requestedId}` : "/api/admin/tracks";
+
       const [tracksRes, artistsRes] = await Promise.all([
-        fetch("/api/admin/tracks"),
+        fetch(fetchUrl),
         fetch("/api/admin/artists") // We can reuse the artist GET endpoint
       ]);
 
       if (tracksRes.ok) {
-        setTracks(await tracksRes.json());
+        const fetchedTracks = await tracksRes.json();
+        setTracks(fetchedTracks);
+
+        // Auto-open modal logic
+        if (requestedId && !hasAutoOpened) {
+          const targetTrack = fetchedTracks.find((t: Track) => t.id === requestedId);
+          if (targetTrack) {
+            setEditingTrack(targetTrack);
+            setEditTitle(targetTrack.title);
+            setEditAlbum(targetTrack.album || "");
+            setEditArtistId(targetTrack.artists?.[0]?.id || "");
+            setEditCoverFile(null);
+            setIsEditModalOpen(true);
+            setHasAutoOpened(true);
+          }
+        }
       }
       if (artistsRes.ok) {
         const artistData: { id: string; name: string }[] = await artistsRes.json();
@@ -61,7 +94,11 @@ export default function AdminTracksPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [requestedId, hasAutoOpened]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const openEditModal = (track: Track) => {
     setEditingTrack(track);
@@ -76,6 +113,9 @@ export default function AdminTracksPage() {
   const closeEditModal = () => {
     setIsEditModalOpen(false);
     setEditingTrack(null);
+    if (requestedId) {
+      router.replace("/secret-admin/tracks", { scroll: false });
+    }
   };
 
   const handleUpdateTrack = async (e: React.FormEvent) => {

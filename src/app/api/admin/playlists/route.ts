@@ -3,8 +3,11 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const requestedId = searchParams.get("id");
+
     const playlists = await prisma.playlist.findMany({
       take: 20,
       orderBy: { createdAt: "desc" },
@@ -13,6 +16,20 @@ export async function GET() {
         _count: { select: { tracks: true } },
       },
     });
+
+    if (requestedId && !playlists.find((p) => p.id === requestedId)) {
+      const specificPlaylist = await prisma.playlist.findUnique({
+        where: { id: requestedId },
+        include: {
+          user: { select: { username: true } },
+          _count: { select: { tracks: true } },
+        },
+      });
+
+      if (specificPlaylist) {
+        playlists.unshift(specificPlaylist);
+      }
+    }
 
     return NextResponse.json(playlists);
   } catch (error) {

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import { AdminModal } from "@/components/admin/AdminModal";
 import { User as UserIcon, Edit2, Trash2, ShieldAlert } from "lucide-react";
 import toast from "react-hot-toast";
+import { useSearchParams, useRouter } from "next/navigation";
 
 interface User {
   id: string;
@@ -13,6 +14,22 @@ interface User {
 }
 
 export default function AdminUsersPage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full flex justify-center py-10">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-[#fa243c]"></div>
+      </div>
+    }>
+      <AdminUsersContent />
+    </Suspense>
+  );
+}
+
+function AdminUsersContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const requestedId = searchParams.get("id");
+
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -26,24 +43,40 @@ export default function AdminUsersPage() {
   const [editIsBanned, setEditIsBanned] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  const [hasAutoOpened, setHasAutoOpened] = useState(false);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/admin/users");
+      const fetchUrl = requestedId ? `/api/admin/users?id=${requestedId}` : "/api/admin/users";
+      const res = await fetch(fetchUrl);
       if (res.ok) {
         const data = await res.json();
         setUsers(data);
+
+        // Auto-open modal logic
+        if (requestedId && !hasAutoOpened) {
+          const targetUser = data.find((u: User) => u.id === requestedId);
+          if (targetUser) {
+            setEditingUser(targetUser);
+            setEditUsername(targetUser.username);
+            setEditPassword(""); // Always reset password field for security
+            setEditIsBanned(targetUser.isBanned);
+            setIsEditModalOpen(true);
+            setHasAutoOpened(true);
+          }
+        }
       }
     } catch (error) {
       console.error("Failed to fetch users", error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [requestedId, hasAutoOpened]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const openEditModal = (user: User) => {
     setEditingUser(user);
@@ -56,6 +89,9 @@ export default function AdminUsersPage() {
   const closeEditModal = () => {
     setIsEditModalOpen(false);
     setEditingUser(null);
+    if (requestedId) {
+      router.replace("/secret-admin/users", { scroll: false });
+    }
   };
 
   const handleUpdateUser = async (e: React.FormEvent) => {

@@ -4,8 +4,11 @@ import bcrypt from "bcrypt";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const requestedId = searchParams.get("id");
+
     const users = await prisma.user.findMany({
       take: 20,
       orderBy: { createdAt: "desc" },
@@ -16,6 +19,22 @@ export async function GET() {
         isBanned: true,
       },
     });
+
+    if (requestedId && !users.find((u) => u.id === requestedId)) {
+      const specificUser = await prisma.user.findUnique({
+        where: { id: requestedId },
+        select: {
+          id: true,
+          username: true,
+          createdAt: true,
+          isBanned: true,
+        },
+      });
+
+      if (specificUser) {
+        users.unshift(specificUser);
+      }
+    }
 
     return NextResponse.json(users);
   } catch (error) {

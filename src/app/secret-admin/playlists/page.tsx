@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import { AdminModal } from "@/components/admin/AdminModal";
 import { ListMusic, Edit2, Trash2, Image as ImageIcon, Music2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useSearchParams, useRouter } from "next/navigation";
 
 interface Playlist {
   id: string;
@@ -20,6 +21,22 @@ interface Playlist {
 }
 
 export default function AdminPlaylistsPage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full flex justify-center py-10">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-[#fa243c]"></div>
+      </div>
+    }>
+      <AdminPlaylistsContent />
+    </Suspense>
+  );
+}
+
+function AdminPlaylistsContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const requestedId = searchParams.get("id");
+
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -32,24 +49,39 @@ export default function AdminPlaylistsPage() {
   const [editDescription, setEditDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchPlaylists();
-  }, []);
+  const [hasAutoOpened, setHasAutoOpened] = useState(false);
 
-  const fetchPlaylists = async () => {
+  const fetchPlaylists = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/admin/playlists");
+      const fetchUrl = requestedId ? `/api/admin/playlists?id=${requestedId}` : "/api/admin/playlists";
+      const res = await fetch(fetchUrl);
       if (res.ok) {
         const data = await res.json();
         setPlaylists(data);
+
+        // Auto-open modal logic
+        if (requestedId && !hasAutoOpened) {
+          const targetPlaylist = data.find((p: Playlist) => p.id === requestedId);
+          if (targetPlaylist) {
+            setEditingPlaylist(targetPlaylist);
+            setEditName(targetPlaylist.name);
+            setEditDescription(targetPlaylist.description || "");
+            setIsEditModalOpen(true);
+            setHasAutoOpened(true);
+          }
+        }
       }
     } catch (error) {
       console.error("Failed to fetch playlists", error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [requestedId, hasAutoOpened]);
+
+  useEffect(() => {
+    fetchPlaylists();
+  }, [fetchPlaylists]);
 
   const openEditModal = (playlist: Playlist) => {
     setEditingPlaylist(playlist);
@@ -61,6 +93,9 @@ export default function AdminPlaylistsPage() {
   const closeEditModal = () => {
     setIsEditModalOpen(false);
     setEditingPlaylist(null);
+    if (requestedId) {
+      router.replace("/secret-admin/playlists", { scroll: false });
+    }
   };
 
   const handleUpdatePlaylist = async (e: React.FormEvent) => {

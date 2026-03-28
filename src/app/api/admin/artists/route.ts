@@ -20,8 +20,11 @@ async function deleteFileSafely(fileUrl: string | null) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const requestedId = searchParams.get("id");
+
     const artists = await prisma.artist.findMany({
       take: 20,
       orderBy: { createdAt: "desc" },
@@ -29,6 +32,19 @@ export async function GET() {
         _count: { select: { tracks: true } },
       },
     });
+
+    if (requestedId && !artists.find((a) => a.id === requestedId)) {
+      const specificArtist = await prisma.artist.findUnique({
+        where: { id: requestedId },
+        include: {
+          _count: { select: { tracks: true } },
+        },
+      });
+
+      if (specificArtist) {
+        artists.unshift(specificArtist);
+      }
+    }
 
     return NextResponse.json(artists);
   } catch (error) {

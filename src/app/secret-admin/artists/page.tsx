@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import { AdminModal } from "@/components/admin/AdminModal";
 import { Mic2, Edit2, Trash2, Image as ImageIcon, Music2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useSearchParams, useRouter } from "next/navigation";
 
 interface Artist {
   id: string;
@@ -16,6 +17,22 @@ interface Artist {
 }
 
 export default function AdminArtistsPage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full flex justify-center py-10">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-[#fa243c]"></div>
+      </div>
+    }>
+      <AdminArtistsContent />
+    </Suspense>
+  );
+}
+
+function AdminArtistsContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const requestedId = searchParams.get("id");
+
   const [artists, setArtists] = useState<Artist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -28,24 +45,39 @@ export default function AdminArtistsPage() {
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchArtists();
-  }, []);
+  const [hasAutoOpened, setHasAutoOpened] = useState(false);
 
-  const fetchArtists = async () => {
+  const fetchArtists = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/admin/artists");
+      const fetchUrl = requestedId ? `/api/admin/artists?id=${requestedId}` : "/api/admin/artists";
+      const res = await fetch(fetchUrl);
       if (res.ok) {
         const data = await res.json();
         setArtists(data);
+
+        // Auto-open modal logic
+        if (requestedId && !hasAutoOpened) {
+          const targetArtist = data.find((a: Artist) => a.id === requestedId);
+          if (targetArtist) {
+            setEditingArtist(targetArtist);
+            setEditName(targetArtist.name);
+            setEditImageFile(null); // Reset file input
+            setIsEditModalOpen(true);
+            setHasAutoOpened(true);
+          }
+        }
       }
     } catch (error) {
       console.error("Failed to fetch artists", error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [requestedId, hasAutoOpened]);
+
+  useEffect(() => {
+    fetchArtists();
+  }, [fetchArtists]);
 
   const openEditModal = (artist: Artist) => {
     setEditingArtist(artist);
@@ -57,6 +89,9 @@ export default function AdminArtistsPage() {
   const closeEditModal = () => {
     setIsEditModalOpen(false);
     setEditingArtist(null);
+    if (requestedId) {
+      router.replace("/secret-admin/artists", { scroll: false });
+    }
   };
 
   const handleUpdateArtist = async (e: React.FormEvent) => {
