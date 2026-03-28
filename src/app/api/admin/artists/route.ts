@@ -72,6 +72,51 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Artist not found" }, { status: 404 });
     }
 
+    // Check if we are renaming to an artist that already exists (Merging Scenario)
+    if (name !== currentArtist.name) {
+      const targetArtist = await prisma.artist.findUnique({
+        where: { name },
+      });
+
+      if (targetArtist) {
+        // Step 1: Atomic Database Transaction
+        // Re-assign all tracks from the source artist to the target artist, then delete the source artist.
+        // Wait for approval for Step 2 (fs.unlink) and Step 3 (frontend UI update).
+
+        // Step 1: Atomic Database Transaction
+        // Re-assign all tracks from the source artist to the target artist, then delete the source artist.
+        const tracksToMove = await prisma.track.findMany({
+          where: { artists: { some: { id: currentArtist.id } } },
+          select: { id: true }
+        });
+
+        await prisma.$transaction([
+          ...tracksToMove.map((track) =>
+            prisma.track.update({
+              where: { id: track.id },
+              data: {
+                artists: {
+                  disconnect: { id: currentArtist.id },
+                  connect: { id: targetArtist.id }
+                }
+              }
+            })
+          ),
+          // Delete the old source artist atomically at the end of the transaction
+          prisma.artist.delete({
+            where: { id: currentArtist.id }
+          })
+        ]);
+
+        // Step 2: File System Cleanup
+        // Safely delete the source artist's cover image ONLY AFTER the database transaction succeeds
+        await deleteFileSafely(currentArtist.imageUrl);
+
+        // For now, return a placeholder merged flag (Step 3 will handle this fully)
+        return NextResponse.json({ merged: true, targetId: targetArtist.id });
+      }
+    }
+
     let newImageUrl = currentArtist.imageUrl;
 
     if (imageFile && imageFile.size > 0) {

@@ -115,10 +115,19 @@ function AdminArtistsContent() {
 
       if (res.ok) {
         const updatedArtist = await res.json();
-        setArtists((prev) =>
-          prev.map((a) => (a.id === updatedArtist.id ? updatedArtist : a))
-        );
-        toast.success("Artist updated successfully");
+
+        if (updatedArtist.merged) {
+          // If a merge occurred, the source artist was deleted, so we filter it out of the UI
+          setArtists((prev) => prev.filter((a) => a.id !== editingArtist.id));
+          toast.success("Artists successfully merged!");
+        } else {
+          // Standard update
+          setArtists((prev) =>
+            prev.map((a) => (a.id === updatedArtist.id ? updatedArtist : a))
+          );
+          toast.success("Artist updated successfully");
+        }
+
         closeEditModal();
       } else {
         const errorData = await res.json();
