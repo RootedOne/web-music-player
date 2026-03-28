@@ -70,3 +70,62 @@ https://next-auth.js.org/warnings#nextauth_url
  GET /api/playlists 200 in 21ms
  GET /api/artists/1 404 in 1374ms
  GET /api/artists/1 404 in 37ms
+ ✓ Compiled in 11.4s (1100 modules)
+ ✓ Compiled in 928ms (1100 modules)
+ ✓ Compiled in 721ms (1100 modules)
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 769ms (791 modules)
+[next-auth][warn][NEXTAUTH_URL]
+https://next-auth.js.org/warnings#nextauth_url
+ GET /api/auth/signin?callbackUrl=%2F 302 in 1326ms
+ GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F 200 in 245ms
+ GET /api/auth/session 200 in 62ms
+ GET /api/auth/session 200 in 21ms
+ GET /api/auth/signin?callbackUrl=%2F 302 in 146ms
+ GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F 200 in 50ms
+ GET /api/auth/session 200 in 51ms
+ GET /api/auth/session 200 in 17ms
+ GET /api/auth/signin?callbackUrl=%2F 302 in 43ms
+ GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F 200 in 44ms
+ GET /api/auth/session 200 in 38ms
+ GET /api/auth/session 200 in 17ms
+ GET /api/auth/signin?callbackUrl=%2F 302 in 36ms
+ GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F 200 in 54ms
+ GET /api/auth/session 200 in 41ms
+ GET /api/auth/session 200 in 17ms
+ GET /api/auth/providers 200 in 52ms
+ GET /api/auth/csrf 200 in 18ms
+ POST /api/auth/callback/credentials 200 in 235ms
+ GET /api/auth/session 200 in 24ms
+ ○ Compiling / ...
+ ✓ Compiled / in 864ms (801 modules)
+ ✓ Compiled /api/tracks in 495ms (825 modules)
+ ✓ Compiled (932 modules)
+[next-auth][warn][NEXTAUTH_URL]
+https://next-auth.js.org/warnings#nextauth_url
+ GET /api/tracks?filter=global 200 in 1102ms
+ GET /api/playlists 200 in 1114ms
+ GET /api/tracks?filter=global 200 in 48ms
+ GET /api/playlists 200 in 38ms
+ GET /api/playlists 200 in 52ms
+ GET /api/playlists 200 in 21ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 1101ms (1468 modules)
+ GET /dummy.mp3 404 in 1250ms
+[next-auth][warn][NEXTAUTH_URL]
+https://next-auth.js.org/warnings#nextauth_url
+ GET /api/auth/signin?callbackUrl=%2F 302 in 103ms
+ GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F 200 in 100ms
+ GET /api/auth/session 200 in 45ms
+ GET /api/auth/session 200 in 18ms
+ GET /api/auth/providers 200 in 98ms
+ GET /api/auth/csrf 200 in 39ms
+ POST /api/auth/callback/credentials 200 in 280ms
+ GET /api/auth/session 200 in 35ms
+ GET /api/playlists 200 in 205ms
+ GET /api/tracks?filter=global 200 in 194ms
+ GET /api/playlists 200 in 66ms
+ GET /api/tracks?filter=global 200 in 76ms
+ GET /api/playlists 200 in 56ms
+ GET /api/playlists 200 in 49ms
+ GET /dummy.mp3 404 in 40ms

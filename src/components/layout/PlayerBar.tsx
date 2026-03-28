@@ -350,7 +350,7 @@ export function PlayerBar() {
             leaveFrom="opacity-100 translate-y-0"
             leaveTo="opacity-0 translate-y-full"
           >
-            <div className="fixed inset-0 bg-gradient-to-b from-neutral-800 to-black backdrop-blur-3xl flex flex-col p-6 pt-10">
+            <div className="fixed inset-0 bg-zinc-900/40 backdrop-blur-2xl rounded-t-3xl flex flex-col p-6 pt-10">
 
               {/* Top Drag Handle (Close Button) */}
               <div className="w-full flex justify-center mb-8 shrink-0">
@@ -427,13 +427,13 @@ export function PlayerBar() {
                   />
                   <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden pointer-events-none">
                     <div
-                      className="h-full bg-white rounded-full pointer-events-none"
+                      className="h-full bg-[#fa243c] rounded-full pointer-events-none"
                       style={{ width: `${(progress / (duration || 1)) * 100}%` }}
                     />
                   </div>
                   {/* Thumb indicator visible on drag/hover (simulated via group-hover in CSS) */}
                   <div
-                    className="absolute h-3 w-3 bg-white rounded-full shadow pointer-events-none z-10 transition-transform scale-0 group-hover:scale-100"
+                    className="absolute h-3 w-3 bg-[#fa243c] rounded-full shadow pointer-events-none z-10 transition-transform scale-0 group-hover:scale-100"
                     style={{ left: `calc(${(progress / (duration || 1)) * 100}% - 6px)` }}
                   />
                 </div>
@@ -444,13 +444,13 @@ export function PlayerBar() {
               </div>
 
               {/* Main Controls */}
-              <div className="flex items-center justify-center gap-8 mb-8 shrink-0">
+              <div className="flex items-center justify-center gap-8 shrink-0 mt-auto pb-12">
                 <button onClick={prev} className="text-white/70 hover:text-white transition-colors p-2 active:scale-90">
                   <SkipBack className="w-10 h-10 fill-current" />
                 </button>
                 <button
                   onClick={togglePlayPause}
-                  className="w-20 h-20 flex items-center justify-center bg-white text-black rounded-full hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)]"
+                  className="w-20 h-20 flex items-center justify-center bg-[#fa243c] text-white rounded-full hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(250,36,60,0.3)]"
                 >
                   {isPlaying ? (
                     <Pause className="w-10 h-10 fill-current" />
@@ -461,30 +461,6 @@ export function PlayerBar() {
                 <button onClick={next} className="text-white/70 hover:text-white transition-colors p-2 active:scale-90">
                   <SkipForward className="w-10 h-10 fill-current" />
                 </button>
-              </div>
-
-              {/* Volume Control */}
-              <div className="flex items-center gap-4 shrink-0 mt-auto pb-4">
-                <button onClick={toggleMute} className="text-white/50 hover:text-white transition-colors p-2">
-                  {volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                </button>
-                <div className="relative w-full flex items-center group h-6">
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    value={volume}
-                    onChange={handleVolumeChange}
-                    className="absolute z-20 w-full h-full opacity-0 cursor-pointer"
-                  />
-                  <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden pointer-events-none">
-                    <div
-                      className="h-full bg-white rounded-full pointer-events-none"
-                      style={{ width: `${volume * 100}%` }}
-                    />
-                  </div>
-                </div>
               </div>
 
             </div>
