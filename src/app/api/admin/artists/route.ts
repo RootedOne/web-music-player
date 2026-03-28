@@ -108,9 +108,34 @@ export async function PATCH(request: Request) {
           })
         ]);
 
-        // Step 2: File System Cleanup
+        // Step 2: Reference Counting & File System Cleanup
+        // Before safely deleting the source artist's cover image, we must ensure no other records
+        // are actively using the exact same image file path (e.g. tracks that were merged).
+        let totalReferences = 0;
+
+        if (currentArtist.imageUrl) {
+          const [trackUsages, artistUsages] = await Promise.all([
+            prisma.track.count({
+              where: { coverUrl: currentArtist.imageUrl }
+            }),
+            prisma.artist.count({
+              where: {
+                imageUrl: currentArtist.imageUrl,
+                id: { not: currentArtist.id } // Exclude the artist we just deleted from the count
+              }
+            })
+          ]);
+
+          totalReferences = trackUsages + artistUsages;
+        }
+
         // Safely delete the source artist's cover image ONLY AFTER the database transaction succeeds
-        await deleteFileSafely(currentArtist.imageUrl);
+        // and only if no other records are actively using the physical file.
+        if (totalReferences === 0) {
+          await deleteFileSafely(currentArtist.imageUrl);
+        } else {
+          console.log(`Skipped file deletion: Image still referenced by ${totalReferences} records.`);
+        }
 
         // For now, return a placeholder merged flag (Step 3 will handle this fully)
         return NextResponse.json({ merged: true, targetId: targetArtist.id });
