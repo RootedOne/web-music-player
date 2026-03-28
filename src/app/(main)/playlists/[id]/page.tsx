@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { usePlayerStore } from "@/store/playerStore";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
-import TrackOptions from "@/components/TrackOptions";
+import TrackRow from "@/components/TrackRow";
 import EditModal from "@/components/EditModal";
 import ConfirmModal from "@/components/modals/ConfirmModal";
 import JSZip from "jszip";
@@ -25,7 +25,7 @@ export default function PlaylistPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const { playQueue, currentTrackIndex, queue, isPlaying, pause, resume, toggleShuffle, isShuffle } = usePlayerStore();
+  const { playQueue, queue, isPlaying, pause, resume, toggleShuffle, isShuffle } = usePlayerStore();
   const { data: session } = useSession();
 
   const playlistId = params.id as string;
@@ -101,14 +101,6 @@ export default function PlaylistPage() {
     const tracksToPlay = playlist.tracks.map((pt: PlaylistTrackType) => pt.track as unknown as TrackType);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     playQueue(tracksToPlay as any, 0);
-  };
-
-  const handlePlayTrack = (startIndex: number) => {
-    if (!playlist) return;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const tracksToPlay = playlist.tracks.map((pt: PlaylistTrackType) => pt.track as unknown as TrackType);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    playQueue(tracksToPlay as any, startIndex);
   };
 
   const toggleSavePlaylist = async () => {
@@ -265,25 +257,59 @@ export default function PlaylistPage() {
             </div>
           )}
         </div>
-        <div className="flex gap-2 items-center w-full md:w-auto justify-center md:justify-start mt-4 md:mt-0">
-            <button onClick={downloadPlaylist} disabled={isDownloading} title="Download Playlist" className="text-gray-400 hover:text-white transition-colors p-2 bg-[#282828] rounded-full hover:bg-[#383838] shadow-md disabled:opacity-50">
-                {isDownloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
-            </button>
-            <button onClick={copyShareLink} title="Share Playlist" className="text-gray-400 hover:text-white transition-colors p-2 bg-[#282828] rounded-full hover:bg-[#383838] shadow-md">
-                <Share2 className="w-5 h-5" />
-            </button>
-            {isOwner && (
-              <>
-                <button onClick={() => setIsEditing(true)} title="Edit Playlist" className="text-white hover:text-gray-300 transition-colors p-2 bg-[#282828] rounded-full hover:bg-[#383838] shadow-md">
-                   <Edit2 className="w-5 h-5" />
-                </button>
-                <button onClick={() => setIsDeleteConfirmOpen(true)} title="Delete Playlist" className="text-red-400 hover:text-red-300 transition-colors p-2 bg-[#282828] rounded-full hover:bg-[#383838] shadow-md">
-                   <Trash2 className="w-5 h-5" />
-                </button>
-              </>
-            )}
-        </div>
       </header>
+
+      <div className="flex flex-row items-center justify-center md:justify-start gap-4 w-full mt-6 mb-8">
+        <button
+          onClick={() => {
+            if (isCurrentPlaylistPlaying && isPlaying) {
+              pause();
+            } else if (isCurrentPlaylistPlaying && !isPlaying) {
+              resume();
+            } else {
+              handlePlayPlaylist();
+            }
+          }}
+          className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-[#fa243c] flex items-center justify-center hover:scale-105 active:scale-95 transition-all text-white shadow-lg shrink-0"
+        >
+          {isCurrentPlaylistPlaying && isPlaying ? (
+            <Pause className="w-6 h-6 md:w-8 md:h-8 fill-current" />
+          ) : (
+            <Play className="w-6 h-6 md:w-8 md:h-8 ml-1 fill-current" />
+          )}
+        </button>
+
+        <button
+          onClick={() => {
+            if (!isCurrentPlaylistPlaying) handlePlayPlaylist();
+            toggleShuffle();
+          }}
+          className={`w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 active:scale-95 transition-all shrink-0 ${isShuffle ? 'text-[#fa243c]' : 'text-white'}`}
+          title="Shuffle Play"
+        >
+          <Shuffle className="w-5 h-5" />
+          {isShuffle && <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#fa243c] rounded-full"></span>}
+        </button>
+
+        <button onClick={downloadPlaylist} disabled={isDownloading} title="Download Playlist" className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 active:scale-95 transition-all text-white shrink-0 disabled:opacity-50">
+            {isDownloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+        </button>
+
+        <button onClick={copyShareLink} title="Share Playlist" className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 active:scale-95 transition-all text-white shrink-0">
+            <Share2 className="w-5 h-5" />
+        </button>
+
+        {isOwner && (
+          <>
+            <button onClick={() => setIsEditing(true)} title="Edit Playlist" className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 active:scale-95 transition-all text-white shrink-0">
+               <Edit2 className="w-5 h-5" />
+            </button>
+            <button onClick={() => setIsDeleteConfirmOpen(true)} title="Delete Playlist" className="w-12 h-12 rounded-full bg-[#fa243c]/20 border border-[#fa243c]/30 flex items-center justify-center hover:bg-[#fa243c]/40 active:scale-95 transition-all text-[#fa243c] shrink-0">
+               <Trash2 className="w-5 h-5" />
+            </button>
+          </>
+        )}
+      </div>
 
       <ConfirmModal
         isOpen={isDeleteConfirmOpen}
@@ -308,101 +334,26 @@ export default function PlaylistPage() {
          />
       )}
 
-      <div className="flex items-center justify-center md:justify-start gap-6 mb-8 mt-2">
-        <button
-          onClick={() => {
-            if (isCurrentPlaylistPlaying && isPlaying) {
-              pause();
-            } else if (isCurrentPlaylistPlaying && !isPlaying) {
-              resume();
-            } else {
-              handlePlayPlaylist();
-            }
-          }}
-          className="w-14 h-14 md:w-16 md:h-16 bg-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition shadow-lg text-black"
-        >
-          {isCurrentPlaylistPlaying && isPlaying ? (
-            <Pause className="w-6 h-6 md:w-8 md:h-8 fill-current" />
+      {/* Tracks List */}
+      <div className="w-full pb-36">
+        <div className="flex flex-col gap-1">
+          {playlist.tracks.length === 0 ? (
+             <div className="text-center text-gray-500 py-12">No tracks in this playlist yet.</div>
           ) : (
-            <Play className="w-6 h-6 md:w-8 md:h-8 ml-1 fill-current" />
+            playlist.tracks.map((pt: PlaylistTrackType, index: number) => (
+              <TrackRow
+                key={pt.id}
+                track={pt.track as unknown as import("@/store/playerStore").Track}
+                index={index}
+                queue={playlist.tracks.map((p) => p.track) as unknown as import("@/store/playerStore").Track[]}
+              />
+            ))
           )}
-        </button>
-
-        <button
-          onClick={() => {
-            if (!isCurrentPlaylistPlaying) handlePlayPlaylist();
-            toggleShuffle();
-          }}
-          className={`p-3 rounded-full hover:scale-105 active:scale-95 transition relative ${isShuffle ? 'text-white' : 'text-gray-400 hover:text-white'}`}
-          title="Shuffle Play"
-        >
-          <Shuffle className="w-6 h-6 md:w-8 md:h-8" />
-          {isShuffle && <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full"></span>}
-        </button>
-      </div>
-
-      {/* Tracks Table */}
-      <div className="w-full">
-        <div className="hidden md:grid grid-cols-[16px_minmax(0,1fr)_minmax(0,1fr)_50px] gap-4 px-4 py-2 text-gray-400 text-sm border-b border-gray-800 mb-4 uppercase tracking-wider font-semibold">
-          <div>#</div>
-          <div>Title</div>
-          <div>Album</div>
-          <div className="text-right">Time</div>
         </div>
-
-        {playlist.tracks.length === 0 ? (
-           <div className="text-center text-gray-500 py-12">No tracks in this playlist yet.</div>
-        ) : (
-          playlist.tracks.map((pt: PlaylistTrackType, index: number) => {
-            const isThisTrackPlaying = isCurrentPlaylistPlaying && currentTrackIndex === index && isPlaying;
-
-            return (
-            <div
-              key={pt.id}
-              onDoubleClick={() => handlePlayTrack(index)}
-              className="grid grid-cols-[30px_minmax(0,1fr)_minmax(0,1fr)_50px] md:grid-cols-[16px_minmax(0,1fr)_minmax(0,1fr)_50px] items-center gap-2 md:gap-4 px-2 md:px-4 py-2 md:py-3 hover:bg-gray-800 rounded-md group text-gray-300 text-sm transition-colors cursor-pointer"
-            >
-              <div className="relative flex items-center justify-center w-6 h-6 md:w-auto md:h-auto">
-                  <div className={`text-gray-500 group-hover:hidden ${isThisTrackPlaying ? 'text-white font-bold' : ''}`}>{index + 1}</div>
-                  <div
-                    className="hidden group-hover:block text-white absolute inset-0 flex items-center justify-center bg-gray-800/80 rounded"
-                    onClick={(e) => { e.stopPropagation(); handlePlayTrack(index); }}
-                  >
-                    {isThisTrackPlaying ? <Pause className="w-3 h-3 md:w-4 md:h-4 fill-current text-white" /> : <Play className="w-3 h-3 md:w-4 md:h-4 fill-current" />}
-                  </div>
-              </div>
-
-              <div className="flex items-center gap-3 min-w-0">
-                {pt.track.coverUrl && (
-                  <img src={pt.track.coverUrl} alt="Cover" className="w-10 h-10 object-cover rounded hidden sm:block bg-[#282828] shrink-0" />
-                )}
-                <div className="flex flex-col min-w-0">
-                  <span className={`font-medium truncate ${isThisTrackPlaying ? 'text-white font-bold' : 'text-white'}`}>{pt.track.title}</span>
-                  <span className="text-gray-500 text-xs md:text-sm truncate">{pt.track.artist}</span>
-                </div>
-              </div>
-              <div className="hidden md:block truncate text-gray-400 pr-4">{pt.track.album}</div>
-
-              <div className="flex items-center justify-end gap-1 md:gap-2 text-gray-400">
-                <span className="hidden sm:block tabular-nums text-xs md:text-sm mr-2">{Math.floor(pt.track.duration / 60)}:{(Math.floor(pt.track.duration % 60)).toString().padStart(2, '0')}</span>
-                <div className="opacity-100 md:opacity-0 group-hover:opacity-100 transition" onClick={(e) => e.stopPropagation()}>
-                   <TrackOptions
-                      trackId={pt.track.id}
-                      trackOwnerId={pt.track.userId}
-                      fileUrl={pt.track.fileUrl}
-                      trackTitle={pt.track.title}
-                      onRemoveFromPlaylist={isOwner ? () => removeTrack(pt.track.id) : undefined}
-                   />
-                </div>
-              </div>
-            </div>
-            );
-          })
-        )}
       </div>
 
       {isOwner && (
-      <div className="mt-8 md:mt-12 pt-8 border-t border-gray-800">
+      <div className="mt-8 md:mt-12 pt-8 border-t border-white/10 pb-36">
         <div className="flex flex-col gap-4 mb-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <h2 className="text-xl md:text-2xl font-bold text-white">Let&apos;s find something for your playlist</h2>
@@ -420,7 +371,7 @@ export default function PlaylistPage() {
                  value={searchQuery}
                  onChange={(e) => setSearchQuery(e.target.value)}
                  autoFocus
-                 className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-4 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                 className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#fa243c] transition-colors"
                />
             )}
         </div>
