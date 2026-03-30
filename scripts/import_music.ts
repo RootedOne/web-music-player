@@ -114,6 +114,15 @@ async function main() {
     const coverArtCache = new Map<string, string>(); // Map hash to relative path
     let successCount = 0;
     let errorCount = 0;
+    let skippedCount = 0;
+
+    const normalizeString = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    // Pre-fetch user's existing tracks for duplicate detection
+    const existingTracks = await prisma.track.findMany({
+      where: { userId: user.id },
+      select: { title: true, artist: true }
+    });
 
     for (const filePath of discoveredFiles) {
       try {
@@ -126,6 +135,21 @@ async function main() {
         const artistName = metadata.common.artist || 'Unknown Artist';
         const album = metadata.common.album || 'Unknown Album';
         const duration = metadata.format.duration || 0;
+
+        // Duplicate / Fuzzy Match Check
+        const normTitle = normalizeString(title);
+        const normArtist = normalizeString(artistName);
+
+        const isDuplicate = existingTracks.some(t =>
+          normalizeString(t.title) === normTitle &&
+          normalizeString(t.artist || "Unknown Artist") === normArtist
+        );
+
+        if (isDuplicate) {
+          console.log(`Skipped (Duplicate): ${title} by ${artistName}`);
+          skippedCount++;
+          continue;
+        }
 
         // Handle cover art
         let coverUrl = null;
@@ -164,28 +188,48 @@ async function main() {
         await fs.copyFile(filePath, targetFilePath);
         const fileUrl = `/uploads/tracks/${newFileName}`;
 
-        // Upsert artist
-        const artistRecord = await prisma.artist.upsert({
-          where: { name: artistName },
-          update: {},
-          create: { name: artistName },
-        });
+        // 1. String Parsing (The Split)
+        const rawArtistString = artistName || "Unknown Artist";
+        // Split on commas, ampersands, and keywords: feat., ft., featuring, x, X
+        const artistNames = rawArtistString
+          .split(/,|\s+&\s+|\s+feat\.?\s+|\s+ft\.?\s+|\s+featuring\s+|\s+[xX]\s+/i)
+          .map((name) => name.trim())
+          .filter((name) => name.length > 0);
+
+        // 2. Multi-Upsert Loop
+        const artistRecords = await Promise.all(
+          artistNames.map(async (name) => {
+            return prisma.artist.upsert({
+              where: { name },
+              update: {
+                ...(coverUrl ? { imageUrl: coverUrl } : {}),
+              },
+              create: {
+                name,
+                imageUrl: coverUrl
+              },
+            });
+          })
+        );
 
         // Insert track into DB
         await prisma.track.create({
           data: {
             title,
-            artist: artistName,
+            artist: artistName, // Keep legacy string for backward compatibility
             album,
             duration,
             fileUrl,
             coverUrl,
             userId: user.id,
             artists: {
-              connect: { id: artistRecord.id }
+              connect: artistRecords.map((a) => ({ id: a.id }))
             }
           }
         });
+
+        // Add newly imported track to the deduplication list for this session
+        existingTracks.push({ title, artist: artistName });
 
         successCount++;
       } catch (fileError: any) {
@@ -196,6 +240,7 @@ async function main() {
 
     console.log(`\nImport Summary:`);
     console.log(`Successfully imported: ${successCount} files.`);
+    console.log(`Skipped (Duplicates): ${skippedCount} files.`);
     console.log(`Failed to import: ${errorCount} files.`);
 
   } catch (error) {
