@@ -126,6 +126,39 @@ export async function POST(request: Request) {
         }
       }
 
+      // Conflict Detection for Artist 'name'
+      if (entity === "Artist" && field === "name" && results.length > 0) {
+        const proposedNames = results.map(r => r.newValue);
+        const existingArtists = await prisma.artist.findMany({
+          where: {
+            name: {
+              in: proposedNames
+            }
+          },
+          select: {
+            id: true,
+            name: true,
+          }
+        });
+
+        const existingNamesMap = new Map(existingArtists.map(a => [a.name.toLowerCase(), a.id]));
+
+        for (const result of results) {
+          const lowerNewValue = result.newValue.toLowerCase();
+          if (existingNamesMap.has(lowerNewValue)) {
+            const existingId = existingNamesMap.get(lowerNewValue);
+            if (existingId !== result.id) {
+              // We'll define results loosely to accept these new keys in JS
+              // using Object.assign or direct assignment since results is typed loosely
+              Object.assign(result, {
+                hasConflict: true,
+                conflictMessage: "Artist name already exists.",
+              });
+            }
+          }
+        }
+      }
+
       return NextResponse.json({ results });
     }
 
@@ -135,22 +168,36 @@ export async function POST(request: Request) {
       }
 
       let updatedCount = 0;
+      let failedCount = 0;
+      const errors: string[] = [];
 
-      // We perform updates in a transaction for safety
-      const transactions = updates.map((update: { id: string, newValue: string }) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (prisma as any)[entity.toLowerCase()].update({
-          where: { id: update.id },
-          data: { [field]: update.newValue }
-        });
-      });
-
-      await prisma.$transaction(transactions);
-      updatedCount = transactions.length;
+      // Execute updates sequentially to gracefully handle unique constraint errors (P2002)
+      // without rolling back the entire batch of unrelated updates.
+      for (const update of updates) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (prisma as any)[entity.toLowerCase()].update({
+            where: { id: update.id },
+            data: { [field]: update.newValue }
+          });
+          updatedCount++;
+        } catch (error) {
+          failedCount++;
+          // Prisma P2002: Unique constraint failed
+          if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+            errors.push(`ID ${update.id} failed: Unique constraint on ${field}.`);
+          } else {
+            const message = error instanceof Error ? error.message : "Unknown error";
+            errors.push(`ID ${update.id} failed: ${message}`);
+          }
+        }
+      }
 
       return NextResponse.json({
-        message: "Successfully updated records",
-        count: updatedCount
+        message: `Successfully updated ${updatedCount} records.` + (failedCount > 0 ? ` Failed ${failedCount} records.` : ""),
+        count: updatedCount,
+        failedCount,
+        errors
       });
     }
 

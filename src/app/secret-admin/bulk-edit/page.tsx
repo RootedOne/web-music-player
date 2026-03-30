@@ -9,6 +9,8 @@ type PreviewResult = {
   id: string;
   originalValue: string;
   newValue: string;
+  hasConflict?: boolean;
+  conflictMessage?: string;
 };
 
 export default function BulkEditPage() {
@@ -82,7 +84,14 @@ export default function BulkEditPage() {
       }
 
       setPreviewResults(data.results);
-      setSelectedIds(new Set(data.results.map((r: PreviewResult) => r.id)));
+      // Exclude conflicting records from default selection
+      setSelectedIds(
+        new Set(
+          data.results
+            .filter((r: PreviewResult) => !r.hasConflict)
+            .map((r: PreviewResult) => r.id)
+        )
+      );
       setStep(2);
 
       if (data.results.length === 0) {
@@ -103,7 +112,10 @@ export default function BulkEditPage() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(new Set(previewResults.map((r) => r.id)));
+      // Only select non-conflicting records
+      setSelectedIds(
+        new Set(previewResults.filter((r) => !r.hasConflict).map((r) => r.id))
+      );
     } else {
       setSelectedIds(new Set());
     }
@@ -151,7 +163,11 @@ export default function BulkEditPage() {
         throw new Error(data.error || "Failed to execute updates");
       }
 
-      toast.success(data.message || `Successfully updated ${data.count} records.`);
+      if (data.failedCount > 0) {
+        toast.error(data.message || `Failed to update some records.`, { duration: 5000 });
+      } else {
+        toast.success(data.message || `Successfully updated ${data.count} records.`);
+      }
       setShowConfirmModal(false);
       setStep(1);
       setPreviewResults([]);
@@ -322,7 +338,10 @@ export default function BulkEditPage() {
                           <th className="px-4 py-3 w-12">
                             <input
                               type="checkbox"
-                              checked={selectedIds.size === previewResults.length && previewResults.length > 0}
+                              checked={
+                                selectedIds.size > 0 &&
+                                selectedIds.size === previewResults.filter((r) => !r.hasConflict).length
+                              }
                               onChange={(e) => handleSelectAll(e.target.checked)}
                               className="appearance-none w-4 h-4 border border-white/20 rounded bg-transparent checked:bg-[#fa243c] checked:border-[#fa243c] transition-all cursor-pointer relative flex items-center justify-center before:content-[''] before:absolute before:w-2 before:h-2 before:bg-white before:rounded-sm checked:before:block before:hidden"
                             />
@@ -340,12 +359,23 @@ export default function BulkEditPage() {
                                 type="checkbox"
                                 checked={selectedIds.has(result.id)}
                                 onChange={(e) => handleSelectOne(result.id, e.target.checked)}
-                                className="appearance-none w-4 h-4 border border-white/20 rounded bg-transparent checked:bg-[#fa243c] checked:border-[#fa243c] transition-all cursor-pointer relative flex items-center justify-center before:content-[''] before:absolute before:w-2 before:h-2 before:bg-white before:rounded-sm checked:before:block before:hidden"
+                                disabled={result.hasConflict}
+                                className="appearance-none w-4 h-4 border border-white/20 rounded bg-transparent checked:bg-[#fa243c] checked:border-[#fa243c] disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer relative flex items-center justify-center before:content-[''] before:absolute before:w-2 before:h-2 before:bg-white before:rounded-sm checked:before:block before:hidden"
                               />
                             </td>
                             <td className="px-4 py-3 font-mono text-xs truncate max-w-[100px]">{result.id.slice(0, 8)}...</td>
                             <td className="px-4 py-3 line-clamp-2 max-w-xs">{result.originalValue}</td>
-                            <td className="px-4 py-3 text-green-400 line-clamp-2 max-w-xs">{result.newValue}</td>
+                            <td className={`px-4 py-3 line-clamp-2 max-w-xs ${result.hasConflict ? "text-red-400" : "text-green-400"}`}>
+                              <div className="flex flex-col">
+                                <span>{result.newValue}</span>
+                                {result.hasConflict && (
+                                  <span className="text-xs text-red-500/80 flex items-center gap-1 mt-1">
+                                    <AlertTriangle className="w-3 h-3" />
+                                    {result.conflictMessage}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
