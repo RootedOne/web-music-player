@@ -158,6 +158,8 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const filter = searchParams.get('filter') || 'global';
     const searchQuery = searchParams.get('search') || '';
+    const cursor = searchParams.get('cursor');
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
 
     const session = await getServerSession(authOptions);
 
@@ -180,14 +182,27 @@ export async function GET(req: Request) {
 
     const tracks = await prisma.track.findMany({
       where: whereClause,
+      take: limit + 1, // Fetch an extra track to see if there's a next page
+      cursor: cursor ? { id: cursor } : undefined,
+      skip: cursor ? 1 : 0, // Skip the cursor itself
       include: {
         user: { select: { username: true } },
         artists: true,
       },
-      orderBy: { createdAt: "desc" },
+      // Use stable sort to prevent duplicates or jumping during pagination
+      orderBy: [
+         { createdAt: "desc" },
+         { id: "desc" }
+      ],
     });
 
-    return NextResponse.json({ tracks }, { status: 200 });
+    let nextCursor: string | null = null;
+    if (tracks.length > limit) {
+      const nextItem = tracks.pop(); // Remove the extra item
+      nextCursor = nextItem!.id;
+    }
+
+    return NextResponse.json({ tracks, nextCursor }, { status: 200 });
   } catch (error) {
     console.error("Fetch Error:", error);
     return NextResponse.json({ error: "Failed to fetch tracks" }, { status: 500 });

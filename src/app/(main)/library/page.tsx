@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import TrackCard from "@/components/TrackCard";
 import { Track } from "@/store/playerStore";
+import { VirtuosoGrid } from "react-virtuoso";
+import React from "react";
 
 type Playlist = { id: string; name: string, coverUrl: string | null };
 
@@ -16,26 +18,49 @@ export default function LibraryPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
   const [error, setError] = useState("");
+
   const [myTracks, setMyTracks] = useState<Track[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+
   const [myPlaylists, setMyPlaylists] = useState<Playlist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchMyTracks();
+    fetchInitialTracks();
     fetchMyPlaylists();
   }, []);
 
-  const fetchMyTracks = async () => {
+  const fetchInitialTracks = async () => {
+    setIsLoading(true);
     try {
-      const res = await fetch("/api/tracks?filter=personal");
+      const res = await fetch("/api/tracks?filter=personal&limit=50");
       if (res.ok) {
         const data = await res.json();
         setMyTracks(data.tracks);
+        setNextCursor(data.nextCursor);
       }
     } catch (err) {
       console.error(err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadMoreTracks = async () => {
+    if (!nextCursor || isFetchingMore) return;
+    setIsFetchingMore(true);
+    try {
+      const res = await fetch(`/api/tracks?filter=personal&limit=50&cursor=${nextCursor}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMyTracks((prev) => [...prev, ...data.tracks]);
+        setNextCursor(data.nextCursor);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsFetchingMore(false);
     }
   };
 
@@ -123,7 +148,7 @@ export default function LibraryPage() {
     }
 
     router.refresh();
-    setTimeout(() => { fetchMyTracks(); }, 500);
+    setTimeout(() => { fetchInitialTracks(); }, 500);
     setIsUploading(false);
     setUploadProgress("");
   };
@@ -205,18 +230,46 @@ export default function LibraryPage() {
 
       <section>
         <h2 className="text-2xl font-bold mb-6 text-gray-100">Your Uploads</h2>
-        {isLoading ? (
+        {isLoading && myTracks.length === 0 ? (
           <p className="text-gray-500">Loading your music...</p>
         ) : myTracks.length === 0 ? (
           <p className="text-gray-500 bg-gray-800/50 p-6 rounded-lg text-center border border-gray-700 border-dashed">
             You haven&apos;t uploaded any tracks yet.
           </p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-            {myTracks.map((track) => (
-               <TrackCard key={track.id} track={track} onUpdate={fetchMyTracks} onDelete={fetchMyTracks} />
-            ))}
-          </div>
+          <VirtuosoGrid
+            useWindowScroll={false}
+            customScrollParent={typeof window !== 'undefined' ? document.querySelector('main') || undefined : undefined}
+            totalCount={myTracks.length}
+            overscan={200}
+            data={myTracks}
+            components={{
+              List: React.forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(function VirtuosoList({ style, children, ...props }, ref) {
+                return (
+                  <div
+                    ref={ref}
+                    {...props}
+                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6"
+                    style={{ ...style }}
+                  >
+                    {children}
+                  </div>
+                );
+              }),
+              Item: React.forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(function VirtuosoItem({ children, ...props }, ref) {
+                return <div ref={ref} {...props}>{children}</div>;
+              })
+            }}
+            itemContent={(index, track) => (
+               <TrackCard key={track.id} track={track} onUpdate={fetchInitialTracks} onDelete={fetchInitialTracks} />
+            )}
+            endReached={loadMoreTracks}
+          />
+        )}
+        {isFetchingMore && (
+           <div className="flex justify-center mt-6">
+              <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+           </div>
         )}
       </section>
     </>
