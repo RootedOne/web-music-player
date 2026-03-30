@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useState, Fragment } from "react";
+import { useEffect, useRef, useState, Fragment } from "react";
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle } from "lucide-react";
 import { usePlayerStore } from "@/store/playerStore";
 import { Dialog, Transition } from "@headlessui/react";
@@ -15,6 +14,7 @@ export function PlayerBar() {
   const [isExpanded, setIsExpanded] = useState(false);
   const router = useRouter();
   const [isMultiArtistModalOpen, setIsMultiArtistModalOpen] = useState(false);
+
   const {
     currentTrackIndex,
     queue,
@@ -35,17 +35,44 @@ export function PlayerBar() {
   } = usePlayerStore();
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playPromiseRef = useRef<Promise<void> | void>(undefined);
+  const isPlayingRef = useRef(isPlaying);
+  const [localProgress, setLocalProgress] = useState(progress);
+
   const currentTrack = currentTrackIndex >= 0 ? queue[currentTrackIndex] : null;
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
 
   useEffect(() => {
     if (!audioRef.current) return;
 
     if (isPlaying) {
-      audioRef.current.play().catch(err => console.error("Playback failed:", err));
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromiseRef.current = playPromise;
+        playPromise.catch((err) => {
+          console.error("Playback failed or was interrupted:", err);
+        });
+      }
     } else {
-      audioRef.current.pause();
+      if (playPromiseRef.current !== undefined) {
+        playPromiseRef.current.then(() => {
+          if (!isPlayingRef.current) {
+            audioRef.current?.pause();
+          }
+        }).catch(() => {
+          // Playback promise was already rejected, safe to try pausing
+          if (!isPlayingRef.current) {
+            audioRef.current?.pause();
+          }
+        });
+      } else {
+        audioRef.current.pause();
+      }
     }
-  }, [isPlaying, currentTrackIndex, currentTrack]); // Added currentTrack to re-trigger play on track change
+  }, [isPlaying, currentTrackIndex, currentTrack]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -53,9 +80,37 @@ export function PlayerBar() {
     }
   }, [volume]);
 
+  const rafRef = useRef<number>();
+
+  useEffect(() => {
+    const updateProgress = () => {
+      if (audioRef.current) {
+        setLocalProgress(audioRef.current.currentTime);
+      }
+      if (isPlaying) {
+        rafRef.current = requestAnimationFrame(updateProgress);
+      }
+    };
+
+    if (isPlaying) {
+      rafRef.current = requestAnimationFrame(updateProgress);
+    } else {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (audioRef.current) setLocalProgress(audioRef.current.currentTime);
+    }
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [isPlaying]);
+
   const handleTimeUpdate = () => {
     if (audioRef.current) {
-      setProgress(audioRef.current.currentTime);
+      const currentTime = audioRef.current.currentTime;
+      if (!isPlaying) setLocalProgress(currentTime);
+
+      if (Math.abs(progress - currentTime) > 1) {
+        setProgress(currentTime);
+      }
     }
   };
 
@@ -70,22 +125,16 @@ export function PlayerBar() {
   };
 
   const handleGlobalShufflePlay = async () => {
-    // Context-Aware Global Shuffle
-    // If the queue only has 1 track (a single song played from Library/Discover)
-    // or is completely empty, act as a "Global Radio" and pull random tracks.
     if (queue.length <= 1) {
       try {
         const res = await fetch("/api/tracks/random?limit=50");
         if (res.ok) {
           const data = await res.json();
           if (data.tracks && data.tracks.length > 0) {
-            // If a single track is currently playing, preserve it as the first track
-            // and append the random radio queue behind it.
             let newQueue = data.tracks;
             const startIndex = 0;
 
             if (queue.length === 1 && currentTrack) {
-               // Remove the current track from the randomized pool to avoid immediate duplicates
                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                newQueue = newQueue.filter((t: any) => t.id !== currentTrack.id);
                newQueue.unshift(currentTrack);
@@ -102,8 +151,6 @@ export function PlayerBar() {
         console.error("Failed to fetch global random tracks", err);
       }
     } else {
-      // The user is in an active Playlist or Album queue (length > 1)
-      // Only shuffle the existing active context.
       toggleShuffle();
     }
   };
@@ -112,6 +159,7 @@ export function PlayerBar() {
     const time = Number(e.target.value);
     if (audioRef.current) {
       audioRef.current.currentTime = time;
+      setLocalProgress(time);
       setProgress(time);
     }
   };
@@ -135,7 +183,6 @@ export function PlayerBar() {
         setIsExpanded(false);
         router.push(`/artist/${encodeURIComponent(currentTrack.artists[0].id)}`);
     } else {
-        // Fallback for older tracks
         const parsedArtists = parseArtists(currentTrack.artistObj?.name || currentTrack.artist);
         if (parsedArtists.length > 1) {
            setIsMultiArtistModalOpen(true);
@@ -158,7 +205,7 @@ export function PlayerBar() {
     return `${minutes}:${seconds}`;
   };
 
-  if (!currentTrack) return null; // Don't render until a track is selected (optional, or render empty state)
+  if (!currentTrack) return null;
 
   return (
     <>
@@ -180,7 +227,7 @@ export function PlayerBar() {
           {/* Thin Progress Bar at bottom edge */}
           <div
             className="absolute bottom-0 left-0 h-[2px] bg-white/50 pointer-events-none transition-all duration-100 ease-linear"
-            style={{ width: `${(progress / (duration || 1)) * 100}%` }}
+            style={{ width: `${(localProgress / (duration || 1)) * 100}%` }}
           />
 
           {/* Increased invisible touch target for progress scrubbing */}
@@ -188,7 +235,7 @@ export function PlayerBar() {
             type="range"
             min={0}
             max={duration || 100}
-            value={progress}
+            value={localProgress}
             onChange={handleSeek}
             className="absolute bottom-[-14px] left-0 w-full h-8 opacity-0 cursor-pointer z-20 touch-none"
           />
@@ -298,17 +345,17 @@ export function PlayerBar() {
           </div>
 
           <div className="w-full flex items-center gap-3">
-            <span className="text-xs text-gray-400 w-10 text-right">{formatTime(progress)}</span>
+            <span className="text-xs text-gray-400 w-10 text-right">{formatTime(localProgress)}</span>
             <div className="relative w-full flex items-center group">
               <input
                 type="range"
                 min={0}
                 max={duration || 100}
-                value={progress}
+                value={localProgress}
                 onChange={handleSeek}
                 className="w-full h-1 bg-[#4d4d4d] rounded-full appearance-none cursor-pointer focus:outline-none"
                 style={{
-                  background: `linear-gradient(to right, #ffffff ${(progress / (duration || 1)) * 100}%, #4d4d4d ${(progress / (duration || 1)) * 100}%)`
+                  background: `linear-gradient(to right, #ffffff ${(localProgress / (duration || 1)) * 100}%, #4d4d4d ${(localProgress / (duration || 1)) * 100}%)`
                 }}
               />
             </div>
@@ -407,7 +454,7 @@ export function PlayerBar() {
                    </button>
                    <TrackOptions
                       trackId={currentTrack.id}
-                      trackOwnerId={currentTrack.id} // Not ideal, but track owner ID isn't easily exposed in PlayerStore currently. Will use track ID to bypass Type errors, backend still checks ownership.
+                      trackOwnerId={currentTrack.id}
                       fileUrl={currentTrack.fileUrl}
                       trackTitle={currentTrack.title}
                    />
@@ -421,24 +468,24 @@ export function PlayerBar() {
                     type="range"
                     min={0}
                     max={duration || 100}
-                    value={progress}
+                    value={localProgress}
                     onChange={handleSeek}
                     className="absolute z-20 w-full h-full opacity-0 cursor-pointer"
                   />
                   <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden pointer-events-none">
                     <div
                       className="h-full bg-white rounded-full pointer-events-none"
-                      style={{ width: `${(progress / (duration || 1)) * 100}%` }}
+                      style={{ width: `${(localProgress / (duration || 1)) * 100}%` }}
                     />
                   </div>
                   {/* Thumb indicator visible on drag/hover (simulated via group-hover in CSS) */}
                   <div
                     className="absolute h-3 w-3 bg-white rounded-full shadow pointer-events-none z-10 transition-transform scale-0 group-hover:scale-100"
-                    style={{ left: `calc(${(progress / (duration || 1)) * 100}% - 6px)` }}
+                    style={{ left: `calc(${(localProgress / (duration || 1)) * 100}% - 6px)` }}
                   />
                 </div>
                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-white/50 font-medium tabular-nums">{formatTime(progress)}</span>
+                  <span className="text-xs text-white/50 font-medium tabular-nums">{formatTime(localProgress)}</span>
                   <span className="text-xs text-white/50 font-medium tabular-nums">{formatTime(duration)}</span>
                 </div>
               </div>
