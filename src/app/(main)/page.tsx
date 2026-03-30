@@ -3,15 +3,18 @@
 import TrackCard from "@/components/TrackCard";
 import { useSession } from "next-auth/react";
 import { redirect, useRouter } from "next/navigation";
-import { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { Track } from "@/store/playerStore";
 import { Search as SearchIcon, Music } from "lucide-react";
+import { VirtuosoGrid } from "react-virtuoso";
 
 function HomeContent() {
   const { data: session, status } = useSession();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -21,7 +24,7 @@ function HomeContent() {
   }, [status]);
 
   useEffect(() => {
-    fetchTracks();
+    fetchInitialTracks();
   }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,18 +37,36 @@ function HomeContent() {
     }
   };
 
-  const fetchTracks = async () => {
+  const fetchInitialTracks = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/tracks?filter=global`);
+      const res = await fetch(`/api/tracks?filter=global&limit=50`);
       if (res.ok) {
         const data = await res.json();
         setTracks(data.tracks);
+        setNextCursor(data.nextCursor);
       }
     } catch (error) {
       console.error(error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadMoreTracks = async () => {
+    if (!nextCursor || isFetchingMore) return;
+    setIsFetchingMore(true);
+    try {
+      const res = await fetch(`/api/tracks?filter=global&limit=50&cursor=${nextCursor}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTracks((prev) => [...prev, ...data.tracks]);
+        setNextCursor(data.nextCursor);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsFetchingMore(false);
     }
   };
 
@@ -91,20 +112,46 @@ function HomeContent() {
             Global Feed
         </h2>
 
-        {isLoading ? (
+        {isLoading && tracks.length === 0 ? (
             <p className="text-gray-500">Loading tracks...</p>
-        ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-               {tracks.length === 0 ? (
-                 <div className="col-span-full text-gray-500 py-8">
-                   No tracks have been uploaded to the platform yet. Be the first!
-                 </div>
-               ) : (
-                 tracks.map(track => (
-                   <TrackCard key={track.id} track={track} />
-                 ))
-               )}
+        ) : tracks.length === 0 ? (
+            <div className="col-span-full text-gray-500 py-8">
+               No tracks have been uploaded to the platform yet. Be the first!
             </div>
+        ) : (
+          <VirtuosoGrid
+            useWindowScroll={false}
+            customScrollParent={typeof window !== 'undefined' ? document.querySelector('main') || undefined : undefined}
+            totalCount={tracks.length}
+            overscan={200}
+            data={tracks}
+            components={{
+              List: React.forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(function VirtuosoList({ style, children, ...props }, ref) {
+                return (
+                  <div
+                    ref={ref}
+                    {...props}
+                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6"
+                    style={{ ...style }}
+                  >
+                    {children}
+                  </div>
+                );
+              }),
+              Item: React.forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(function VirtuosoItem({ children, ...props }, ref) {
+                return <div ref={ref} {...props}>{children}</div>;
+              })
+            }}
+            itemContent={(index, track) => (
+               <TrackCard key={track.id} track={track} onUpdate={fetchInitialTracks} onDelete={fetchInitialTracks} />
+            )}
+            endReached={loadMoreTracks}
+          />
+        )}
+        {isFetchingMore && (
+           <div className="flex justify-center mt-6">
+              <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+           </div>
         )}
       </section>
     </div>
