@@ -25,7 +25,10 @@ export async function POST(request: Request) {
     }
 
     if (action === "preview") {
-      if (!search && !isRegex) {
+      const safeSearch = typeof search === 'string' ? search : "";
+      const safeReplace = typeof replace === 'string' ? replace : "";
+
+      if (!safeSearch && !isRegex) {
          return NextResponse.json({ error: "Search term is required" }, { status: 400 });
       }
 
@@ -36,18 +39,18 @@ export async function POST(request: Request) {
       // Actually, Prisma SQLite 'contains' is case-insensitive by default in dev/sqlite.
       // But since we need case-sensitive or regex logic, we might have to fetch a wider net or do it in JS.
       // To be safe and since this is admin functionality, we can fetch all or a large chunk and filter.
-      // Let's use Prisma to fetch all records where the field is not null.
+      // We cannot use `{ not: null }` on fields that are required (like Artist.name or Track.title),
+      // as Prisma will throw a validation error. Instead, we use a simpler approach.
 
       let records: { id: string, [key: string]: string | null }[] = [];
 
-      if (!isRegex && !isCaseSensitive) {
+      if (!isRegex && !isCaseSensitive && safeSearch !== "") {
         // We can optimize non-regex case-insensitive with Prisma 'contains'
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         records = await (prisma as any)[entity.toLowerCase()].findMany({
           where: {
             [field]: {
-               contains: search,
-               // mode: 'insensitive' is not supported in SQLite, but default is case-insensitive for ASCII.
+               contains: safeSearch,
             }
           },
           select: {
@@ -56,14 +59,10 @@ export async function POST(request: Request) {
           }
         });
       } else {
-        // Fetch all non-null for this field and filter in JS for regex or strict case sensitivity
+        // Fetch all and filter in JS for regex or strict case sensitivity, or empty search strings
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         records = await (prisma as any)[entity.toLowerCase()].findMany({
-          where: {
-            [field]: {
-              not: null
-            }
-          },
+          where: {}, // Empty where clause fetches all records
           select: {
             id: true,
             [field]: true,
@@ -76,7 +75,7 @@ export async function POST(request: Request) {
 
       if (isRegex) {
         try {
-          regex = new RegExp(search, isCaseSensitive ? "g" : "gi");
+          regex = new RegExp(safeSearch, isCaseSensitive ? "g" : "gi");
         } catch {
           return NextResponse.json({ error: "Invalid Regular Expression" }, { status: 400 });
         }
@@ -94,25 +93,25 @@ export async function POST(request: Request) {
             match = true;
             // Reset lastIndex because test() advances it
             regex!.lastIndex = 0;
-            newValue = originalValue.replace(regex!, replace || "");
+            newValue = originalValue.replace(regex!, safeReplace);
           }
         } else {
           if (isCaseSensitive) {
-            if (originalValue.includes(search)) {
+            if (originalValue.includes(safeSearch)) {
               match = true;
-              newValue = originalValue.split(search).join(replace || "");
+              newValue = originalValue.split(safeSearch).join(safeReplace);
             }
           } else {
             // Case-insensitive simple string replacement
             const lowerOriginal = originalValue.toLowerCase();
-            const lowerSearch = search.toLowerCase();
+            const lowerSearch = safeSearch.toLowerCase();
             if (lowerOriginal.includes(lowerSearch)) {
               match = true;
               // Safe case-insensitive replace all
               // We use a regex created from the search string, escaping regex characters
-              const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const escapedSearch = safeSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
               const replaceRegex = new RegExp(escapedSearch, "gi");
-              newValue = originalValue.replace(replaceRegex, replace || "");
+              newValue = originalValue.replace(replaceRegex, safeReplace);
             }
           }
         }
