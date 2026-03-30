@@ -18,20 +18,20 @@ const TrackCard = React.memo(function TrackCard({ track, onUpdate, onDelete }: {
 
   return (
     <div
-      className="bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition cursor-pointer group shadow-lg"
+      className="bg-white/5 backdrop-blur-xl border border-white/10 p-4 rounded-2xl hover:bg-white/10 transition cursor-pointer group shadow-lg"
       onClick={handlePlay}
     >
-      <div className="w-full aspect-square bg-[#181818] rounded-md mb-4 flex items-center justify-center relative shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden">
+      <div className="w-full aspect-square bg-zinc-900/40 rounded-xl mb-4 flex items-center justify-center relative shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden">
         {track.coverUrl ? (
           <img src={track.coverUrl} alt="Cover" className="w-full h-full object-cover" />
         ) : (
-          <span className="text-gray-600 font-bold text-2xl">MP3</span>
+          <span className="text-white/20 font-bold text-2xl">MP3</span>
         )}
         <button
           onClick={(e) => { e.stopPropagation(); handlePlay(); }}
-          className="absolute bottom-2 right-2 w-12 h-12 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all shadow-xl hover:scale-105"
+          className="absolute bottom-2 right-2 w-12 h-12 bg-[#fa243c] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all shadow-xl hover:scale-105 active:scale-95"
         >
-          <Play className="w-6 h-6 ml-1 fill-black text-black" />
+          <Play className="w-6 h-6 ml-1 fill-white text-white" />
         </button>
       </div>
       <div className="flex items-start justify-between gap-2">

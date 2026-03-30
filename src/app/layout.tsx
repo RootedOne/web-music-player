@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-black text-white min-h-[100dvh] selection:bg-white/20`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-zinc-950 text-white min-h-screen overflow-x-hidden selection:bg-white/20`}
       >
         {/* Ambient Dark Mesh Background */}
         <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden bg-black">
