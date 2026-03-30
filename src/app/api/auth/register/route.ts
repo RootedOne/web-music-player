@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { validateUsername } from "@/lib/validations";
 
 export async function POST(req: Request) {
   try {
@@ -9,6 +10,13 @@ export async function POST(req: Request) {
     if (!username || !password) {
       return NextResponse.json(
         { error: "Missing username or password" },
+        { status: 400 }
+      );
+    }
+
+    if (!validateUsername(username)) {
+      return NextResponse.json(
+        { error: "Username must be 3-16 characters and contain only letters and numbers" },
         { status: 400 }
       );
     }
