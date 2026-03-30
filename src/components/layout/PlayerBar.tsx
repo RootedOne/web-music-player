@@ -21,7 +21,7 @@ export function PlayerBar() {
     isShuffle,
     isPlaying,
     volume,
-    progress,
+    progress: globalProgress,
     duration,
     pause,
     resume,
@@ -36,6 +36,18 @@ export function PlayerBar() {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentTrack = currentTrackIndex >= 0 ? queue[currentTrackIndex] : null;
+
+  // ⚡ Bolt: Keep high-frequency scrubber state local
+  const [localProgress, setLocalProgress] = useState(0);
+  const [isScrubbing, setIsScrubbing] = useState(false);
+  const lastSyncTimeRef = useRef(0);
+
+  // Sync from global when track changes or initial load
+  useEffect(() => {
+    if (!isScrubbing) {
+       setLocalProgress(globalProgress);
+    }
+  }, [globalProgress, isScrubbing]);
 
   useEffect(() => {
     if (!audioRef.current) return;
@@ -54,8 +66,16 @@ export function PlayerBar() {
   }, [volume]);
 
   const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      setProgress(audioRef.current.currentTime);
+    if (audioRef.current && !isScrubbing) {
+      const currentTime = audioRef.current.currentTime;
+      setLocalProgress(currentTime);
+
+      // Sync to global store only once per second to minimize app-wide re-renders
+      const now = Date.now();
+      if (now - lastSyncTimeRef.current > 1000) {
+         setProgress(currentTime);
+         lastSyncTimeRef.current = now;
+      }
     }
   };
 
@@ -108,12 +128,19 @@ export function PlayerBar() {
     }
   };
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const time = Number(e.target.value);
+  const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsScrubbing(true);
+    setLocalProgress(Number(e.target.value));
+  };
+
+  const handleSeekComplete = (e: React.ChangeEvent<HTMLInputElement> | React.MouseEvent<HTMLInputElement> | React.TouchEvent<HTMLInputElement> | React.KeyboardEvent<HTMLInputElement>) => {
+    const time = Number((e.target as HTMLInputElement).value);
     if (audioRef.current) {
       audioRef.current.currentTime = time;
-      setProgress(time);
+      setLocalProgress(time);
+      setProgress(time); // Sync to global store on final drop
     }
+    setIsScrubbing(false);
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -180,7 +207,7 @@ export function PlayerBar() {
           {/* Thin Progress Bar at bottom edge */}
           <div
             className="absolute bottom-0 left-0 h-[2px] bg-white/50 pointer-events-none transition-all duration-100 ease-linear"
-            style={{ width: `${(progress / (duration || 1)) * 100}%` }}
+            style={{ width: `${(localProgress / (duration || 1)) * 100}%` }}
           />
 
           {/* Increased invisible touch target for progress scrubbing */}
@@ -188,8 +215,11 @@ export function PlayerBar() {
             type="range"
             min={0}
             max={duration || 100}
-            value={progress}
-            onChange={handleSeek}
+            value={localProgress}
+            onChange={handleSeekChange}
+            onMouseUp={handleSeekComplete}
+            onTouchEnd={handleSeekComplete}
+              onKeyUp={handleSeekComplete}
             className="absolute bottom-[-14px] left-0 w-full h-8 opacity-0 cursor-pointer z-20 touch-none"
           />
 
@@ -298,17 +328,20 @@ export function PlayerBar() {
           </div>
 
           <div className="w-full flex items-center gap-3">
-            <span className="text-xs text-gray-400 w-10 text-right">{formatTime(progress)}</span>
+            <span className="text-xs text-gray-400 w-10 text-right">{formatTime(localProgress)}</span>
             <div className="relative w-full flex items-center group">
               <input
                 type="range"
                 min={0}
                 max={duration || 100}
-                value={progress}
-                onChange={handleSeek}
+                value={localProgress}
+                onChange={handleSeekChange}
+                onMouseUp={handleSeekComplete}
+                onTouchEnd={handleSeekComplete}
+                onKeyUp={handleSeekComplete}
                 className="w-full h-1 bg-[#4d4d4d] rounded-full appearance-none cursor-pointer focus:outline-none"
                 style={{
-                  background: `linear-gradient(to right, #ffffff ${(progress / (duration || 1)) * 100}%, #4d4d4d ${(progress / (duration || 1)) * 100}%)`
+                  background: `linear-gradient(to right, #ffffff ${(localProgress / (duration || 1)) * 100}%, #4d4d4d ${(localProgress / (duration || 1)) * 100}%)`
                 }}
               />
             </div>
@@ -423,24 +456,27 @@ export function PlayerBar() {
                       type="range"
                       min={0}
                       max={duration || 100}
-                      value={progress}
-                      onChange={handleSeek}
+                      value={localProgress}
+                      onChange={handleSeekChange}
+                      onMouseUp={handleSeekComplete}
+                      onTouchEnd={handleSeekComplete}
+                      onKeyUp={handleSeekComplete}
                       className="absolute z-20 w-full h-full opacity-0 cursor-pointer"
                     />
                     <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden pointer-events-none">
                       <div
                         className="h-full bg-[#fa243c] rounded-full pointer-events-none"
-                        style={{ width: `${(progress / (duration || 1)) * 100}%` }}
+                        style={{ width: `${(localProgress / (duration || 1)) * 100}%` }}
                       />
                     </div>
                     {/* Thumb indicator visible on drag/hover (simulated via group-hover in CSS) */}
                     <div
                       className="absolute h-3 w-3 bg-[#fa243c] rounded-full shadow pointer-events-none z-10 transition-transform scale-0 group-hover:scale-100"
-                      style={{ left: `calc(${(progress / (duration || 1)) * 100}% - 6px)` }}
+                      style={{ left: `calc(${(localProgress / (duration || 1)) * 100}% - 6px)` }}
                     />
                   </div>
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-xs text-white/50 font-medium tabular-nums">{formatTime(progress)}</span>
+                    <span className="text-xs text-white/50 font-medium tabular-nums">{formatTime(localProgress)}</span>
                     <span className="text-xs text-white/50 font-medium tabular-nums">{formatTime(duration)}</span>
                   </div>
                 </div>
