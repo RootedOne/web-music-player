@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { validateUsername } from "@/lib/validations";
 
 export default function Register() {
   const router = useRouter();
@@ -14,6 +15,11 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!validateUsername(username)) {
+      setError("Username must be 3-16 characters and contain only letters and numbers");
+      return;
+    }
 
     try {
       const res = await fetch("/api/auth/register", {
