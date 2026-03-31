@@ -127,20 +127,28 @@ export async function POST(request: Request) {
 
       // Auto-Merge Detection for Artist 'name'
       if (entity === "Artist" && field === "name" && results.length > 0) {
-        const proposedNames = results.map(r => r.newValue);
+        // Fetch all existing artists to build a case-insensitive map.
+        // We order by createdAt asc so the oldest (original) artist is chosen as the target if there are duplicates.
+        // SQLite doesn't support mode: 'insensitive' in Prisma, and 'in' might be case-sensitive depending on collation.
+        // So we fetch all artists (or we could fetch where contains the names, but fetching all artists name/id is fast enough for admin).
         const existingArtists = await prisma.artist.findMany({
-          where: {
-            name: {
-              in: proposedNames
-            }
-          },
           select: {
             id: true,
             name: true,
+          },
+          orderBy: {
+            createdAt: 'asc'
           }
         });
 
-        const existingNamesMap = new Map(existingArtists.map(a => [a.name.toLowerCase(), a.id]));
+        const existingNamesMap = new Map();
+        for (const artist of existingArtists) {
+          const lowerName = artist.name.toLowerCase();
+          // Only keep the first (oldest) one we see
+          if (!existingNamesMap.has(lowerName)) {
+            existingNamesMap.set(lowerName, artist.id);
+          }
+        }
 
         for (const result of results) {
           const lowerNewValue = result.newValue.toLowerCase();
@@ -174,10 +182,23 @@ export async function POST(request: Request) {
       for (const update of updates) {
         try {
           if (entity === "Artist" && field === "name") {
-            // Check if the target name already exists
-            const existingTarget = await prisma.artist.findUnique({
-              where: { name: update.newValue }
+            // Check if the target name already exists (case-insensitive)
+            // SQLite 'contains' is case-insensitive, so we fetch potential targets
+            // and filter in memory to find an exact case-insensitive match.
+            // Order by createdAt to prefer merging into the oldest record.
+            const potentialTargets = await prisma.artist.findMany({
+              where: {
+                name: {
+                  contains: update.newValue
+                }
+              },
+              orderBy: {
+                createdAt: 'asc'
+              }
             });
+
+            const lowerNewValue = update.newValue.toLowerCase();
+            const existingTarget = potentialTargets.find(t => t.name.toLowerCase() === lowerNewValue);
 
             if (existingTarget && existingTarget.id !== update.id) {
               // Auto-Merge Logic
