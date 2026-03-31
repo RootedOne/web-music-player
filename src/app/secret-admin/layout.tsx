@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { headers } from "next/headers";
-import { LayoutDashboard, Users, Music, Mic2, ListMusic, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Users, Music, Mic2, ListMusic, Wrench, ArrowLeft } from "lucide-react";
 import { AdminSearch } from "@/components/admin/AdminSearch";
 
 export default function AdminLayout({
@@ -16,6 +16,7 @@ export default function AdminLayout({
     { name: "Tracks", href: "/secret-admin/tracks", icon: Music },
     { name: "Artists", href: "/secret-admin/artists", icon: Mic2 },
     { name: "Playlists", href: "/secret-admin/playlists", icon: ListMusic },
+    { name: "Bulk Edit", href: "/secret-admin/bulk-edit", icon: Wrench },
   ];
 
   return (
