@@ -9,8 +9,8 @@ type PreviewResult = {
   id: string;
   originalValue: string;
   newValue: string;
-  hasConflict?: boolean;
-  conflictMessage?: string;
+  isMerge?: boolean;
+  mergeMessage?: string;
 };
 
 export default function BulkEditPage() {
@@ -84,12 +84,10 @@ export default function BulkEditPage() {
       }
 
       setPreviewResults(data.results);
-      // Exclude conflicting records from default selection
+      // Include all records by default, including merges
       setSelectedIds(
         new Set(
-          data.results
-            .filter((r: PreviewResult) => !r.hasConflict)
-            .map((r: PreviewResult) => r.id)
+          data.results.map((r: PreviewResult) => r.id)
         )
       );
       setStep(2);
@@ -112,9 +110,8 @@ export default function BulkEditPage() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      // Only select non-conflicting records
       setSelectedIds(
-        new Set(previewResults.filter((r) => !r.hasConflict).map((r) => r.id))
+        new Set(previewResults.map((r) => r.id))
       );
     } else {
       setSelectedIds(new Set());
@@ -340,7 +337,7 @@ export default function BulkEditPage() {
                               type="checkbox"
                               checked={
                                 selectedIds.size > 0 &&
-                                selectedIds.size === previewResults.filter((r) => !r.hasConflict).length
+                                selectedIds.size === previewResults.length
                               }
                               onChange={(e) => handleSelectAll(e.target.checked)}
                               className="appearance-none w-4 h-4 border border-white/20 rounded bg-transparent checked:bg-[#fa243c] checked:border-[#fa243c] transition-all cursor-pointer relative flex items-center justify-center before:content-[''] before:absolute before:w-2 before:h-2 before:bg-white before:rounded-sm checked:before:block before:hidden"
@@ -359,19 +356,18 @@ export default function BulkEditPage() {
                                 type="checkbox"
                                 checked={selectedIds.has(result.id)}
                                 onChange={(e) => handleSelectOne(result.id, e.target.checked)}
-                                disabled={result.hasConflict}
-                                className="appearance-none w-4 h-4 border border-white/20 rounded bg-transparent checked:bg-[#fa243c] checked:border-[#fa243c] disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer relative flex items-center justify-center before:content-[''] before:absolute before:w-2 before:h-2 before:bg-white before:rounded-sm checked:before:block before:hidden"
+                                className="appearance-none w-4 h-4 border border-white/20 rounded bg-transparent checked:bg-[#fa243c] checked:border-[#fa243c] transition-all cursor-pointer relative flex items-center justify-center before:content-[''] before:absolute before:w-2 before:h-2 before:bg-white before:rounded-sm checked:before:block before:hidden"
                               />
                             </td>
                             <td className="px-4 py-3 font-mono text-xs truncate max-w-[100px]">{result.id.slice(0, 8)}...</td>
                             <td className="px-4 py-3 line-clamp-2 max-w-xs">{result.originalValue}</td>
-                            <td className={`px-4 py-3 line-clamp-2 max-w-xs ${result.hasConflict ? "text-red-400" : "text-green-400"}`}>
+                            <td className={`px-4 py-3 line-clamp-2 max-w-xs ${result.isMerge ? "text-blue-400" : "text-green-400"}`}>
                               <div className="flex flex-col">
                                 <span>{result.newValue}</span>
-                                {result.hasConflict && (
-                                  <span className="text-xs text-red-500/80 flex items-center gap-1 mt-1">
+                                {result.isMerge && (
+                                  <span className="text-xs text-blue-500/80 flex items-center gap-1 mt-1">
                                     <AlertTriangle className="w-3 h-3" />
-                                    {result.conflictMessage}
+                                    {result.mergeMessage}
                                   </span>
                                 )}
                               </div>
