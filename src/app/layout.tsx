@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Toaster } from "react-hot-toast";
+import { PWAListener } from "@/components/PWAListener";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -37,6 +38,7 @@ export default function RootLayout({
         </div>
 
         <Providers>
+           <PWAListener />
            <Toaster
               position="bottom-center"
               toastOptions={{

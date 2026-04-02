@@ -4,21 +4,31 @@ import { usePlayerStore, Track } from "@/store/playerStore";
 import { Play } from "lucide-react";
 import TrackOptions from "./TrackOptions";
 
-import React, { useState, Fragment } from "react";
+import React, { useState, Fragment, useMemo } from "react";
 import EditModal from "./EditModal";
 import Link from "next/link";
+import { useOfflineStore } from "@/store/offlineStore";
 
 const TrackCard = React.memo(function TrackCard({ track, onUpdate, onDelete }: { track: Track & { userId?: string }, onUpdate?: () => void, onDelete?: () => void }) {
   const { play } = usePlayerStore();
   const [isEditing, setIsEditing] = useState(false);
+  const { isOffline, cachedUrls } = useOfflineStore();
+
+  const isCached = useMemo(() => {
+    if (!isOffline) return true;
+    return cachedUrls.some(url => track.fileUrl.includes(url));
+  }, [isOffline, cachedUrls, track.fileUrl]);
 
   const handlePlay = () => {
+    if (isOffline && !isCached) return;
     play(track);
   };
 
   return (
     <div
-      className="bg-white/5 backdrop-blur-xl border border-white/10 p-4 rounded-2xl hover:bg-white/10 transition cursor-pointer group shadow-lg"
+      className={`bg-white/5 backdrop-blur-xl border border-white/10 p-4 rounded-2xl transition group shadow-lg ${
+        isOffline && !isCached ? 'opacity-40 grayscale cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'
+      }`}
       onClick={handlePlay}
     >
       <div className="w-full aspect-square bg-zinc-900/40 rounded-xl mb-4 flex items-center justify-center relative shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden">
@@ -27,12 +37,14 @@ const TrackCard = React.memo(function TrackCard({ track, onUpdate, onDelete }: {
         ) : (
           <span className="text-white/20 font-bold text-2xl">MP3</span>
         )}
-        <button
-          onClick={(e) => { e.stopPropagation(); handlePlay(); }}
-          className="absolute bottom-2 right-2 w-12 h-12 bg-[#fa243c] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all shadow-xl hover:scale-105 active:scale-95"
-        >
-          <Play className="w-6 h-6 ml-1 fill-white text-white" />
-        </button>
+        {(!isOffline || isCached) && (
+          <button
+            onClick={(e) => { e.stopPropagation(); handlePlay(); }}
+            className="absolute bottom-2 right-2 w-12 h-12 bg-[#fa243c] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all shadow-xl hover:scale-105 active:scale-95"
+          >
+            <Play className="w-6 h-6 ml-1 fill-white text-white" />
+          </button>
+        )}
       </div>
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-col min-w-0">

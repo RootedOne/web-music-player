@@ -4,7 +4,8 @@ import { Track, usePlayerStore } from "@/store/playerStore";
 import { Music } from "lucide-react";
 import TrackOptions from "./TrackOptions";
 import Link from "next/link";
-import { Fragment } from "react";
+import { Fragment, useMemo } from "react";
+import { useOfflineStore } from "@/store/offlineStore";
 
 interface TrackRowProps {
   track: Track;
@@ -16,8 +17,16 @@ export default function TrackRow({ track, index, queue }: TrackRowProps) {
   const { playQueue, queue: globalQueue, currentTrackIndex, isPlaying, pause, resume } = usePlayerStore();
   const currentTrack = globalQueue[currentTrackIndex];
   const isThisTrackPlaying = currentTrack?.id === track.id;
+  const { isOffline, cachedUrls } = useOfflineStore();
+
+  const isCached = useMemo(() => {
+    if (!isOffline) return true;
+    return cachedUrls.some(url => track.fileUrl.includes(url));
+  }, [isOffline, cachedUrls, track.fileUrl]);
 
   const handlePlay = (e?: React.MouseEvent) => {
+    if (isOffline && !isCached) return;
+
     // Optional click event from row
     if (e) {
       // Don't play if clicking on links or options
@@ -41,7 +50,9 @@ export default function TrackRow({ track, index, queue }: TrackRowProps) {
   return (
     <div
       onClick={handlePlay}
-      className="flex items-center w-full gap-3 p-2 h-16 rounded-xl active:bg-white/10 transition-colors cursor-pointer group"
+      className={`flex items-center w-full gap-3 p-2 h-16 rounded-xl transition-colors group ${
+        isOffline && !isCached ? 'opacity-40 grayscale cursor-not-allowed' : 'active:bg-white/10 cursor-pointer'
+      }`}
     >
       <div className="w-12 h-12 flex-shrink-0 rounded-md bg-[#282828] overflow-hidden flex items-center justify-center relative shadow-sm">
         {track.coverUrl ? (
