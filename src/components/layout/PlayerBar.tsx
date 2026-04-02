@@ -49,6 +49,47 @@ export function PlayerBar() {
     }
   }, [globalProgress, isScrubbing]);
 
+  // Media Session API for iOS Lock Screen & Dynamic Island
+  useEffect(() => {
+    if ('mediaSession' in navigator && currentTrack) {
+      const sizes = [96, 128, 192, 256, 384, 512];
+      const artwork = currentTrack.coverUrl
+        ? sizes.map((size) => ({
+            src: currentTrack.coverUrl as string,
+            sizes: `${size}x${size}`,
+            type: currentTrack.coverUrl!.endsWith('.png') ? 'image/png' : 'image/jpeg',
+          }))
+        : [];
+
+      let artistName = currentTrack.artist || 'Unknown Artist';
+      if (currentTrack.artists && currentTrack.artists.length > 0) {
+        artistName = currentTrack.artists.map(a => a.name).join(', ');
+      } else if (currentTrack.artistObj) {
+        artistName = currentTrack.artistObj.name;
+      }
+
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentTrack.title || 'Unknown Title',
+        artist: artistName,
+        artwork: artwork,
+      });
+
+      navigator.mediaSession.setActionHandler('play', () => resume());
+      navigator.mediaSession.setActionHandler('pause', () => pause());
+      navigator.mediaSession.setActionHandler('previoustrack', () => prev());
+      navigator.mediaSession.setActionHandler('nexttrack', () => next());
+    }
+
+    return () => {
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.setActionHandler('play', null);
+        navigator.mediaSession.setActionHandler('pause', null);
+        navigator.mediaSession.setActionHandler('previoustrack', null);
+        navigator.mediaSession.setActionHandler('nexttrack', null);
+      }
+    };
+  }, [currentTrack, resume, pause, prev, next]);
+
   useEffect(() => {
     if (!audioRef.current) return;
 
