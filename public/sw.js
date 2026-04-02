@@ -47,7 +47,30 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. Handle Static Assets and Pages (Stale-While-Revalidate or Cache First)
+  // 3. Handle Navigation Requests (Offline Fallback)
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match('/');
+      })
+    );
+    return;
+  }
+
+  // 4. Handle Next.js RSC and Data fetching gracefully
+  const isRSC = url.searchParams.has('_rsc') || event.request.headers.get('RSC') === '1';
+  if (isRSC) {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match(event.request).then(cached => {
+          return cached || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+        });
+      })
+    );
+    return;
+  }
+
+  // 5. Handle Static Assets and Pages (Stale-While-Revalidate or Cache First)
   if (event.request.method === 'GET') {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
@@ -60,10 +83,10 @@ self.addEventListener('fetch', (event) => {
            }
            return networkResponse;
         }).catch(() => {
-           // Network failed, we just return the cached response (if available) handled below
+           // Global catch: return cached if available, else generic 503 to prevent browser crash
+           return cachedResponse || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
         });
 
-        // Return cached immediately if available, otherwise wait for network
         return cachedResponse || fetchPromise;
       })
     );
