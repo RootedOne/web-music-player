@@ -3,6 +3,8 @@ const MEDIA_CACHE_NAME = 'sepatifay-media-v1';
 
 const STATIC_ASSETS = [
   '/',
+  '/library',
+  '/playlists',
   '/manifest.webmanifest', // Next.js generates this path by default
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
@@ -47,24 +49,45 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. Handle Navigation Requests (Offline Fallback)
+  // 3. Handle Navigation Requests (Network First, Cache Fallback, Root Fallback)
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match('/');
+      fetch(event.request).then((networkResponse) => {
+        const responseClone = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseClone);
+        });
+        return networkResponse;
+      }).catch(() => {
+        return caches.match(event.request).then((cachedResponse) => {
+           return cachedResponse || caches.match('/');
+        });
       })
     );
     return;
   }
 
-  // 4. Handle Next.js RSC and Data fetching gracefully
-  const isRSC = url.searchParams.has('_rsc') || event.request.headers.get('RSC') === '1';
+  // 4. Handle Next.js RSC and Data fetching gracefully (Stale-While-Revalidate)
+  const isRSC = url.searchParams.has('_rsc') || event.request.headers.get('RSC') === '1' || url.pathname.endsWith('.rsc');
   if (isRSC) {
     event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match(event.request).then(cached => {
-          return cached || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+      caches.match(event.request).then((cachedResponse) => {
+        const fetchPromise = fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, networkResponse.clone());
+            });
+          }
+          return networkResponse;
+        }).catch(() => {
+          // If network fails, return cached response.
+          // Note: we don't return 503 here anymore because it causes Next.js router to panic and hard reload.
+          // If absolutely no cache is available, returning undefined effectively drops the request
+          // or we can return a generic empty 200 OK text so Next.js doesn't panic.
+          return cachedResponse || new Response('Offline but handled', { status: 200, statusText: 'OK' });
         });
+
+        return cachedResponse || fetchPromise;
       })
     );
     return;
@@ -115,7 +138,7 @@ async function handleMediaRequest(request) {
         headers: {
           'Content-Type': blob.type,
           'Content-Length': String(chunkSize),
-          'Content-Range': \`bytes \${start}-\${end}/\${blob.size}\`,
+          'Content-Range': `bytes ${start}-${end}/${blob.size}`,
           'Accept-Ranges': 'bytes'
         }
       });

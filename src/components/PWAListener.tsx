@@ -7,9 +7,11 @@ export function PWAListener() {
   const { isOffline, setOfflineStatus, setCachedUrls } = useOfflineStore();
 
   useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
     // Register Service Worker
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
+      const registerServiceWorker = () => {
         navigator.serviceWorker
           .register('/sw.js')
           .then((registration) => {
@@ -20,11 +22,12 @@ export function PWAListener() {
           });
 
         // Listen for messages from the service worker
-        navigator.serviceWorker.addEventListener('message', (event) => {
+        const messageListener = (event: MessageEvent) => {
           if (event.data && event.data.type === 'CACHED_URLS') {
             setCachedUrls(event.data.urls);
           }
-        });
+        };
+        navigator.serviceWorker.addEventListener('message', messageListener);
 
         // Periodically ask the SW for cached URLs
         const requestCachedUrls = () => {
@@ -34,10 +37,14 @@ export function PWAListener() {
         };
 
         requestCachedUrls();
-        const intervalId = setInterval(requestCachedUrls, 10000); // Check every 10 seconds
+        intervalId = setInterval(requestCachedUrls, 10000); // Check every 10 seconds
+      };
 
-        return () => clearInterval(intervalId);
-      });
+      if (document.readyState === 'complete') {
+        registerServiceWorker();
+      } else {
+        window.addEventListener('load', registerServiceWorker);
+      }
     }
 
     // Set initial network status
@@ -51,6 +58,7 @@ export function PWAListener() {
     window.addEventListener('offline', handleOffline);
 
     return () => {
+      if (intervalId) clearInterval(intervalId);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
