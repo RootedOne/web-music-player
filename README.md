@@ -6,13 +6,16 @@ Sepatifay is a full-stack, responsive web application designed to bring the slee
 
 ### Key Features
 *   **Persistent Global Audio:** Your music never stops, even when you browse between playlists, library, or discovery pages.
-*   **Premium Glassmorphism UI:** A sleek, responsive, Apple Music-inspired dark theme that looks stunning on desktop and mobile.
+*   **Premium Glassmorphism UI:** A sleek, responsive, Apple Music-inspired dark theme that looks stunning on desktop and mobile, with RTL/Farsi layout support.
 *   **Advanced Track Management:** Drag-and-drop multiple `.mp3` or `.wav` files at once. The backend automatically extracts ID3 metadata (Title, Artist, Album, Cover Art) and features built-in fuzzy deduplication.
 *   **Dynamic Playlists:** Create, delete, subscribe to, and clone playlists. Easily add or remove tracks with smooth UI interactions.
 *   **Case-Insensitive Authentication:** Secure user registration and login utilizing NextAuth.js and bcrypt, with smart case-handling.
 *   **Global Radio & Discovery:** Shuffle tracks universally or discover new music uploaded by other users on the platform.
+*   **Admin Panel:** Protected dashboard to manage users, tracks, artists, and playlists with "Wizard" style safety locks for destructive actions.
 *   **Shareable Links:** Generate dynamic, shareable URLs for your custom playlists.
-*   **ZIP Downloads:** Download entire playlists with a single click.
+*   **ZIP Downloads:** Download entire playlists with a single click using `jszip` and `file-saver`.
+*   **Virtualized Lists:** Extremely performant rendering of large track libraries using `react-virtuoso`.
+*   **Beautiful Notifications:** Real-time feedback with `react-hot-toast`.
 
 ---
 
@@ -20,97 +23,115 @@ Sepatifay is a full-stack, responsive web application designed to bring the slee
 
 | Domain | Technology |
 | :--- | :--- |
-| **Frontend Framework** | Next.js 14 (App Router), React |
-| **Styling** | Tailwind CSS (Dark Mode, Glassmorphism, Headless UI) |
+| **Frontend Framework** | Next.js 14 (App Router), React 18 |
+| **Styling** | Tailwind CSS (Dark Mode, Glassmorphism) |
+| **UI Components** | Headless UI, Lucide React, React Icons, React Hot Toast |
 | **State Management** | Zustand (Global Audio & Player State) |
 | **Backend API** | Next.js Route Handlers |
 | **Database ORM** | Prisma Client |
 | **Database Engine** | SQLite (Zero-config local file: `prisma/dev.db`) |
-| **Authentication** | NextAuth.js (Credentials Provider) |
+| **Authentication** | NextAuth.js (Credentials Provider), HTTP Basic Auth (Admin) |
 | **Audio Processing** | `music-metadata` (ID3 Tag parsing) |
+| **File Handling** | `jszip`, `file-saver` (ZIP Downloads) |
+| **Performance** | `react-virtuoso` (Virtualized Lists) |
 
 ---
 
-## How to Install on Ubuntu (0 to 100)
+## Installation & Requirements
 
-Follow this step-by-step guide to get Sepatifay running on a fresh Ubuntu environment.
+To set up Sepatifay locally, follow these cross-platform instructions (Windows, macOS, Linux).
 
-### 1. Update your system
-Before installing new software, ensure your package lists are up to date:
-```bash
-sudo apt update && sudo apt upgrade -y
-```
+### Prerequisites
+*   **Node.js**: LTS version (e.g., v18 or v20).
+*   **Git**: To clone the repository.
+*   **Python**: Playwright verification scripts (Optional).
 
-### 2. Install Node.js & npm (via NVM)
-The recommended way to install Node.js is using the Node Version Manager (NVM). This allows you to easily manage Node versions.
+### General Setup
 
-Install NVM:
-```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-```
-*(After running this, close and reopen your terminal, or run `source ~/.bashrc` to apply the changes).*
-
-Install the latest LTS version of Node.js:
-```bash
-nvm install --lts
-nvm use --lts
-```
-Verify the installation:
-```bash
-node -v
-npm -v
-```
-
-### 3. Clone the Repository
+#### 1. Clone the Repository
 Clone the Sepatifay project to your local machine:
 ```bash
 git clone https://github.com/RootedOne/sepatifay.git
 cd sepatifay
 ```
 
-### 4. Install Dependencies
-Install all the required frontend and backend packages:
+#### 2. Install Dependencies
+Install all the required packages using npm:
 ```bash
 npm install
 ```
 
-### 5. Setup Environment Variables
-Sepatifay uses environment variables to manage sensitive keys.
+#### 3. Setup Environment Variables
+Sepatifay requires specific environment variables for authentication and the admin panel.
 
-Create your `.env` file from the example:
+Copy the example file to create your local `.env`:
 ```bash
 cp .env.example .env
 ```
-Open `.env` in your preferred editor (e.g., `nano .env`) and configure the variables. You will need to generate a secure secret for NextAuth:
+Open the `.env` file in your favorite text editor and ensure you have generated a secure secret for NextAuth:
 ```bash
-# Generate a secret key by running this in your terminal:
+# You can generate a random secret via terminal (or using Node):
 # openssl rand -base64 32
+# node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="your_generated_secret_here"
+ADMIN_USERNAME="admin"
+ADMIN_PASSWORD="secure_admin_password_here"
 ```
 
-### 6. Initialize the Database
-Since Sepatifay uses Prisma with SQLite, you need to generate the Prisma client and push the schema to create your local `dev.db` file:
+#### 4. Initialize the Database
+Sepatifay uses Prisma with a local SQLite file. Generate the client and create the `dev.db` file:
 ```bash
 npx prisma generate
 npx prisma db push
 ```
 
-### 7. Run the Development Server
-Start the Next.js development server:
+#### 5. Run the Development Server
+Start the Next.js application:
 ```bash
 npm run dev
 ```
-🎉 **Success!** You can now open your browser and navigate to `http://localhost:3000` to enjoy Sepatifay.
+🎉 **Success!** Open your browser and navigate to `http://localhost:3000`.
 
-### Optional: Build for Production
-If you want to run the app in a highly optimized production environment, build the application first, then start it:
+#### Build for Production
+To run in an optimized production setting, build the app first:
 ```bash
 npm run build
 npm start
 ```
-*(Note: You can use tools like `pm2` to keep the production server running in the background).*
+
+---
+
+### Ubuntu-Specific Setup
+
+If you are running a fresh Ubuntu environment, you can follow these specific commands to get everything prepared before following the general steps above.
+
+#### Update your system
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+#### Install Node.js & npm (via NVM)
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+```
+*(After running this, close and reopen your terminal, or run `source ~/.bashrc`).*
+```bash
+nvm install --lts
+nvm use --lts
+```
+
+---
+
+## Contact Us
+
+Have questions, feedback, or need support? Reach out to us through any of the channels below:
+
+*   **Email:** [Insert Email Here]
+*   **Website:** [Insert Website URL Here]
+*   **Twitter / X:** [Insert Handle]
+*   **GitHub Issues:** [Insert Issues URL Here]
 
 ---
 
