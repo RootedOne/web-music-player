@@ -78,6 +78,15 @@ export function PlayerBar() {
       navigator.mediaSession.setActionHandler('pause', () => pause());
       navigator.mediaSession.setActionHandler('previoustrack', () => prev());
       navigator.mediaSession.setActionHandler('nexttrack', () => next());
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+        if (details.fastSeek && ('fastSeek' in audioRef.current!)) {
+          audioRef.current!.fastSeek(details.seekTime || 0);
+          return;
+        }
+        if (audioRef.current) {
+          audioRef.current.currentTime = details.seekTime || 0;
+        }
+      });
     }
 
     return () => {
@@ -86,6 +95,7 @@ export function PlayerBar() {
         navigator.mediaSession.setActionHandler('pause', null);
         navigator.mediaSession.setActionHandler('previoustrack', null);
         navigator.mediaSession.setActionHandler('nexttrack', null);
+        navigator.mediaSession.setActionHandler('seekto', null);
       }
     };
   }, [currentTrack, resume, pause, prev, next]);
@@ -116,6 +126,15 @@ export function PlayerBar() {
       if (now - lastSyncTimeRef.current > 1000) {
          setProgress(currentTime);
          lastSyncTimeRef.current = now;
+
+         // Update Media Session Position State for lock screen scrubber
+         if ('mediaSession' in navigator && audioRef.current.duration) {
+            navigator.mediaSession.setPositionState({
+               duration: audioRef.current.duration,
+               playbackRate: audioRef.current.playbackRate,
+               position: currentTime,
+            });
+         }
       }
     }
   };
