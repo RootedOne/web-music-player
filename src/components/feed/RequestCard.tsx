@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { MusicRequest } from './mockData';
 import { WarningModal, UploadedTrackInfo } from './WarningModal';
 import { Upload, CheckCircle2, Music, User, Disc3 } from 'lucide-react';
@@ -16,8 +16,17 @@ export const RequestCard: React.FC<RequestCardProps> = ({ request: initialReques
   const [simulatedUpload, setSimulatedUpload] = useState<UploadedTrackInfo | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleUploadClick = () => {
-    // Simulate detecting a mismatched file
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // We simulate the extracted metadata mismatch once the file is actually selected.
     const mismatchedTrack: UploadedTrackInfo = {
       musicName: request.targetMusicName === 'Blinding Lights' ? 'Starboy' : 'Unknown Track',
       artist: request.targetArtist === 'The Weeknd' ? 'The Weeknd feat. Daft Punk' : 'Unknown Artist',
@@ -26,6 +35,11 @@ export const RequestCard: React.FC<RequestCardProps> = ({ request: initialReques
 
     setSimulatedUpload(mismatchedTrack);
     setIsModalOpen(true);
+
+    // Reset file input so the same file can trigger onChange again if needed
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleConfirmUpload = async () => {
@@ -109,13 +123,22 @@ export const RequestCard: React.FC<RequestCardProps> = ({ request: initialReques
 
         {/* Action Area */}
         {!isCompleted && (
-          <button
-            onClick={handleUploadClick}
-            className="w-full mt-2 py-3 px-4 rounded-xl flex items-center justify-center gap-2 bg-apple-red hover:bg-[#ff4057] text-white font-bold transition-all active:scale-95 shadow-lg shadow-apple-red/20"
-          >
-            <Upload size={18} strokeWidth={2.5} />
-            <span>Upload Music</span>
-          </button>
+          <>
+            <input
+              type="file"
+              accept="audio/*"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+            />
+            <button
+              onClick={handleUploadClick}
+              className="w-full mt-2 py-3 px-4 rounded-xl flex items-center justify-center gap-2 bg-apple-red hover:bg-[#ff4057] text-white font-bold transition-all active:scale-95 shadow-lg shadow-apple-red/20"
+            >
+              <Upload size={18} strokeWidth={2.5} />
+              <span>Upload Music</span>
+            </button>
+          </>
         )}
       </div>
 
