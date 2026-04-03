@@ -6,6 +6,7 @@ import { RequestCard } from './RequestCard';
 import { Plus, Loader2 } from 'lucide-react';
 import { getMusicRequests, createMusicRequest } from '@/actions/musicRequests';
 import toast from 'react-hot-toast';
+import { WarningModal } from './WarningModal';
 
 type FilterType = 'recent' | 'oldest' | 'random';
 
@@ -17,6 +18,10 @@ export const MusicRequestFeed: React.FC = () => {
 
   const [newSongName, setNewSongName] = useState('');
   const [newArtist, setNewArtist] = useState('');
+
+  // Duplicate Check Modal State
+  const [isWarningOpen, setIsWarningOpen] = useState(false);
+  const [matchedTrackInfo, setMatchedTrackInfo] = useState<{musicName: string, artist: string} | null>(null);
 
   useEffect(() => {
     const fetchRequests = async () => {
@@ -30,41 +35,45 @@ export const MusicRequestFeed: React.FC = () => {
     fetchRequests();
   }, []);
 
-  const handleSubmitRequest = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newSongName.trim() || !newArtist.trim()) return;
-
+  const executeSubmission = async (force: boolean = false) => {
     setIsSubmitting(true);
     const res = await createMusicRequest({
       targetMusicName: newSongName.trim(),
       targetArtist: newArtist.trim(),
+      force
     });
 
     if (res.success) {
-      // Re-fetch requests to get the correct database ID and requester details
       const fetchRes = await getMusicRequests();
       if (fetchRes.success && fetchRes.data) {
         setRequests(fetchRes.data as MusicRequest[]);
       }
       setNewSongName('');
       setNewArtist('');
+      setIsWarningOpen(false);
+      setMatchedTrackInfo(null);
       toast.success('Request submitted successfully!');
     } else {
-      if (res.error === 'Duplicate') {
-        toast.error(res.message || 'We already have this music in the library!', {
-          style: {
-            background: 'rgba(250, 36, 60, 0.1)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(250, 36, 60, 0.2)',
-            color: '#fff',
-          },
-          icon: '🛑',
-        });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (res.error === 'Duplicate' && (res as any).matchedTrack) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setMatchedTrackInfo((res as any).matchedTrack);
+        setIsWarningOpen(true);
       } else {
         toast.error(res.error || 'Failed to submit request');
       }
     }
     setIsSubmitting(false);
+  };
+
+  const handleSubmitRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSongName.trim() || !newArtist.trim()) return;
+    await executeSubmission(false);
+  };
+
+  const handleConfirmDuplicate = async () => {
+    await executeSubmission(true);
   };
 
   const sortedRequests = useMemo(() => {
@@ -138,6 +147,32 @@ export const MusicRequestFeed: React.FC = () => {
             </button>
           ))}
         </div>
+
+        {/* Warning Modal for Duplicates */}
+        {matchedTrackInfo && (
+          <WarningModal
+            isOpen={isWarningOpen}
+            request={{
+              id: 'temp',
+              requesterName: 'You',
+              targetMusicName: newSongName,
+              targetArtist: newArtist,
+              status: 'pending',
+            }}
+            uploadedInfo={{
+              musicName: matchedTrackInfo.musicName,
+              artist: matchedTrackInfo.artist,
+            }}
+            title="Potential Duplicate Found"
+            description="We found similar music already in the library. Are you sure you still want to request this?"
+            confirmText="Request Anyway"
+            leftLabel="Your Request"
+            rightLabel="In Library"
+            onConfirm={handleConfirmDuplicate}
+            onCancel={() => setIsWarningOpen(false)}
+            isUpdating={isSubmitting}
+          />
+        )}
 
         {/* Feed List */}
         <div className="flex flex-col gap-5">

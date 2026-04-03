@@ -39,6 +39,7 @@ export async function createMusicRequest(data: {
   targetMusicName: string;
   targetArtist: string;
   targetAlbum?: string;
+  force?: boolean;
 }) {
   try {
     const session = await getServerSession(authOptions);
@@ -48,30 +49,40 @@ export async function createMusicRequest(data: {
     }
 
     // Pre-Request Validation (Duplicate Check)
-    const normalizeString = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const normTargetName = normalizeString(data.targetMusicName);
-    const normTargetArtist = normalizeString(data.targetArtist);
+    if (!data.force) {
+      const normalizeString = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const normTargetName = normalizeString(data.targetMusicName);
+      const normTargetArtist = normalizeString(data.targetArtist);
 
-    // Fetch all tracks to do accurate contains/matching checks on normalized strings
-    // (SQLite Prisma doesn't natively support case-insensitive contains filters via `mode: 'insensitive'`)
-    const existingTracks = await prisma.track.findMany({
-      select: { title: true, artist: true }
-    });
+      // Fetch all tracks to do accurate contains/matching checks on normalized strings
+      // (SQLite Prisma doesn't natively support case-insensitive contains filters via `mode: 'insensitive'`)
+      const existingTracks = await prisma.track.findMany({
+        select: { title: true, artist: true }
+      });
 
-    const isDuplicate = existingTracks.some((t) => {
-      const normDBTitle = normalizeString(t.title);
-      const normDBArtist = normalizeString(t.artist || '');
+      const matchedTrack = existingTracks.find((t) => {
+        const normDBTitle = normalizeString(t.title);
+        const normDBArtist = normalizeString(t.artist || '');
 
-      // Exact title match + artist substring match (to catch features/collaborations)
-      return normDBTitle === normTargetName && normDBArtist.includes(normTargetArtist);
-    });
+        // Exact title match AND (DB artist includes Req artist OR Req artist includes DB artist)
+        // This handles "Behzad Leito" vs "Leito" and "Leito & Gdaal" vs "Leito"
+        const isTitleMatch = normDBTitle === normTargetName;
+        const isArtistMatch = normDBArtist.includes(normTargetArtist) || normTargetArtist.includes(normDBArtist);
 
-    if (isDuplicate) {
-      return {
-        success: false,
-        error: 'Duplicate',
-        message: 'We already have this music in the library!'
-      };
+        return isTitleMatch && isArtistMatch;
+      });
+
+      if (matchedTrack) {
+        return {
+          success: false,
+          error: 'Duplicate',
+          message: 'We already have similar music in the library!',
+          matchedTrack: {
+            musicName: matchedTrack.title,
+            artist: matchedTrack.artist || 'Unknown Artist',
+          }
+        };
+      }
     }
 
     const newRequest = await prisma.musicRequest.create({
