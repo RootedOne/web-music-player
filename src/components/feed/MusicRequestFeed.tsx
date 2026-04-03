@@ -7,10 +7,14 @@ import { Plus, Loader2 } from 'lucide-react';
 import { getMusicRequests, createMusicRequest } from '@/actions/musicRequests';
 import toast from 'react-hot-toast';
 import { WarningModal } from './WarningModal';
+import { useSession } from 'next-auth/react';
 
 type FilterType = 'recent' | 'oldest' | 'random';
 
 export const MusicRequestFeed: React.FC = () => {
+  const { data: session } = useSession();
+  const currentUserId = (session?.user as { id?: string })?.id;
+
   const [requests, setRequests] = useState<MusicRequest[]>([]);
   const [filter, setFilter] = useState<FilterType>('recent');
   const [isLoading, setIsLoading] = useState(true);
@@ -182,7 +186,17 @@ export const MusicRequestFeed: React.FC = () => {
             </div>
           ) : sortedRequests.length > 0 ? (
             sortedRequests.map((request) => (
-              <RequestCard key={request.id} request={request} />
+              <RequestCard
+                key={request.id}
+                request={request}
+                currentUserId={currentUserId}
+                onUpdate={async () => {
+                  const fetchRes = await getMusicRequests();
+                  if (fetchRes.success && fetchRes.data) {
+                    setRequests(fetchRes.data as MusicRequest[]);
+                  }
+                }}
+              />
             ))
           ) : (
             <div className="text-center text-zinc-500 py-12">No requests found. Be the first to ask!</div>

@@ -3,6 +3,7 @@ export type RequestStatus = 'pending' | 'completed';
 export interface MusicRequest {
   id: string;
   requesterName: string;
+  requesterId?: string; // Optional for backward compatibility with mock data
   targetMusicName: string;
   targetArtist: string;
   targetAlbum?: string;

@@ -11,7 +11,7 @@ export async function getMusicRequests() {
       orderBy: { createdAt: 'desc' },
       include: {
         requester: {
-          select: { username: true },
+          select: { username: true, id: true },
         },
       },
     });
@@ -22,6 +22,7 @@ export async function getMusicRequests() {
       data: requests.map((req) => ({
         id: req.id,
         requesterName: req.requester.username,
+        requesterId: req.requester.id,
         targetMusicName: req.targetMusicName,
         targetArtist: req.targetArtist,
         targetAlbum: req.targetAlbum || undefined,
@@ -122,5 +123,81 @@ export async function completeMusicRequest(requestId: string) {
   } catch (error) {
     console.error('Error completing music request:', error);
     return { success: false, error: 'Failed to update request' };
+  }
+}
+
+export async function updateMusicRequest(
+  requestId: string,
+  data: { targetMusicName: string; targetArtist: string; targetAlbum?: string }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    const userId = (session?.user as { id?: string })?.id;
+    if (!session || !userId) {
+      return { success: false, error: 'Unauthorized. Please log in.' };
+    }
+
+    const existingRequest = await prisma.musicRequest.findUnique({
+      where: { id: requestId }
+    });
+
+    if (!existingRequest) {
+      return { success: false, error: 'Request not found.' };
+    }
+
+    if (existingRequest.requesterId !== userId) {
+      return { success: false, error: 'Forbidden. You can only edit your own requests.' };
+    }
+
+    if (existingRequest.status === 'completed') {
+       return { success: false, error: 'Cannot edit a completed request.' };
+    }
+
+    const updatedRequest = await prisma.musicRequest.update({
+      where: { id: requestId },
+      data: {
+        targetMusicName: data.targetMusicName,
+        targetArtist: data.targetArtist,
+        targetAlbum: data.targetAlbum || null,
+      },
+    });
+
+    revalidatePath('/');
+    return { success: true, data: updatedRequest };
+  } catch (error) {
+    console.error('Error updating music request:', error);
+    return { success: false, error: 'Failed to update request' };
+  }
+}
+
+export async function deleteMusicRequest(requestId: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    const userId = (session?.user as { id?: string })?.id;
+    if (!session || !userId) {
+      return { success: false, error: 'Unauthorized. Please log in.' };
+    }
+
+    const existingRequest = await prisma.musicRequest.findUnique({
+      where: { id: requestId }
+    });
+
+    if (!existingRequest) {
+      return { success: false, error: 'Request not found.' };
+    }
+
+    if (existingRequest.requesterId !== userId) {
+      return { success: false, error: 'Forbidden. You can only delete your own requests.' };
+    }
+
+    await prisma.musicRequest.delete({
+      where: { id: requestId }
+    });
+
+    revalidatePath('/');
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting music request:', error);
+    return { success: false, error: 'Failed to delete request' };
   }
 }
