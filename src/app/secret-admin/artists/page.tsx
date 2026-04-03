@@ -99,18 +99,47 @@ function AdminArtistsContent() {
     if (!editingArtist) return;
 
     setIsSubmitting(true);
-    const formData = new FormData();
-    formData.append("id", editingArtist.id);
-    formData.append("name", editName);
-
-    if (editImageFile) {
-      formData.append("image", editImageFile);
-    }
 
     try {
+      let imageUrl = undefined;
+
+      if (editImageFile) {
+        const presignRes = await fetch("/api/upload/presigned", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            files: [{ name: editImageFile.name, type: editImageFile.type || "image/jpeg" }]
+          })
+        });
+
+        if (!presignRes.ok) throw new Error("Failed to get upload URL");
+
+        const { urls } = await presignRes.json();
+        const uploadInfo = urls[0];
+
+        const uploadRes = await fetch(uploadInfo.presignedUrl, {
+          method: "PUT",
+          headers: { "Content-Type": editImageFile.type || "image/jpeg" },
+          body: editImageFile
+        });
+
+        if (!uploadRes.ok) throw new Error("Failed to upload image to cloud");
+        imageUrl = uploadInfo.publicUrl;
+      }
+
+      const payload: Record<string, string> = {
+        id: editingArtist.id,
+        name: editName,
+      };
+
+      if (imageUrl) {
+        payload.imageUrl = imageUrl;
+      }
+
       const res = await fetch("/api/admin/artists", {
         method: "PATCH",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
