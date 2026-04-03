@@ -53,7 +53,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       const arrayBuffer = await coverFile.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      const uploadDir = path.join(process.cwd(), "public/uploads");
+      const uploadDir = path.join(process.cwd(), "uploads");
       const picUniqueId = crypto.randomBytes(16).toString("hex");
       const ext = path.extname(coverFile.name).toLowerCase() || '.jpg';
       const picFilename = `custom_cover_${picUniqueId}${ext}`;
@@ -62,7 +62,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       await fs.writeFile(picFilepath, buffer);
 
       if (track.coverUrl) {
-        const oldPicFilepath = path.join(process.cwd(), "public", track.coverUrl);
+        const oldPicFilepath = path.join(process.cwd(), track.coverUrl);
         await fs.unlink(oldPicFilepath).catch((err) => console.error("Failed to delete old track cover:", err));
       }
 
@@ -101,12 +101,12 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     }
 
     if (track.fileUrl) {
-      const filepath = path.join(process.cwd(), "public", track.fileUrl);
+      const filepath = path.join(process.cwd(), track.fileUrl);
       await fs.unlink(filepath).catch((err) => console.error("Failed to delete track file:", err));
     }
 
     if (track.coverUrl) {
-      const picFilepath = path.join(process.cwd(), "public", track.coverUrl);
+      const picFilepath = path.join(process.cwd(), track.coverUrl);
       await fs.unlink(picFilepath).catch((err) => console.error("Failed to delete track cover:", err));
     }
 

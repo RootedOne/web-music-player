@@ -11,6 +11,10 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        apple: {
+          red: '#fa243c',
+          dark: '#0A0A0A',
+        }
       },
     },
   },

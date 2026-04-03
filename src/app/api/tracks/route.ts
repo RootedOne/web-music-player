@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     const uniqueId = crypto.randomBytes(16).toString("hex");
     const filename = `${uniqueId}${ext}`;
 
-    const uploadDir = path.join(process.cwd(), "public/uploads");
+    const uploadDir = path.join(process.cwd(), "uploads");
     await fs.mkdir(uploadDir, { recursive: true });
 
     const filepath = path.join(uploadDir, filename);
@@ -92,7 +92,8 @@ export async function POST(req: Request) {
         console.error(`Failed to delete duplicate track file at ${filepath}:`, err);
       });
       if (coverUrl) {
-        const picFilepath = path.join(process.cwd(), "public", coverUrl);
+        // coverUrl is `/uploads/filename`
+        const picFilepath = path.join(process.cwd(), coverUrl);
         await fs.unlink(picFilepath).catch((err) => {
           console.error(`Failed to delete duplicate cover file at ${picFilepath}:`, err);
         });

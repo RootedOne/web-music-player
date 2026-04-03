@@ -18,6 +18,7 @@ model User {
   tracks    Track[]
   playlists Playlist[] // Playlists created by the user
   savedPlaylists SavedPlaylist[] // Playlists saved by the user
+  musicRequests  MusicRequest[] // Requests made by the user
 }
 
 model Artist {
@@ -85,4 +86,17 @@ model PlaylistTrack {
   track      Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
 
   @@unique([playlistId, trackId])
+}
+
+model MusicRequest {
+  id              String   @id @default(cuid())
+  targetMusicName String
+  targetArtist    String
+  targetAlbum     String?
+  status          String   @default("pending") // 'pending' | 'completed'
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  requesterId     String
+  requester       User     @relation(fields: [requesterId], references: [id], onDelete: Cascade)
 }

@@ -22,7 +22,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     }
 
     if (playlist.coverUrl) {
-      const picFilepath = path.join(process.cwd(), "public", playlist.coverUrl);
+      const picFilepath = path.join(process.cwd(), playlist.coverUrl);
       await fs.unlink(picFilepath).catch((err) => console.error("Failed to delete playlist cover:", err));
     }
 
@@ -94,7 +94,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       const arrayBuffer = await coverFile.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      const uploadDir = path.join(process.cwd(), "public/uploads");
+      const uploadDir = path.join(process.cwd(), "uploads");
       const picUniqueId = crypto.randomBytes(16).toString("hex");
       const ext = path.extname(coverFile.name).toLowerCase() || '.jpg';
       const picFilename = `playlist_cover_${picUniqueId}${ext}`;
@@ -103,7 +103,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       await fs.writeFile(picFilepath, buffer);
 
       if (playlist.coverUrl) {
-        const oldPicFilepath = path.join(process.cwd(), "public", playlist.coverUrl);
+        const oldPicFilepath = path.join(process.cwd(), playlist.coverUrl);
         await fs.unlink(oldPicFilepath).catch((err) => console.error("Failed to delete old playlist cover:", err));
       }
 

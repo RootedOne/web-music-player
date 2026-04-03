@@ -5,8 +5,9 @@ import { useSession } from "next-auth/react";
 import { redirect, useRouter } from "next/navigation";
 import React, { useState, useEffect, Suspense } from "react";
 import { Track } from "@/store/playerStore";
-import { Search as SearchIcon, Music } from "lucide-react";
+import { Search as SearchIcon, Music, Plus } from "lucide-react";
 import { VirtuosoGrid } from "react-virtuoso";
+import { MusicRequestFeed } from "@/components/feed/MusicRequestFeed";
 
 function HomeContent() {
   const { data: session, status } = useSession();
@@ -15,6 +16,7 @@ function HomeContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [isRequestMode, setIsRequestMode] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -81,9 +83,41 @@ function HomeContent() {
           Discover
         </h1>
 
-        {/* Mobile Logo (Top Right) */}
-        <div className="absolute right-0 top-0 md:hidden flex items-center justify-center pointer-events-none text-white opacity-80 mt-1">
-           <Music className="w-8 h-8 drop-shadow-lg" />
+        {/* Mobile Logo / Toggle (Top Right) */}
+        <button
+          onClick={() => setIsRequestMode(!isRequestMode)}
+          className="absolute right-0 top-0 md:hidden flex items-center justify-center text-white opacity-80 mt-1 hover:opacity-100 transition-opacity active:scale-95"
+          aria-label={isRequestMode ? "Switch to Discover" : "Switch to Requests"}
+        >
+           {isRequestMode ? (
+             <Plus className="w-8 h-8 drop-shadow-lg transition-transform duration-300 rotate-0" />
+           ) : (
+             <Music className="w-8 h-8 drop-shadow-lg transition-transform duration-300 rotate-0" />
+           )}
+        </button>
+
+        {/* Desktop Mode Toggle */}
+        <div className="hidden md:flex items-center gap-2">
+          <button
+            onClick={() => setIsRequestMode(false)}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+              !isRequestMode
+                ? 'bg-apple-red text-white shadow-lg shadow-apple-red/20'
+                : 'bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            Discover
+          </button>
+          <button
+            onClick={() => setIsRequestMode(true)}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+              isRequestMode
+                ? 'bg-apple-red text-white shadow-lg shadow-apple-red/20'
+                : 'bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            Requests
+          </button>
         </div>
 
         {/* Global Search Bar (Hidden on mobile where floating nav takes over) */}
@@ -107,53 +141,59 @@ function HomeContent() {
         </div>
       </header>
 
-      <section className="mt-8">
-        <h2 className="text-2xl font-bold mb-6 text-gray-100 hidden md:block">
-            Global Feed
-        </h2>
+      {isRequestMode ? (
+        <section className="mt-8 animate-in fade-in duration-300">
+          <MusicRequestFeed />
+        </section>
+      ) : (
+        <section className="mt-8 animate-in fade-in duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-100 hidden md:block">
+              Global Feed
+          </h2>
 
-        {isLoading && tracks.length === 0 ? (
-            <p className="text-gray-500">Loading tracks...</p>
-        ) : tracks.length === 0 ? (
-            <div className="col-span-full text-gray-500 py-8">
-               No tracks have been uploaded to the platform yet. Be the first!
-            </div>
-        ) : (
-          <VirtuosoGrid
-            useWindowScroll={false}
-            customScrollParent={typeof window !== 'undefined' ? document.querySelector('main') || undefined : undefined}
-            totalCount={tracks.length}
-            overscan={200}
-            data={tracks}
-            components={{
-              List: React.forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(function VirtuosoList({ style, children, ...props }, ref) {
-                return (
-                  <div
-                    ref={ref}
-                    {...props}
-                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6"
-                    style={{ ...style }}
-                  >
-                    {children}
-                  </div>
-                );
-              }),
-              Item: React.forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(function VirtuosoItem({ children, ...props }, ref) {
-                return <div ref={ref} {...props}>{children}</div>;
-              })
-            }}
-            itemContent={(index, track) => (
-               <TrackCard key={track.id} track={track} onUpdate={fetchInitialTracks} onDelete={fetchInitialTracks} />
-            )}
-            endReached={loadMoreTracks}
-          />
-        )}
-        {isFetchingMore && (
-           <div className="flex justify-center mt-6">
-              <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-           </div>
-        )}
-      </section>
+          {isLoading && tracks.length === 0 ? (
+              <p className="text-gray-500">Loading tracks...</p>
+          ) : tracks.length === 0 ? (
+              <div className="col-span-full text-gray-500 py-8">
+                 No tracks have been uploaded to the platform yet. Be the first!
+              </div>
+          ) : (
+            <VirtuosoGrid
+              useWindowScroll={false}
+              customScrollParent={typeof window !== 'undefined' ? document.querySelector('main') || undefined : undefined}
+              totalCount={tracks.length}
+              overscan={200}
+              data={tracks}
+              components={{
+                List: React.forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(function VirtuosoList({ style, children, ...props }, ref) {
+                  return (
+                    <div
+                      ref={ref}
+                      {...props}
+                      className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6"
+                      style={{ ...style }}
+                    >
+                      {children}
+                    </div>
+                  );
+                }),
+                Item: React.forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(function VirtuosoItem({ children, ...props }, ref) {
+                  return <div ref={ref} {...props}>{children}</div>;
+                })
+              }}
+              itemContent={(index, track) => (
+                 <TrackCard key={track.id} track={track} onUpdate={fetchInitialTracks} onDelete={fetchInitialTracks} />
+              )}
+              endReached={loadMoreTracks}
+            />
+          )}
+          {isFetchingMore && (
+             <div className="flex justify-center mt-6">
+                <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+             </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }
