@@ -169,7 +169,7 @@ export const RequestCard: React.FC<RequestCardProps> = ({ request: initialReques
           <>
             <input
               type="file"
-              accept="audio/*"
+              accept=".mp3, .wav, audio/mpeg, audio/wav, audio/*"
               className="hidden"
               ref={fileInputRef}
               onChange={handleFileChange}
