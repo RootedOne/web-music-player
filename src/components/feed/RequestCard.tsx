@@ -15,6 +15,7 @@ export const RequestCard: React.FC<RequestCardProps> = ({ request: initialReques
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [simulatedUpload, setSimulatedUpload] = useState<UploadedTrackInfo | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -22,18 +23,32 @@ export const RequestCard: React.FC<RequestCardProps> = ({ request: initialReques
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // We simulate the extracted metadata mismatch once the file is actually selected.
-    const mismatchedTrack: UploadedTrackInfo = {
-      musicName: request.targetMusicName === 'Blinding Lights' ? 'Starboy' : 'Unknown Track',
-      artist: request.targetArtist === 'The Weeknd' ? 'The Weeknd feat. Daft Punk' : 'Unknown Artist',
-      album: 'Unknown Album',
+    // We use a clean name parsing to simulate metadata before actual upload
+    // because full extraction requires Node.js `music-metadata` on the server.
+    // We strip the extension to get a reasonable guess of the track name.
+    const rawName = file.name.replace(/\.[^/.]+$/, "");
+    let guessedTitle = rawName;
+    let guessedArtist = "Unknown Artist";
+
+    // Attempt to parse standard "Artist - Title" format often found in filenames
+    if (rawName.includes(" - ")) {
+      const parts = rawName.split(" - ");
+      guessedArtist = parts[0].trim();
+      guessedTitle = parts[1].trim();
+    }
+
+    const trackInfo: UploadedTrackInfo = {
+      musicName: guessedTitle,
+      artist: guessedArtist,
+      album: 'Unknown Album', // Basic guess, accurate metadata will parse on backend
     };
 
-    setSimulatedUpload(mismatchedTrack);
+    setSelectedFile(file);
+    setSimulatedUpload(trackInfo);
     setIsModalOpen(true);
 
     // Reset file input so the same file can trigger onChange again if needed
@@ -43,17 +58,45 @@ export const RequestCard: React.FC<RequestCardProps> = ({ request: initialReques
   };
 
   const handleConfirmUpload = async () => {
-    setIsUpdating(true);
-    const res = await completeMusicRequest(request.id);
+    if (!selectedFile) return;
 
-    if (res.success) {
-      setRequest((prev) => ({ ...prev, status: 'completed' }));
-      setIsModalOpen(false);
-      setSimulatedUpload(null);
-    } else {
-      alert(res.error || 'Failed to complete request');
+    setIsUpdating(true);
+
+    try {
+      // 1. Upload the file using the existing Library API
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      const uploadRes = await fetch("/api/tracks", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        const errorData = await uploadRes.json();
+        throw new Error(errorData.error || "Failed to upload track.");
+      }
+
+      // 2. Mark the request as completed
+      const completeRes = await completeMusicRequest(request.id);
+
+      if (completeRes.success) {
+        setRequest((prev) => ({ ...prev, status: 'completed' }));
+        setIsModalOpen(false);
+        setSimulatedUpload(null);
+        setSelectedFile(null);
+      } else {
+        throw new Error(completeRes.error || 'Failed to complete request');
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert('An error occurred during upload.');
+      }
+    } finally {
+      setIsUpdating(false);
     }
-    setIsUpdating(false);
   };
 
   const handleCancelUpload = () => {
