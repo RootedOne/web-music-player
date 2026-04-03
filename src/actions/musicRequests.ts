@@ -47,6 +47,33 @@ export async function createMusicRequest(data: {
       return { success: false, error: 'Unauthorized. Please log in.' };
     }
 
+    // Pre-Request Validation (Duplicate Check)
+    const normalizeString = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normTargetName = normalizeString(data.targetMusicName);
+    const normTargetArtist = normalizeString(data.targetArtist);
+
+    // Fetch all tracks to do accurate contains/matching checks on normalized strings
+    // (SQLite Prisma doesn't natively support case-insensitive contains filters via `mode: 'insensitive'`)
+    const existingTracks = await prisma.track.findMany({
+      select: { title: true, artist: true }
+    });
+
+    const isDuplicate = existingTracks.some((t) => {
+      const normDBTitle = normalizeString(t.title);
+      const normDBArtist = normalizeString(t.artist || '');
+
+      // Exact title match + artist substring match (to catch features/collaborations)
+      return normDBTitle === normTargetName && normDBArtist.includes(normTargetArtist);
+    });
+
+    if (isDuplicate) {
+      return {
+        success: false,
+        error: 'Duplicate',
+        message: 'We already have this music in the library!'
+      };
+    }
+
     const newRequest = await prisma.musicRequest.create({
       data: {
         targetMusicName: data.targetMusicName,

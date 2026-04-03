@@ -5,6 +5,7 @@ import { MusicRequest } from './mockData';
 import { RequestCard } from './RequestCard';
 import { Plus, Loader2 } from 'lucide-react';
 import { getMusicRequests, createMusicRequest } from '@/actions/musicRequests';
+import toast from 'react-hot-toast';
 
 type FilterType = 'recent' | 'oldest' | 'random';
 
@@ -47,8 +48,21 @@ export const MusicRequestFeed: React.FC = () => {
       }
       setNewSongName('');
       setNewArtist('');
+      toast.success('Request submitted successfully!');
     } else {
-      alert(res.error || 'Failed to submit request');
+      if (res.error === 'Duplicate') {
+        toast.error(res.message || 'We already have this music in the library!', {
+          style: {
+            background: 'rgba(250, 36, 60, 0.1)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(250, 36, 60, 0.2)',
+            color: '#fff',
+          },
+          icon: '🛑',
+        });
+      } else {
+        toast.error(res.error || 'Failed to submit request');
+      }
     }
     setIsSubmitting(false);
   };
