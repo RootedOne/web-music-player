@@ -1,4 +1,7 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { MusicRequest } from './mockData';
 
 export interface UploadedTrackInfo {
@@ -26,12 +29,18 @@ export const WarningModal: React.FC<WarningModalProps> = ({
   onCancel,
   isUpdating = false,
 }) => {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const isNameMismatch = request.targetMusicName !== uploadedInfo.musicName;
   const isArtistMismatch = request.targetArtist !== uploadedInfo.artist;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden p-4 bg-black/60 backdrop-blur-sm">
       <div className="glass-modal w-full max-w-lg p-6 flex flex-col gap-6 max-h-[90vh] overflow-y-auto hide-scrollbar animate-in fade-in zoom-in duration-200">
         <div className="text-center">
@@ -103,6 +112,7 @@ export const WarningModal: React.FC<WarningModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
