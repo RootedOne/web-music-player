@@ -1,34 +1,56 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { mockMusicRequests, MusicRequest } from './mockData';
+import React, { useState, useMemo, useEffect } from 'react';
+import { MusicRequest } from './mockData';
 import { RequestCard } from './RequestCard';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
+import { getMusicRequests, createMusicRequest } from '@/actions/musicRequests';
 
 type FilterType = 'recent' | 'oldest' | 'random';
 
 export const MusicRequestFeed: React.FC = () => {
-  const [requests, setRequests] = useState<MusicRequest[]>(mockMusicRequests);
+  const [requests, setRequests] = useState<MusicRequest[]>([]);
   const [filter, setFilter] = useState<FilterType>('recent');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [newSongName, setNewSongName] = useState('');
   const [newArtist, setNewArtist] = useState('');
 
-  const handleSubmitRequest = (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchRequests = async () => {
+      setIsLoading(true);
+      const res = await getMusicRequests();
+      if (res.success && res.data) {
+        setRequests(res.data as MusicRequest[]);
+      }
+      setIsLoading(false);
+    };
+    fetchRequests();
+  }, []);
+
+  const handleSubmitRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSongName.trim() || !newArtist.trim()) return;
 
-    const newRequest: MusicRequest = {
-      id: `req-${Date.now()}`,
-      requesterName: 'You',
+    setIsSubmitting(true);
+    const res = await createMusicRequest({
       targetMusicName: newSongName.trim(),
       targetArtist: newArtist.trim(),
-      status: 'pending',
-    };
+    });
 
-    setRequests((prev) => [newRequest, ...prev]);
-    setNewSongName('');
-    setNewArtist('');
+    if (res.success) {
+      // Re-fetch requests to get the correct database ID and requester details
+      const fetchRes = await getMusicRequests();
+      if (fetchRes.success && fetchRes.data) {
+        setRequests(fetchRes.data as MusicRequest[]);
+      }
+      setNewSongName('');
+      setNewArtist('');
+    } else {
+      alert(res.error || 'Failed to submit request');
+    }
+    setIsSubmitting(false);
   };
 
   const sortedRequests = useMemo(() => {
@@ -64,22 +86,24 @@ export const MusicRequestFeed: React.FC = () => {
               placeholder="Song Name"
               value={newSongName}
               onChange={(e) => setNewSongName(e.target.value)}
-              className="w-full bg-transparent border-b border-white/10 pb-2 text-white placeholder-zinc-500 outline-none focus:border-apple-red transition-colors"
+              disabled={isSubmitting}
+              className="w-full bg-transparent border-b border-white/10 pb-2 text-white placeholder-zinc-500 outline-none focus:border-apple-red transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <input
               type="text"
               placeholder="Artist Name"
               value={newArtist}
               onChange={(e) => setNewArtist(e.target.value)}
-              className="w-full bg-transparent border-b border-white/10 pb-2 text-white placeholder-zinc-500 outline-none focus:border-apple-red transition-colors"
+              disabled={isSubmitting}
+              className="w-full bg-transparent border-b border-white/10 pb-2 text-white placeholder-zinc-500 outline-none focus:border-apple-red transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <button
               type="submit"
-              disabled={!newSongName.trim() || !newArtist.trim()}
+              disabled={!newSongName.trim() || !newArtist.trim() || isSubmitting}
               className="mt-2 py-3 px-4 rounded-xl flex items-center justify-center gap-2 bg-apple-red text-white font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#ff4057] active:scale-95 shadow-lg shadow-apple-red/20"
             >
-              <Plus size={18} strokeWidth={2.5} />
-              <span>Submit Request</span>
+              {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} strokeWidth={2.5} />}
+              <span>{isSubmitting ? 'Submitting...' : 'Submit Request'}</span>
             </button>
           </form>
         </div>
@@ -103,9 +127,17 @@ export const MusicRequestFeed: React.FC = () => {
 
         {/* Feed List */}
         <div className="flex flex-col gap-5">
-          {sortedRequests.map((request) => (
-            <RequestCard key={request.id} request={request} />
-          ))}
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="w-8 h-8 text-apple-red animate-spin drop-shadow-lg" />
+            </div>
+          ) : sortedRequests.length > 0 ? (
+            sortedRequests.map((request) => (
+              <RequestCard key={request.id} request={request} />
+            ))
+          ) : (
+            <div className="text-center text-zinc-500 py-12">No requests found. Be the first to ask!</div>
+          )}
         </div>
       </div>
     </div>

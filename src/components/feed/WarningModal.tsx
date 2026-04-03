@@ -7,12 +7,15 @@ export interface UploadedTrackInfo {
   album?: string;
 }
 
+import { Loader2 } from 'lucide-react';
+
 interface WarningModalProps {
   isOpen: boolean;
   request: MusicRequest;
   uploadedInfo: UploadedTrackInfo;
   onConfirm: () => void;
   onCancel: () => void;
+  isUpdating?: boolean;
 }
 
 export const WarningModal: React.FC<WarningModalProps> = ({
@@ -21,6 +24,7 @@ export const WarningModal: React.FC<WarningModalProps> = ({
   uploadedInfo,
   onConfirm,
   onCancel,
+  isUpdating = false,
 }) => {
   if (!isOpen) return null;
 
@@ -84,15 +88,18 @@ export const WarningModal: React.FC<WarningModalProps> = ({
         <div className="flex gap-3 mt-2">
           <button
             onClick={onCancel}
-            className="flex-1 py-3 px-4 rounded-xl text-sm font-medium text-white bg-white/10 hover:bg-white/20 transition-colors active:scale-95"
+            disabled={isUpdating}
+            className="flex-1 py-3 px-4 rounded-xl text-sm font-medium text-white bg-white/10 hover:bg-white/20 transition-colors active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 py-3 px-4 rounded-xl text-sm font-bold text-white bg-apple-red hover:bg-[#ff4057] shadow-[0_0_15px_rgba(250,36,60,0.4)] transition-all active:scale-95"
+            disabled={isUpdating}
+            className="flex-1 py-3 px-4 rounded-xl text-sm font-bold text-white bg-apple-red hover:bg-[#ff4057] shadow-[0_0_15px_rgba(250,36,60,0.4)] transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            Upload Anyway
+            {isUpdating ? <Loader2 size={16} className="animate-spin" /> : null}
+            <span>{isUpdating ? 'Updating...' : 'Upload Anyway'}</span>
           </button>
         </div>
       </div>

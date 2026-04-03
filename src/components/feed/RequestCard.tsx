@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { MusicRequest } from './mockData';
 import { WarningModal, UploadedTrackInfo } from './WarningModal';
 import { Upload, CheckCircle2, Music, User, Disc3 } from 'lucide-react';
+import { completeMusicRequest } from '@/actions/musicRequests';
 
 interface RequestCardProps {
   request: MusicRequest;
@@ -13,6 +14,7 @@ export const RequestCard: React.FC<RequestCardProps> = ({ request: initialReques
   const [request, setRequest] = useState<MusicRequest>(initialRequest);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [simulatedUpload, setSimulatedUpload] = useState<UploadedTrackInfo | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const handleUploadClick = () => {
     // Simulate detecting a mismatched file
@@ -26,11 +28,18 @@ export const RequestCard: React.FC<RequestCardProps> = ({ request: initialReques
     setIsModalOpen(true);
   };
 
-  const handleConfirmUpload = () => {
-    // Transition to completed state
-    setRequest((prev) => ({ ...prev, status: 'completed' }));
-    setIsModalOpen(false);
-    setSimulatedUpload(null);
+  const handleConfirmUpload = async () => {
+    setIsUpdating(true);
+    const res = await completeMusicRequest(request.id);
+
+    if (res.success) {
+      setRequest((prev) => ({ ...prev, status: 'completed' }));
+      setIsModalOpen(false);
+      setSimulatedUpload(null);
+    } else {
+      alert(res.error || 'Failed to complete request');
+    }
+    setIsUpdating(false);
   };
 
   const handleCancelUpload = () => {
@@ -118,6 +127,7 @@ export const RequestCard: React.FC<RequestCardProps> = ({ request: initialReques
           uploadedInfo={simulatedUpload}
           onConfirm={handleConfirmUpload}
           onCancel={handleCancelUpload}
+          isUpdating={isUpdating}
         />
       )}
     </>
