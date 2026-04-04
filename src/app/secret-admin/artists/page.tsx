@@ -94,23 +94,68 @@ function AdminArtistsContent() {
     }
   };
 
+  const directUploadToS3 = async (file: File | Blob, key: string) => {
+    const presignedRes = await fetch('/api/upload/presigned', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key })
+    });
+
+    if (!presignedRes.ok) {
+      throw new Error(`Failed to get presigned URL for ${key}`);
+    }
+
+    const { presignedUrl, publicUrl } = await presignedRes.json();
+
+    try {
+      const uploadRes = await fetch(presignedUrl, {
+        method: 'PUT',
+        body: file
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error(`Failed to upload file to S3: ${uploadRes.statusText}`);
+      }
+    } catch (err: unknown) {
+      if (err instanceof TypeError && err.message === 'Failed to fetch') {
+         throw new Error('Network Error: CORS rejection or connection failure. Please check the S3 bucket CORS rules.');
+      }
+      throw err;
+    }
+
+    return publicUrl;
+  };
+
   const handleUpdateArtist = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingArtist) return;
 
     setIsSubmitting(true);
-    const formData = new FormData();
-    formData.append("id", editingArtist.id);
-    formData.append("name", editName);
-
-    if (editImageFile) {
-      formData.append("image", editImageFile);
-    }
 
     try {
+      let imageUrl = undefined;
+
+      if (editImageFile) {
+         const ext = editImageFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+         const key = `covers/artist_cover_${Date.now()}.${ext}`;
+         imageUrl = await directUploadToS3(editImageFile, key);
+      }
+
+      const payload: Record<string, string> = {
+        id: editingArtist.id,
+        name: editName,
+      };
+
+      if (imageUrl) {
+        payload.imageUrl = imageUrl;
+      }
+
       const res = await fetch("/api/admin/artists", {
         method: "PATCH",
-        body: formData,
+        headers: {
+           "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
@@ -133,9 +178,13 @@ function AdminArtistsContent() {
         const errorData = await res.json();
         toast.error(errorData.error || "Failed to update artist");
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error);
-      toast.error("Error updating artist");
+      if (error instanceof Error) {
+        toast.error(error.message || "Error updating artist");
+      } else {
+        toast.error("Error updating artist");
+      }
     } finally {
       setIsSubmitting(false);
     }

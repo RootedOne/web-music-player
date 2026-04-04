@@ -2,10 +2,17 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { deleteS3File } from "@/lib/s3";
 
-import path from "path";
-import fs from "fs/promises";
-import crypto from "crypto";
+function extractS3Key(url: string | null) {
+  if (!url) return null;
+  const parts = url.split('/');
+  const prefixIndex = parts.findIndex(p => p === 'tracks' || p === 'covers');
+  if (prefixIndex !== -1) {
+    return parts.slice(prefixIndex).join('/');
+  }
+  return null;
+}
 
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -22,8 +29,10 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     }
 
     if (playlist.coverUrl) {
-      const picFilepath = path.join(process.cwd(), playlist.coverUrl);
-      await fs.unlink(picFilepath).catch((err) => console.error("Failed to delete playlist cover:", err));
+      const coverKey = extractS3Key(playlist.coverUrl);
+      if (coverKey) {
+        await deleteS3File(coverKey);
+      }
     }
 
     await prisma.playlist.delete({
@@ -84,37 +93,21 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const formData = await req.formData();
-    const name = formData.get("name") as string;
-    const coverFile = formData.get("coverFile") as File | null;
+    const body = await req.json();
+    const { name, coverUrl } = body;
 
-    let coverUrl = playlist.coverUrl;
-
-    if (coverFile && coverFile.size > 0) {
-      const arrayBuffer = await coverFile.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-
-      const uploadDir = path.join(process.cwd(), "uploads");
-      const picUniqueId = crypto.randomBytes(16).toString("hex");
-      const ext = path.extname(coverFile.name).toLowerCase() || '.jpg';
-      const picFilename = `playlist_cover_${picUniqueId}${ext}`;
-      const picFilepath = path.join(uploadDir, picFilename);
-
-      await fs.writeFile(picFilepath, buffer);
-
-      if (playlist.coverUrl) {
-        const oldPicFilepath = path.join(process.cwd(), playlist.coverUrl);
-        await fs.unlink(oldPicFilepath).catch((err) => console.error("Failed to delete old playlist cover:", err));
+    if (coverUrl && playlist.coverUrl && playlist.coverUrl !== coverUrl) {
+      const oldKey = extractS3Key(playlist.coverUrl);
+      if (oldKey) {
+        await deleteS3File(oldKey);
       }
-
-      coverUrl = `/uploads/${picFilename}`;
     }
 
     const updatedPlaylist = await prisma.playlist.update({
       where: { id: playlistId },
       data: {
         name: name || playlist.name,
-        coverUrl,
+        coverUrl: coverUrl !== undefined ? coverUrl : playlist.coverUrl,
       },
     });
 

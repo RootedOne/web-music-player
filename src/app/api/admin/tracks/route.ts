@@ -1,20 +1,24 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import fs from "fs";
-import path from "path";
+import { deleteS3File } from "@/lib/s3";
 
 export const dynamic = "force-dynamic";
 
+function extractS3Key(url: string | null) {
+  if (!url) return null;
+  const parts = url.split('/');
+  const prefixIndex = parts.findIndex(p => p === 'tracks' || p === 'covers');
+  if (prefixIndex !== -1) {
+    return parts.slice(prefixIndex).join('/');
+  }
+  return null;
+}
+
 async function deleteFileSafely(fileUrl: string | null) {
   if (!fileUrl) return;
-  if (!fileUrl.startsWith("/uploads/")) return;
-
-  try {
-    const filePath = path.join(process.cwd(), "public", fileUrl);
-    await fs.promises.unlink(filePath);
-  } catch (error) {
-    console.warn(`Failed to delete old file: ${fileUrl}`, error);
-    // Continue running, do not crash API
+  const s3Key = extractS3Key(fileUrl);
+  if (s3Key) {
+    await deleteS3File(s3Key);
   }
 }
 
@@ -56,12 +60,8 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const formData = await request.formData();
-    const id = formData.get("id") as string;
-    const title = formData.get("title") as string;
-    const album = formData.get("album") as string;
-    const artistId = formData.get("artistId") as string;
-    const coverFile = formData.get("cover") as File | null;
+    const body = await request.json();
+    const { id, title, album, artistId, coverUrl } = body;
 
     if (!id || !title || !artistId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -78,22 +78,9 @@ export async function PATCH(request: Request) {
 
     let newCoverUrl = currentTrack.coverUrl;
 
-    if (coverFile && coverFile.size > 0) {
-      const buffer = Buffer.from(await coverFile.arrayBuffer());
-      const fileName = `custom_cover_${Date.now()}_${coverFile.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-      const uploadDir = path.join(process.cwd(), "public", "uploads");
-
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-
-      const filePath = path.join(uploadDir, fileName);
-      await fs.promises.writeFile(filePath, buffer);
-
-      newCoverUrl = `/uploads/${fileName}`;
-
-      // Safely delete old image
-      await deleteFileSafely(currentTrack.coverUrl);
+    if (coverUrl !== undefined && coverUrl !== currentTrack.coverUrl) {
+       newCoverUrl = coverUrl;
+       await deleteFileSafely(currentTrack.coverUrl);
     }
 
     // Update track with new text fields, new coverUrl, and connect new artist via set

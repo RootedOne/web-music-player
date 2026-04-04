@@ -1,44 +1,38 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { action, entity, field, search, replace, isRegex, isCaseSensitive, updates } = body;
+    const { action, entity, field, searchString, replaceString, isRegex, isCaseSensitive, updates } = body;
 
-    // Validate inputs
-    if (!action || !["preview", "execute"].includes(action)) {
-      return NextResponse.json({ error: "Invalid action" }, { status: 400 });
-    }
-    if (!entity || !["Track", "Artist", "Playlist"].includes(entity)) {
+    // Validate entity and field to prevent SQL injection or bad generic access
+    const allowedEntities = ["Track", "Artist", "Playlist"];
+    const allowedFields = {
+      Track: ["title", "artist", "album"], // artist is the legacy string field
+      Artist: ["name"],
+      Playlist: ["name", "description"]
+    };
+
+    if (!allowedEntities.includes(entity)) {
       return NextResponse.json({ error: "Invalid entity" }, { status: 400 });
     }
 
-    const validFields: Record<string, string[]> = {
-      Track: ["title", "album"], // 'album' is a string field on Track
-      Artist: ["name"],
-      Playlist: ["name", "description"],
-    };
-
-    if (!field || !validFields[entity].includes(field)) {
-      return NextResponse.json({ error: "Invalid field for entity" }, { status: 400 });
+    if (!allowedFields[entity as keyof typeof allowedFields].includes(field)) {
+      return NextResponse.json({ error: "Invalid field" }, { status: 400 });
     }
 
     if (action === "preview") {
-      const safeSearch = typeof search === 'string' ? search : "";
-      const safeReplace = typeof replace === 'string' ? replace : "";
-
-      if (!safeSearch && !isRegex) {
-         return NextResponse.json({ error: "Search term is required" }, { status: 400 });
+      if (typeof searchString !== "string" || typeof replaceString !== "string") {
+         return NextResponse.json({ error: "Invalid search or replace strings" }, { status: 400 });
       }
 
-      // Fetch all potentially matching records
-      // SQLite does not support native case-insensitive LIKE/contains without extra configuration,
-      // and it doesn't support regex natively. So we fetch and filter in Node.js.
-      // To prevent fetching huge datasets, we try a simple LIKE if it's not a regex and it's case-insensitive (sqlite default)
-      // Actually, Prisma SQLite 'contains' is case-insensitive by default in dev/sqlite.
-      // But since we need case-sensitive or regex logic, we might have to fetch a wider net or do it in JS.
-      // To be safe and since this is admin functionality, we can fetch all or a large chunk and filter.
+      const safeSearch = searchString;
+      const safeReplace = replaceString;
+
+      // Because Prisma does not support RegExp native queries in SQLite, and `contains` mode:'insensitive' is also not supported natively by Prisma for SQLite natively in a simple way, we can fetch all or a large chunk and filter.
       // We cannot use `{ not: null }` on fields that are required (like Artist.name or Track.title),
       // as Prisma will throw a validation error. Instead, we use a simpler approach.
 
@@ -253,11 +247,9 @@ export async function POST(request: Request) {
                 })
               );
 
-              // Wait, we also need to safely delete local files via fs.promises.unlink.
-              // We should import fs and path if needed. For now, since it's an artist and only has imageUrl,
-              // we don't necessarily delete the image file if it's being used or discarded.
-              // Actually, deleting the artist doesn't strictly require deleting the image if it's not a strict requirement here.
-              // The instructions say "if the TargetArtist is missing an image cover... copy those fields".
+              // We also need to safely delete files via S3 DeleteObjectCommand in the future if this
+              // was fully deleting the artist's resources without moving them, but if we are merging
+              // and the source had an image, it is preserved, if they didn't, nothing is lost.
 
               await prisma.$transaction(transaction);
               updatedCount++;
