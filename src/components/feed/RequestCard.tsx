@@ -6,6 +6,7 @@ import { WarningModal, UploadedTrackInfo } from './WarningModal';
 import { Upload, CheckCircle2, Music, User, Disc3, MoreVertical, Pencil, Trash2, X, Loader2 } from 'lucide-react';
 import { completeMusicRequest, updateMusicRequest, deleteMusicRequest } from '@/actions/musicRequests';
 import toast from 'react-hot-toast';
+import * as mm from 'music-metadata-browser';
 
 interface RequestCardProps {
   request: MusicRequest;
@@ -74,21 +75,106 @@ export const RequestCard: React.FC<RequestCardProps> = ({ request: initialReques
     setIsUpdating(true);
 
     try {
-      // 1. Upload the file using the existing Library API
-      const formData = new FormData();
-      formData.append("file", selectedFile);
+      // 1. Extract Metadata
+      let title = selectedFile.name.replace(/\.[^/.]+$/, "");
+      let artist = "Unknown Artist";
+      let album = "Unknown Album";
+      let duration = 0;
+      let coverBlob: Blob | null = null;
+      let coverMimeType = "image/jpeg";
 
-      const uploadRes = await fetch("/api/tracks", {
+      try {
+        const metadata = await mm.parseBlob(selectedFile);
+        if (metadata.common.title) title = metadata.common.title;
+        if (metadata.common.artist) artist = metadata.common.artist;
+        if (metadata.common.album) album = metadata.common.album;
+        if (metadata.format.duration) duration = metadata.format.duration;
+
+        if (metadata.common.picture && metadata.common.picture.length > 0) {
+          const picture = metadata.common.picture[0];
+          coverBlob = new Blob([new Uint8Array(picture.data).buffer], { type: picture.format });
+          coverMimeType = picture.format;
+        }
+      } catch (metaErr) {
+        console.warn(`Could not parse ID3 tags for ${selectedFile.name}:`, metaErr);
+      }
+
+      // 2. Pre-flight check for duplicates
+      const dupRes = await fetch("/api/tracks/check-duplicate", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, artist }),
+      });
+      const dupData = await dupRes.json();
+      if (!dupRes.ok) throw new Error(dupData.error || "Failed to check duplicate");
+      if (dupData.isDuplicate) {
+        throw new Error(`Track "${title}" by "${artist}" already exists.`);
+      }
+
+      // 3. Request Presigned URLs
+      const fileMimeType = selectedFile.type || "application/octet-stream";
+      const filesToUpload = [{ name: selectedFile.name, type: fileMimeType }];
+      if (coverBlob) {
+        filesToUpload.push({ name: `cover-${selectedFile.name}.jpg`, type: coverMimeType });
+      }
+
+      const presignRes = await fetch("/api/upload/presigned", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ files: filesToUpload }),
       });
 
-      if (!uploadRes.ok) {
-        const errorData = await uploadRes.json();
+      if (!presignRes.ok) {
+         const data = await presignRes.json();
+         throw new Error(data.error || "Failed to get upload URLs");
+      }
+
+      const { urls } = await presignRes.json();
+      const trackUploadInfo = urls[0];
+      const coverUploadInfo = urls.length > 1 ? urls[1] : null;
+
+      // 4. Upload Files to S3 directly
+      const trackUploadRes = await fetch(trackUploadInfo.presignedUrl, {
+        method: "PUT",
+        body: selectedFile,
+      });
+
+      if (!trackUploadRes.ok) {
+        const errText = await trackUploadRes.text();
+        throw new Error(`Failed to upload ${selectedFile.name} to cloud. Status: ${trackUploadRes.status}. Error: ${errText}`);
+      }
+
+      let coverUrl = null;
+      if (coverBlob && coverUploadInfo) {
+         const coverUploadRes = await fetch(coverUploadInfo.presignedUrl, {
+            method: "PUT",
+            body: coverBlob,
+         });
+         if (coverUploadRes.ok) {
+           coverUrl = coverUploadInfo.publicUrl;
+         }
+      }
+
+      // 5. Save Record to Database via JSON API
+      const saveRes = await fetch("/api/tracks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          artist,
+          album,
+          duration,
+          fileUrl: trackUploadInfo.publicUrl,
+          coverUrl,
+        }),
+      });
+
+      if (!saveRes.ok) {
+        const errorData = await saveRes.json();
         throw new Error(errorData.error || "Failed to upload track.");
       }
 
-      // 2. Mark the request as completed
+      // 6. Mark the request as completed
       const completeRes = await completeMusicRequest(request.id);
 
       if (completeRes.success) {

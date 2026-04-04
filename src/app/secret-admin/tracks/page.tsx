@@ -128,20 +128,51 @@ function AdminTracksContent() {
     }
 
     setIsSubmitting(true);
-    const formData = new FormData();
-    formData.append("id", editingTrack.id);
-    formData.append("title", editTitle);
-    formData.append("album", editAlbum);
-    formData.append("artistId", editArtistId);
-
-    if (editCoverFile) {
-      formData.append("cover", editCoverFile);
-    }
 
     try {
+      let coverUrl = undefined;
+      if (editCoverFile) {
+        const presignRes = await fetch("/api/upload/presigned", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            files: [{ name: editCoverFile.name, type: editCoverFile.type || "image/jpeg" }]
+          })
+        });
+
+        if (!presignRes.ok) throw new Error("Failed to get upload URL");
+
+        const { urls } = await presignRes.json();
+        const uploadInfo = urls[0];
+
+        const uploadRes = await fetch(uploadInfo.presignedUrl, {
+          method: "PUT",
+          body: editCoverFile
+        });
+
+        if (!uploadRes.ok) {
+          const errText = await uploadRes.text();
+          console.error("Track Cover S3 Upload Error:", uploadRes.status, errText);
+          throw new Error(`Failed to upload image to cloud. Status: ${uploadRes.status}. Error: ${errText}`);
+        }
+        coverUrl = uploadInfo.publicUrl;
+      }
+
+      const payload: Record<string, string> = {
+        id: editingTrack.id,
+        title: editTitle,
+        album: editAlbum,
+        artistId: editArtistId,
+      };
+
+      if (coverUrl) {
+        payload.coverUrl = coverUrl;
+      }
+
       const res = await fetch("/api/admin/tracks", {
         method: "PATCH",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {

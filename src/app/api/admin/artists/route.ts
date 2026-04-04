@@ -1,19 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import fs from "fs";
-import path from "path";
+import { deleteS3File } from "@/lib/s3";
 
 export const dynamic = "force-dynamic";
 
 async function deleteFileSafely(fileUrl: string | null) {
   if (!fileUrl) return;
-  // Assumes fileUrl is like /uploads/custom_cover_123.jpg
-  // Only delete files in /uploads to prevent path traversal
-  if (!fileUrl.startsWith("/uploads/")) return;
 
   try {
-    const filePath = path.join(process.cwd(), "public", fileUrl);
-    await fs.promises.unlink(filePath);
+    await deleteS3File(fileUrl);
   } catch (error) {
     console.warn(`Failed to delete old file: ${fileUrl}`, error);
     // Do not crash the API
@@ -55,10 +50,7 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const formData = await request.formData();
-    const id = formData.get("id") as string;
-    const name = formData.get("name") as string;
-    const imageFile = formData.get("image") as File | null;
+    const { id, name, imageUrl } = await request.json();
 
     if (!id || !name) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -144,23 +136,11 @@ export async function PATCH(request: Request) {
 
     let newImageUrl = currentArtist.imageUrl;
 
-    if (imageFile && imageFile.size > 0) {
-      const buffer = Buffer.from(await imageFile.arrayBuffer());
-      const fileName = `artist_cover_${Date.now()}_${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-      const uploadDir = path.join(process.cwd(), "public", "uploads");
-
-      // Ensure directory exists
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
+    if (imageUrl !== undefined) {
+      if (currentArtist.imageUrl && currentArtist.imageUrl !== imageUrl) {
+        await deleteFileSafely(currentArtist.imageUrl);
       }
-
-      const filePath = path.join(uploadDir, fileName);
-      await fs.promises.writeFile(filePath, buffer);
-
-      newImageUrl = `/uploads/${fileName}`;
-
-      // Safely delete old image
-      await deleteFileSafely(currentArtist.imageUrl);
+      newImageUrl = imageUrl;
     }
 
     const updatedArtist = await prisma.artist.update({

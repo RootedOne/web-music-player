@@ -49,22 +49,53 @@ export default function EditModal({
     setIsLoading(true);
     setError("");
 
-    const formData = new FormData();
-    formData.append(nameFieldKey, name);
-    if (secondaryNameFieldKey) {
-      formData.append(secondaryNameFieldKey, secondaryName);
-    }
-    if (tertiaryNameFieldKey) {
-      formData.append(tertiaryNameFieldKey, tertiaryName);
-    }
-    if (coverFile) {
-      formData.append("coverFile", coverFile);
-    }
-
     try {
+      let coverUrl = undefined;
+
+      if (coverFile) {
+        const presignRes = await fetch("/api/upload/presigned", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            files: [{ name: coverFile.name, type: coverFile.type || "image/jpeg" }]
+          })
+        });
+
+        if (!presignRes.ok) throw new Error("Failed to get upload URL");
+
+        const { urls } = await presignRes.json();
+        const uploadInfo = urls[0];
+
+        const uploadRes = await fetch(uploadInfo.presignedUrl, {
+          method: "PUT",
+          body: coverFile
+        });
+
+        if (!uploadRes.ok) {
+          const errText = await uploadRes.text();
+          console.error("Cover S3 Upload Error:", uploadRes.status, errText);
+          throw new Error(`Failed to upload image to cloud. Status: ${uploadRes.status}. Error: ${errText}`);
+        }
+        coverUrl = uploadInfo.publicUrl;
+      }
+
+      const payload: Record<string, string> = {
+        [nameFieldKey]: name
+      };
+      if (secondaryNameFieldKey) {
+        payload[secondaryNameFieldKey] = secondaryName;
+      }
+      if (tertiaryNameFieldKey) {
+        payload[tertiaryNameFieldKey] = tertiaryName;
+      }
+      if (coverUrl) {
+        payload.coverUrl = coverUrl;
+      }
+
       const res = await fetch(endpoint, {
         method: "PATCH",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
