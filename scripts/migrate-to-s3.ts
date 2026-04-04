@@ -43,9 +43,22 @@ async function convertToFlac(inputPath: string, outputPath: string): Promise<voi
   });
 }
 
-function getLocalPathFromUrl(url: string): string {
-  // e.g. /uploads/tracks/foo.mp3 -> public/uploads/tracks/foo.mp3
-  return path.join(process.cwd(), 'public', url);
+function findLocalPath(url: string): string | null {
+  // e.g. /uploads/tracks/foo.mp3 or uploads/tracks/foo.mp3
+  // Strip leading slash to make path joining consistent
+  const relativePath = url.startsWith('/') ? url.substring(1) : url;
+
+  const publicPath = path.join(process.cwd(), 'public', relativePath);
+  if (fs.existsSync(publicPath)) {
+    return publicPath;
+  }
+
+  const rootPath = path.join(process.cwd(), relativePath);
+  if (fs.existsSync(rootPath)) {
+    return rootPath;
+  }
+
+  return null;
 }
 
 async function uploadFileToS3(buffer: Buffer, key: string, contentType: string): Promise<string> {
@@ -64,14 +77,14 @@ async function uploadFileToS3(buffer: Buffer, key: string, contentType: string):
 }
 
 async function migrateFileUrl(url: string | null | undefined, type: 'track' | 'cover'): Promise<string | null> {
-  if (!url || !url.startsWith('/uploads/')) {
+  if (!url || url.startsWith('http://') || url.startsWith('https://')) {
     return url || null;
   }
 
-  const localPath = getLocalPathFromUrl(url);
+  const localPath = findLocalPath(url);
 
-  if (!fs.existsSync(localPath)) {
-    console.warn(`[WARNING] File missing locally: ${localPath} (from URL: ${url})`);
+  if (!localPath) {
+    console.warn(`[WARNING] File missing locally: ${url}`);
     return url; // Keep old URL if file doesn't exist, or return null? Let's keep old URL.
   }
 
@@ -119,7 +132,9 @@ async function main() {
     where: {
       OR: [
         { fileUrl: { startsWith: '/uploads/' } },
+        { fileUrl: { startsWith: 'uploads/' } },
         { coverUrl: { startsWith: '/uploads/' } },
+        { coverUrl: { startsWith: 'uploads/' } },
       ],
     },
   });
@@ -133,12 +148,12 @@ async function main() {
       let newFileUrl = track.fileUrl;
       let newCoverUrl = track.coverUrl;
 
-      if (track.fileUrl.startsWith('/uploads/')) {
+      if (!track.fileUrl.startsWith('http')) {
         newFileUrl = await migrateFileUrl(track.fileUrl, 'track') || track.fileUrl;
       }
 
-      if (track.coverUrl && track.coverUrl.startsWith('/uploads/')) {
-        newCoverUrl = await migrateFileUrl(track.coverUrl, 'cover');
+      if (track.coverUrl && !track.coverUrl.startsWith('http')) {
+        newCoverUrl = await migrateFileUrl(track.coverUrl, 'cover') || track.coverUrl;
       }
 
       if (newFileUrl !== track.fileUrl || newCoverUrl !== track.coverUrl) {
@@ -164,7 +179,10 @@ async function main() {
   // 2. Migrate Artists
   const artists = await prisma.artist.findMany({
     where: {
-      imageUrl: { startsWith: '/uploads/' },
+      OR: [
+        { imageUrl: { startsWith: '/uploads/' } },
+        { imageUrl: { startsWith: 'uploads/' } },
+      ],
     },
   });
 
@@ -174,8 +192,8 @@ async function main() {
     count++;
     console.log(`Migrating Artist ${count}/${artists.length}: [${artist.name}]...`);
     try {
-      if (artist.imageUrl && artist.imageUrl.startsWith('/uploads/')) {
-        const newImageUrl = await migrateFileUrl(artist.imageUrl, 'cover');
+      if (artist.imageUrl && !artist.imageUrl.startsWith('http')) {
+        const newImageUrl = await migrateFileUrl(artist.imageUrl, 'cover') || artist.imageUrl;
         if (newImageUrl !== artist.imageUrl) {
           await prisma.artist.update({
             where: { id: artist.id },
@@ -195,7 +213,10 @@ async function main() {
   // 3. Migrate Playlists
   const playlists = await prisma.playlist.findMany({
     where: {
-      coverUrl: { startsWith: '/uploads/' },
+      OR: [
+        { coverUrl: { startsWith: '/uploads/' } },
+        { coverUrl: { startsWith: 'uploads/' } },
+      ],
     },
   });
 
@@ -205,8 +226,8 @@ async function main() {
     count++;
     console.log(`Migrating Playlist ${count}/${playlists.length}: [${playlist.name}]...`);
     try {
-      if (playlist.coverUrl && playlist.coverUrl.startsWith('/uploads/')) {
-        const newCoverUrl = await migrateFileUrl(playlist.coverUrl, 'cover');
+      if (playlist.coverUrl && !playlist.coverUrl.startsWith('http')) {
+        const newCoverUrl = await migrateFileUrl(playlist.coverUrl, 'cover') || playlist.coverUrl;
         if (newCoverUrl !== playlist.coverUrl) {
           await prisma.playlist.update({
             where: { id: playlist.id },
