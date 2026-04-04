@@ -27,6 +27,8 @@ const s3Client = new S3Client({
 const BUCKET_NAME = process.env.S3_BUCKET_NAME || '';
 const ENDPOINT = process.env.S3_ENDPOINT || '';
 
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
 async function convertToFlac(inputPath: string, outputPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     ffmpeg(inputPath)
@@ -154,6 +156,9 @@ async function main() {
     } catch (err) {
       console.error(`  [ERROR] Failed to migrate track ${track.id}:`, err);
     }
+
+    // Add artificial delay to prevent rate-limiting or DNS lookup errors
+    await delay(500);
   }
 
   // 2. Migrate Artists
@@ -182,6 +187,9 @@ async function main() {
     } catch (err) {
       console.error(`  [ERROR] Failed to migrate artist ${artist.id}:`, err);
     }
+
+    // Add artificial delay to prevent rate-limiting or DNS lookup errors
+    await delay(500);
   }
 
   // 3. Migrate Playlists
@@ -210,6 +218,9 @@ async function main() {
     } catch (err) {
       console.error(`  [ERROR] Failed to migrate playlist ${playlist.id}:`, err);
     }
+
+    // Add artificial delay to prevent rate-limiting or DNS lookup errors
+    await delay(500);
   }
 
   console.log('Migration completed.');
