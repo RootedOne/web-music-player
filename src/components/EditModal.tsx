@@ -3,6 +3,7 @@
 import { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { Loader2, Upload } from "lucide-react";
+import { v4 as uuidv4 } from 'uuid';
 
 type EditModalProps = {
   isOpen: boolean;
@@ -44,27 +45,72 @@ export default function EditModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const directUploadToS3 = async (file: File | Blob, key: string) => {
+    const presignedRes = await fetch('/api/upload/presigned', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key })
+    });
+
+    if (!presignedRes.ok) {
+      throw new Error(`Failed to get presigned URL for ${key}`);
+    }
+
+    const { presignedUrl, publicUrl } = await presignedRes.json();
+
+    try {
+      const uploadRes = await fetch(presignedUrl, {
+        method: 'PUT',
+        body: file
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error(`Failed to upload file to S3: ${uploadRes.statusText}`);
+      }
+    } catch (err: unknown) {
+      if (err instanceof TypeError && err.message === 'Failed to fetch') {
+         throw new Error('Network Error: CORS rejection or connection failure. Please check the S3 bucket CORS rules.');
+      }
+      throw err;
+    }
+
+    return publicUrl;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
-    const formData = new FormData();
-    formData.append(nameFieldKey, name);
-    if (secondaryNameFieldKey) {
-      formData.append(secondaryNameFieldKey, secondaryName);
-    }
-    if (tertiaryNameFieldKey) {
-      formData.append(tertiaryNameFieldKey, tertiaryName);
-    }
-    if (coverFile) {
-      formData.append("coverFile", coverFile);
-    }
-
     try {
+      let coverUrl: string | undefined = undefined;
+
+      if (coverFile) {
+        const uniqueId = uuidv4();
+        const ext = coverFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+        const prefix = endpoint.includes('/playlists') ? 'playlist_cover' : 'custom_cover';
+        const coverKey = `covers/${prefix}_${uniqueId}.${ext}`;
+        coverUrl = await directUploadToS3(coverFile, coverKey);
+      }
+
+      const bodyData: Record<string, string> = {
+        [nameFieldKey]: name,
+      };
+
+      if (secondaryNameFieldKey) {
+        bodyData[secondaryNameFieldKey] = secondaryName;
+      }
+      if (tertiaryNameFieldKey) {
+         bodyData[tertiaryNameFieldKey] = tertiaryName;
+      }
+      if (coverUrl !== undefined) {
+         bodyData.coverUrl = coverUrl;
+      }
+
       const res = await fetch(endpoint, {
         method: "PATCH",
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyData),
       });
 
       if (res.ok) {
@@ -74,9 +120,13 @@ export default function EditModal({
         const data = await res.json();
         setError(data.error || "Failed to update");
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
-      setError("An unexpected error occurred.");
+      if (err instanceof Error) {
+        setError(err.message || "An unexpected error occurred.");
+      } else {
+        setError("An unexpected error occurred.");
+      }
     } finally {
       setIsLoading(false);
     }

@@ -1,86 +1,158 @@
-'use client';
+"use client";
 
-import React, { useState, useRef } from 'react';
-import { MusicRequest } from './mockData';
-import { WarningModal, UploadedTrackInfo } from './WarningModal';
-import { Upload, CheckCircle2, Music, User, Disc3, MoreVertical, Pencil, Trash2, X, Loader2 } from 'lucide-react';
-import { completeMusicRequest, updateMusicRequest, deleteMusicRequest } from '@/actions/musicRequests';
-import toast from 'react-hot-toast';
+import React, { useState, useRef, useEffect } from 'react';
+import { Upload, CheckCircle2, Music, User, Disc3, Loader2, MoreVertical, Trash2, Pencil, X } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { completeMusicRequest, deleteMusicRequest, updateMusicRequest } from '@/actions/musicRequests';
+import { WarningModal } from './WarningModal';
+import * as musicMetadata from 'music-metadata-browser';
+import { v4 as uuidv4 } from 'uuid';
 
-interface RequestCardProps {
-  request: MusicRequest;
+type RequestCardProps = {
+  request: {
+    id: string;
+    requesterName: string;
+    requesterId?: string;
+    targetMusicName: string;
+    targetArtist: string;
+    targetAlbum?: string;
+    status: 'pending' | 'completed';
+  };
   currentUserId?: string;
   onUpdate?: () => void;
-}
+};
 
-export const RequestCard: React.FC<RequestCardProps> = ({ request: initialRequest, currentUserId, onUpdate }) => {
-  const [request, setRequest] = useState<MusicRequest>(initialRequest);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [simulatedUpload, setSimulatedUpload] = useState<UploadedTrackInfo | null>(null);
+export const RequestCard = ({ request: initialRequest, currentUserId, onUpdate }: RequestCardProps) => {
+  const [request, setRequest] = useState(initialRequest);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  // Edit & Delete State
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editSongName, setEditSongName] = useState(initialRequest.targetMusicName);
-  const [editArtist, setEditArtist] = useState(initialRequest.targetArtist);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editSongName, setEditSongName] = useState(request.targetMusicName);
+  const [editArtist, setEditArtist] = useState(request.targetArtist);
+
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [simulatedUpload, setSimulatedUpload] = useState<{ title: string; artist: string; file: File; coverBlob: Blob | null, coverExt: string } | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
 
-    // We use a clean name parsing to simulate metadata before actual upload
-    // because full extraction requires Node.js `music-metadata` on the server.
-    // We strip the extension to get a reasonable guess of the track name.
-    const rawName = file.name.replace(/\.[^/.]+$/, "");
-    let guessedTitle = rawName;
-    let guessedArtist = "Unknown Artist";
+    setSelectedFile(file);
 
-    // Attempt to parse standard "Artist - Title" format often found in filenames
-    if (rawName.includes(" - ")) {
-      const parts = rawName.split(" - ");
-      guessedArtist = parts[0].trim();
-      guessedTitle = parts[1].trim();
+    // Parse ID3 Client-side
+    let title = file.name.replace(/\.[^/.]+$/, "");
+    let artist = "Unknown Artist";
+    let coverBlob: Blob | null = null;
+    let coverExt = "jpg";
+
+    try {
+      const metadata = await musicMetadata.parseBlob(file);
+      if (metadata.common.title) title = metadata.common.title;
+      if (metadata.common.artist) artist = metadata.common.artist;
+
+      if (metadata.common.picture && metadata.common.picture.length > 0) {
+        const picture = metadata.common.picture[0];
+        coverBlob = new Blob([new Uint8Array(picture.data)], { type: picture.format });
+        if (picture.format === 'image/png') coverExt = 'png';
+      }
+    } catch (metaErr) {
+      console.warn("Could not parse ID3 tags on client:", metaErr);
     }
 
-    const trackInfo: UploadedTrackInfo = {
-      musicName: guessedTitle,
-      artist: guessedArtist,
-      album: 'Unknown Album', // Basic guess, accurate metadata will parse on backend
-    };
-
-    setSelectedFile(file);
-    setSimulatedUpload(trackInfo);
+    setSimulatedUpload({ title, artist, file, coverBlob, coverExt });
     setIsModalOpen(true);
 
-    // Reset file input so the same file can trigger onChange again if needed
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
+  const directUploadToS3 = async (file: File | Blob, key: string) => {
+    const presignedRes = await fetch('/api/upload/presigned', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key })
+    });
+
+    if (!presignedRes.ok) {
+      throw new Error(`Failed to get presigned URL for ${key}`);
+    }
+
+    const { presignedUrl, publicUrl } = await presignedRes.json();
+
+    try {
+      const uploadRes = await fetch(presignedUrl, {
+        method: 'PUT',
+        body: file
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error(`Failed to upload file to S3: ${uploadRes.statusText}`);
+      }
+    } catch (err: unknown) {
+      if (err instanceof TypeError && err.message === 'Failed to fetch') {
+         throw new Error('Network Error: CORS rejection or connection failure. Please check the S3 bucket CORS rules.');
+      }
+      throw err;
+    }
+
+    return publicUrl;
+  };
+
   const handleConfirmUpload = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || !simulatedUpload) return;
 
     setIsUpdating(true);
 
     try {
-      // 1. Upload the file using the existing Library API
-      const formData = new FormData();
-      formData.append("file", selectedFile);
+      // 1. Direct to S3 Upload
+      const uniqueId = uuidv4();
 
+      let coverUrl = null;
+      if (simulatedUpload.coverBlob) {
+        const coverKey = `covers/cover_${uniqueId}.${simulatedUpload.coverExt}`;
+        coverUrl = await directUploadToS3(simulatedUpload.coverBlob, coverKey);
+      }
+
+      const ext = selectedFile.name.split('.').pop()?.toLowerCase() || 'mp3';
+      const trackKey = `tracks/${uniqueId}.${ext}`;
+      const fileUrl = await directUploadToS3(selectedFile, trackKey);
+
+      // 2. Save JSON to backend
       const uploadRes = await fetch("/api/tracks", {
         method: "POST",
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: simulatedUpload.title,
+          artist: simulatedUpload.artist,
+          album: "Unknown Album",
+          duration: 0,
+          fileUrl,
+          coverUrl
+        }),
       });
 
       if (!uploadRes.ok) {
@@ -88,7 +160,7 @@ export const RequestCard: React.FC<RequestCardProps> = ({ request: initialReques
         throw new Error(errorData.error || "Failed to upload track.");
       }
 
-      // 2. Mark the request as completed
+      // 3. Mark the request as completed
       const completeRes = await completeMusicRequest(request.id);
 
       if (completeRes.success) {
@@ -313,7 +385,7 @@ export const RequestCard: React.FC<RequestCardProps> = ({ request: initialReques
         <WarningModal
           isOpen={isModalOpen}
           request={request}
-          uploadedInfo={simulatedUpload}
+          uploadedInfo={{ musicName: simulatedUpload.title, artist: simulatedUpload.artist }}
           onConfirm={handleConfirmUpload}
           onCancel={handleCancelUpload}
           isUpdating={isUpdating}

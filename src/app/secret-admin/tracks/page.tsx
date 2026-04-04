@@ -118,6 +118,38 @@ function AdminTracksContent() {
     }
   };
 
+  const directUploadToS3 = async (file: File | Blob, key: string) => {
+    const presignedRes = await fetch('/api/upload/presigned', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key })
+    });
+
+    if (!presignedRes.ok) {
+      throw new Error(`Failed to get presigned URL for ${key}`);
+    }
+
+    const { presignedUrl, publicUrl } = await presignedRes.json();
+
+    try {
+      const uploadRes = await fetch(presignedUrl, {
+        method: 'PUT',
+        body: file
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error(`Failed to upload file to S3: ${uploadRes.statusText}`);
+      }
+    } catch (err: unknown) {
+      if (err instanceof TypeError && err.message === 'Failed to fetch') {
+         throw new Error('Network Error: CORS rejection or connection failure. Please check the S3 bucket CORS rules.');
+      }
+      throw err;
+    }
+
+    return publicUrl;
+  };
+
   const handleUpdateTrack = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTrack) return;
@@ -128,20 +160,33 @@ function AdminTracksContent() {
     }
 
     setIsSubmitting(true);
-    const formData = new FormData();
-    formData.append("id", editingTrack.id);
-    formData.append("title", editTitle);
-    formData.append("album", editAlbum);
-    formData.append("artistId", editArtistId);
-
-    if (editCoverFile) {
-      formData.append("cover", editCoverFile);
-    }
 
     try {
+      let coverUrl = undefined;
+
+      if (editCoverFile) {
+        const ext = editCoverFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+        const key = `covers/custom_cover_${Date.now()}.${ext}`;
+        coverUrl = await directUploadToS3(editCoverFile, key);
+      }
+
+      const payload: Record<string, string> = {
+        id: editingTrack.id,
+        title: editTitle,
+        album: editAlbum,
+        artistId: editArtistId,
+      };
+
+      if (coverUrl) {
+         payload.coverUrl = coverUrl;
+      }
+
       const res = await fetch("/api/admin/tracks", {
         method: "PATCH",
-        body: formData,
+        headers: {
+           "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
@@ -155,9 +200,13 @@ function AdminTracksContent() {
         const errorData = await res.json();
         toast.error(errorData.error || "Failed to update track");
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error);
-      toast.error("Error updating track");
+      if (error instanceof Error) {
+        toast.error(error.message || "Error updating track");
+      } else {
+        toast.error("Error updating track");
+      }
     } finally {
       setIsSubmitting(false);
     }

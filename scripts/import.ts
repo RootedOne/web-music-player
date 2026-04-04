@@ -61,7 +61,7 @@ async function main() {
     const discoveredFiles: string[] = [];
     const resolvedPaths = new Set<string>();
 
-    async function walkDir(currentDir: string) {
+    const walkDir = async (currentDir: string): Promise<void> => {
       try {
         const realPath = await fs.realpath(currentDir);
         if (resolvedPaths.has(realPath)) {
@@ -99,12 +99,13 @@ async function main() {
           }
         }
       } catch (dirError: any) {
+
         if (dirError.code === 'EACCES') {
           console.warn(`Permission denied: Skipping directory '${currentDir}'`);
         } else {
           console.warn(`Error reading directory '${currentDir}': ${dirError.message}`);
         }
-      }
+      };
     }
 
     await walkDir(targetDir);

@@ -9,6 +9,8 @@ import TrackCard from "@/components/TrackCard";
 import { Track } from "@/store/playerStore";
 import { VirtuosoGrid } from "react-virtuoso";
 import React from "react";
+import * as musicMetadata from 'music-metadata-browser';
+import { v4 as uuidv4 } from 'uuid';
 
 type Playlist = { id: string; name: string, coverUrl: string | null };
 
@@ -99,6 +101,41 @@ export default function LibraryPage() {
     }
   };
 
+  const directUploadToS3 = async (file: File | Blob, key: string) => {
+    // 1. Get Presigned URL
+    const presignedRes = await fetch('/api/upload/presigned', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key })
+    });
+
+    if (!presignedRes.ok) {
+      throw new Error(`Failed to get presigned URL for ${key}`);
+    }
+
+    const { presignedUrl, publicUrl } = await presignedRes.json();
+
+    // 2. Direct PUT to S3
+    try {
+      // CRITICAL: No headers / No Content-Type
+      const uploadRes = await fetch(presignedUrl, {
+        method: 'PUT',
+        body: file
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error(`Failed to upload file to S3: ${uploadRes.statusText}`);
+      }
+    } catch (err: unknown) {
+      if (err instanceof TypeError && err.message === 'Failed to fetch') {
+         throw new Error('Network Error: CORS rejection or connection failure. Please check the S3 bucket CORS rules.');
+      }
+      throw err;
+    }
+
+    return publicUrl;
+  };
+
   const uploadFiles = async (files: File[]) => {
     setError("");
     setIsUploading(true);
@@ -115,24 +152,84 @@ export default function LibraryPage() {
         const file = files[i];
         setUploadProgress(`Uploading ${i + 1} of ${files.length}: ${file.name}...`);
 
-        const formData = new FormData();
-        formData.append("file", file);
-
         try {
-          const res = await fetch("/api/tracks", {
+          // 1. Extract Metadata Client-Side
+          let title = file.name.replace(/\.[^/.]+$/, "");
+          let artist = "Unknown Artist";
+          let album = "Unknown Album";
+          let duration = 0;
+          let coverBlob: Blob | null = null;
+          let coverExt = "jpg";
+
+          try {
+            const metadata = await musicMetadata.parseBlob(file);
+            if (metadata.common.title) title = metadata.common.title;
+            if (metadata.common.artist) artist = metadata.common.artist;
+            if (metadata.common.album) album = metadata.common.album;
+            if (metadata.format.duration) duration = metadata.format.duration;
+
+            if (metadata.common.picture && metadata.common.picture.length > 0) {
+              const picture = metadata.common.picture[0];
+              coverBlob = new Blob([new Uint8Array(picture.data)], { type: picture.format });
+              if (picture.format === 'image/png') coverExt = 'png';
+            }
+          } catch (metaErr) {
+            console.warn("Could not parse ID3 tags on client:", metaErr);
+          }
+
+          // 2. Pre-flight Check for Duplicates
+          const duplicateParams = new URLSearchParams({ title });
+          if (artist) duplicateParams.append('artist', artist);
+
+          const dupRes = await fetch(`/api/tracks/check-duplicate?${duplicateParams.toString()}`);
+          if (dupRes.ok) {
+            const dupData = await dupRes.json();
+            if (dupData.isDuplicate) {
+              throw new Error("A track with this title and artist already exists in your library.");
+            }
+          }
+
+          // 3. Direct to S3 Upload
+          const uniqueId = uuidv4();
+
+          // Upload cover if exists
+          let coverUrl = null;
+          if (coverBlob) {
+            const coverKey = `covers/cover_${uniqueId}.${coverExt}`;
+            coverUrl = await directUploadToS3(coverBlob, coverKey);
+          }
+
+          // Upload audio file
+          const ext = file.name.split('.').pop()?.toLowerCase() || 'mp3';
+          const trackKey = `tracks/${uniqueId}.${ext}`;
+          const fileUrl = await directUploadToS3(file, trackKey);
+
+          // 4. Save to Backend with Strict JSON
+          const saveRes = await fetch("/api/tracks", {
             method: "POST",
-            body: formData,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title,
+              artist,
+              album,
+              duration,
+              fileUrl,
+              coverUrl
+            }),
           });
 
-          if (!res.ok) {
-            const data = await res.json();
+          if (!saveRes.ok) {
+            const data = await saveRes.json();
             throw new Error(data.error || `Upload failed for ${file.name}`);
           }
+
           successCount++;
         } catch (err: unknown) {
           failCount++;
           if (err instanceof Error) {
             lastError = err.message;
+          } else {
+            lastError = "Unknown error occurred";
           }
         }
       }

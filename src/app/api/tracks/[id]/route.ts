@@ -3,9 +3,21 @@ import { prisma } from "@/lib/prisma";
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import path from "path";
-import fs from "fs/promises";
-import crypto from "crypto";
+import { deleteS3File } from "@/lib/s3";
+
+function extractS3Key(url: string | null) {
+  if (!url) return null;
+  // Assumes URLs are of format https://.../bucket/key
+  // Or path-style logic that was asked: `${process.env.S3_ENDPOINT}/${process.env.S3_BUCKET_NAME}/${key}`
+  // Let's just find the part after the bucket name or simply find tracks/ or covers/ prefix
+  const parts = url.split('/');
+  // To be safe, look for 'tracks/' or 'covers/' index
+  const prefixIndex = parts.findIndex(p => p === 'tracks' || p === 'covers');
+  if (prefixIndex !== -1) {
+    return parts.slice(prefixIndex).join('/');
+  }
+  return null;
+}
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -41,41 +53,24 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const formData = await req.formData();
-    const title = formData.get("title") as string;
-    const artist = formData.get("artist") as string | null;
-    const album = formData.get("album") as string | null;
-    const coverFile = formData.get("coverFile") as File | null;
+    const body = await req.json();
+    const { title, artist, album, coverUrl } = body;
 
-    let coverUrl = track.coverUrl;
-
-    if (coverFile && coverFile.size > 0) {
-      const arrayBuffer = await coverFile.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-
-      const uploadDir = path.join(process.cwd(), "uploads");
-      const picUniqueId = crypto.randomBytes(16).toString("hex");
-      const ext = path.extname(coverFile.name).toLowerCase() || '.jpg';
-      const picFilename = `custom_cover_${picUniqueId}${ext}`;
-      const picFilepath = path.join(uploadDir, picFilename);
-
-      await fs.writeFile(picFilepath, buffer);
-
-      if (track.coverUrl) {
-        const oldPicFilepath = path.join(process.cwd(), track.coverUrl);
-        await fs.unlink(oldPicFilepath).catch((err) => console.error("Failed to delete old track cover:", err));
+    if (coverUrl && track.coverUrl && track.coverUrl !== coverUrl) {
+      // Delete old cover from S3
+      const oldKey = extractS3Key(track.coverUrl);
+      if (oldKey) {
+        await deleteS3File(oldKey);
       }
-
-      coverUrl = `/uploads/${picFilename}`;
     }
 
     const updatedTrack = await prisma.track.update({
       where: { id: trackId },
       data: {
         title: title || track.title,
-        artist: artist !== null ? artist : track.artist,
-        album: album !== null ? album : track.album,
-        coverUrl,
+        artist: artist !== undefined ? artist : track.artist,
+        album: album !== undefined ? album : track.album,
+        coverUrl: coverUrl !== undefined ? coverUrl : track.coverUrl,
       },
     });
 
@@ -101,13 +96,13 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     }
 
     if (track.fileUrl) {
-      const filepath = path.join(process.cwd(), track.fileUrl);
-      await fs.unlink(filepath).catch((err) => console.error("Failed to delete track file:", err));
+      const trackKey = extractS3Key(track.fileUrl);
+      if (trackKey) await deleteS3File(trackKey);
     }
 
     if (track.coverUrl) {
-      const picFilepath = path.join(process.cwd(), track.coverUrl);
-      await fs.unlink(picFilepath).catch((err) => console.error("Failed to delete track cover:", err));
+      const coverKey = extractS3Key(track.coverUrl);
+      if (coverKey) await deleteS3File(coverKey);
     }
 
     await prisma.track.delete({
