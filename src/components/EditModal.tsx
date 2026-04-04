@@ -68,7 +68,6 @@ export default function EditModal({
 
         const uploadRes = await fetch(uploadInfo.presignedUrl, {
           method: "PUT",
-          headers: { "Content-Type": coverFile.type || "image/jpeg" },
           body: coverFile
         });
 

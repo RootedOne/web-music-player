@@ -19,11 +19,11 @@ const BUCKET_NAME = process.env.S3_BUCKET_NAME || "";
  * @param contentType The MIME type of the file.
  * @returns The presigned URL and the final public URL.
  */
-export async function getPresignedUploadUrl(key: string, contentType: string) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function getPresignedUploadUrl(key: string, _contentType: string) {
   const command = new PutObjectCommand({
     Bucket: BUCKET_NAME,
     Key: key,
-    ContentType: contentType,
     ACL: "public-read",
   });
 

@@ -136,7 +136,6 @@ export const RequestCard: React.FC<RequestCardProps> = ({ request: initialReques
       // 4. Upload Files to S3 directly
       const trackUploadRes = await fetch(trackUploadInfo.presignedUrl, {
         method: "PUT",
-        headers: { "Content-Type": fileMimeType },
         body: selectedFile,
       });
 
@@ -149,7 +148,6 @@ export const RequestCard: React.FC<RequestCardProps> = ({ request: initialReques
       if (coverBlob && coverUploadInfo) {
          const coverUploadRes = await fetch(coverUploadInfo.presignedUrl, {
             method: "PUT",
-            headers: { "Content-Type": coverMimeType },
             body: coverBlob,
          });
          if (coverUploadRes.ok) {

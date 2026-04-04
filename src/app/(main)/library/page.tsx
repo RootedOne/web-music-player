@@ -181,7 +181,6 @@ export default function LibraryPage() {
           // 4. Upload Files to S3 directly
           const trackUploadRes = await fetch(trackUploadInfo.presignedUrl, {
             method: "PUT",
-            headers: { "Content-Type": fileMimeType },
             body: file,
           });
 
@@ -195,7 +194,6 @@ export default function LibraryPage() {
           if (coverBlob && coverUploadInfo) {
              const coverUploadRes = await fetch(coverUploadInfo.presignedUrl, {
                 method: "PUT",
-                headers: { "Content-Type": coverMimeType },
                 body: coverBlob,
              });
              if (coverUploadRes.ok) {

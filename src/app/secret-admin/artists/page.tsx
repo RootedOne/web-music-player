@@ -119,7 +119,6 @@ function AdminArtistsContent() {
 
         const uploadRes = await fetch(uploadInfo.presignedUrl, {
           method: "PUT",
-          headers: { "Content-Type": editImageFile.type || "image/jpeg" },
           body: editImageFile
         });
 

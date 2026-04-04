@@ -147,7 +147,6 @@ function AdminTracksContent() {
 
         const uploadRes = await fetch(uploadInfo.presignedUrl, {
           method: "PUT",
-          headers: { "Content-Type": editCoverFile.type || "image/jpeg" },
           body: editCoverFile
         });
 
