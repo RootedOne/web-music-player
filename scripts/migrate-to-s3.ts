@@ -1,3 +1,6 @@
+import * as dotenv from 'dotenv';
+dotenv.config(); // Load the .env file
+
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { PrismaClient } from '@prisma/client';
 import * as fs from 'fs';
