@@ -157,7 +157,8 @@ export default function LibraryPage() {
           setUploadProgress(`Uploading ${i + 1} of ${files.length}: ${file.name}...`);
 
           // 3. Request Presigned URLs
-          const filesToUpload = [{ name: file.name, type: file.type }];
+          const fileMimeType = file.type || "application/octet-stream";
+          const filesToUpload = [{ name: file.name, type: fileMimeType }];
           if (coverBlob) {
             filesToUpload.push({ name: `cover-${file.name}.jpg`, type: coverMimeType });
           }
@@ -180,7 +181,7 @@ export default function LibraryPage() {
           // 4. Upload Files to S3 directly
           const trackUploadRes = await fetch(trackUploadInfo.presignedUrl, {
             method: "PUT",
-            headers: { "Content-Type": file.type },
+            headers: { "Content-Type": fileMimeType },
             body: file,
           });
 

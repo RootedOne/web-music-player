@@ -112,7 +112,8 @@ export const RequestCard: React.FC<RequestCardProps> = ({ request: initialReques
       }
 
       // 3. Request Presigned URLs
-      const filesToUpload = [{ name: selectedFile.name, type: selectedFile.type }];
+      const fileMimeType = selectedFile.type || "application/octet-stream";
+      const filesToUpload = [{ name: selectedFile.name, type: fileMimeType }];
       if (coverBlob) {
         filesToUpload.push({ name: `cover-${selectedFile.name}.jpg`, type: coverMimeType });
       }
@@ -135,7 +136,7 @@ export const RequestCard: React.FC<RequestCardProps> = ({ request: initialReques
       // 4. Upload Files to S3 directly
       const trackUploadRes = await fetch(trackUploadInfo.presignedUrl, {
         method: "PUT",
-        headers: { "Content-Type": selectedFile.type },
+        headers: { "Content-Type": fileMimeType },
         body: selectedFile,
       });
 
