@@ -151,7 +151,11 @@ function AdminTracksContent() {
           body: editCoverFile
         });
 
-        if (!uploadRes.ok) throw new Error("Failed to upload image to cloud");
+        if (!uploadRes.ok) {
+          const errText = await uploadRes.text();
+          console.error("Track Cover S3 Upload Error:", uploadRes.status, errText);
+          throw new Error(`Failed to upload image to cloud. Status: ${uploadRes.status}. Error: ${errText}`);
+        }
         coverUrl = uploadInfo.publicUrl;
       }
 

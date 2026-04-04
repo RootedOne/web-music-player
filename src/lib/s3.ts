@@ -24,6 +24,7 @@ export async function getPresignedUploadUrl(key: string, contentType: string) {
     Bucket: BUCKET_NAME,
     Key: key,
     ContentType: contentType,
+    ACL: "public-read",
   });
 
   const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });

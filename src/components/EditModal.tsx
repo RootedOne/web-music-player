@@ -72,7 +72,11 @@ export default function EditModal({
           body: coverFile
         });
 
-        if (!uploadRes.ok) throw new Error("Failed to upload image to cloud");
+        if (!uploadRes.ok) {
+          const errText = await uploadRes.text();
+          console.error("Cover S3 Upload Error:", uploadRes.status, errText);
+          throw new Error(`Failed to upload image to cloud. Status: ${uploadRes.status}. Error: ${errText}`);
+        }
         coverUrl = uploadInfo.publicUrl;
       }
 

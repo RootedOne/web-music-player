@@ -184,7 +184,11 @@ export default function LibraryPage() {
             body: file,
           });
 
-          if (!trackUploadRes.ok) throw new Error(`Failed to upload ${file.name} to cloud.`);
+          if (!trackUploadRes.ok) {
+            const errText = await trackUploadRes.text();
+            console.error("Track S3 Upload Error:", trackUploadRes.status, errText);
+            throw new Error(`Failed to upload ${file.name} to cloud. Status: ${trackUploadRes.status}. Error: ${errText}`);
+          }
 
           let coverUrl = null;
           if (coverBlob && coverUploadInfo) {
@@ -193,7 +197,13 @@ export default function LibraryPage() {
                 headers: { "Content-Type": coverMimeType },
                 body: coverBlob,
              });
-             if (coverUploadRes.ok) coverUrl = coverUploadInfo.publicUrl;
+             if (coverUploadRes.ok) {
+               coverUrl = coverUploadInfo.publicUrl;
+             } else {
+               const errText = await coverUploadRes.text();
+               console.error("Cover S3 Upload Error:", coverUploadRes.status, errText);
+               throw new Error(`Failed to upload cover art for ${file.name} to cloud. Status: ${coverUploadRes.status}. Error: ${errText}`);
+             }
           }
 
           // 5. Save Record to Database
