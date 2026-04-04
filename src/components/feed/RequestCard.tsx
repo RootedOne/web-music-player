@@ -7,6 +7,8 @@ import { completeMusicRequest, deleteMusicRequest, updateMusicRequest } from '@/
 import { WarningModal } from './WarningModal';
 import * as musicMetadata from 'music-metadata-browser';
 import { v4 as uuidv4 } from 'uuid';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { fetchFile } from '@ffmpeg/util';
 
 type RequestCardProps = {
   request: {
@@ -35,7 +37,24 @@ export const RequestCard = ({ request: initialRequest, currentUserId, onUpdate }
   const menuRef = useRef<HTMLDivElement>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | Blob | null>(null);
+  const [ffmpeg, setFfmpeg] = useState<FFmpeg | null>(null);
+  const [isFfmpegLoaded, setIsFfmpegLoaded] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
+
+  useEffect(() => {
+    const loadFFmpeg = async () => {
+      try {
+        const ff = new FFmpeg();
+        await ff.load();
+        setFfmpeg(ff);
+        setIsFfmpegLoaded(true);
+      } catch (err) {
+        console.error('Failed to load FFmpeg:', err);
+      }
+    };
+    loadFFmpeg();
+  }, []);
   const [simulatedUpload, setSimulatedUpload] = useState<{ title: string; artist: string; file: File; coverBlob: Blob | null, coverExt: string } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -62,6 +81,8 @@ export const RequestCard = ({ request: initialRequest, currentUserId, onUpdate }
 
     setSelectedFile(file);
 
+    setUploadProgress("Extracting metadata...");
+
     // Parse ID3 Client-side
     let title = file.name.replace(/\.[^/.]+$/, "");
     let artist = "Unknown Artist";
@@ -82,7 +103,32 @@ export const RequestCard = ({ request: initialRequest, currentUserId, onUpdate }
       console.warn("Could not parse ID3 tags on client:", metaErr);
     }
 
-    setSimulatedUpload({ title, artist, file, coverBlob, coverExt });
+    let uploadFile: Blob | File = file;
+    let ext = file.name.split('.').pop()?.toLowerCase() || 'mp3';
+
+    if (isFfmpegLoaded && ffmpeg) {
+      setUploadProgress("Compressing audio... this may take a moment.");
+      try {
+        const inputName = `input.${ext}`;
+        const outputName = `output.mp3`;
+
+        await ffmpeg.writeFile(inputName, await fetchFile(file));
+        await ffmpeg.exec(['-i', inputName, '-codec:a', 'libmp3lame', '-b:a', '128k', outputName]);
+
+        const data = await ffmpeg.readFile(outputName);
+        uploadFile = new Blob([new Uint8Array(data as Iterable<number>)], { type: 'audio/mpeg' });
+        ext = 'mp3';
+
+        await ffmpeg.deleteFile(inputName);
+        await ffmpeg.deleteFile(outputName);
+      } catch (ffmpegErr) {
+        console.warn("Failed to compress file on client, falling back to original file:", ffmpegErr);
+      }
+    }
+
+    setUploadProgress("");
+    setSelectedFile(uploadFile);
+    setSimulatedUpload({ title, artist, file: uploadFile as File, coverBlob, coverExt });
     setIsModalOpen(true);
 
     if (fileInputRef.current) {
@@ -137,7 +183,8 @@ export const RequestCard = ({ request: initialRequest, currentUserId, onUpdate }
         coverUrl = await directUploadToS3(simulatedUpload.coverBlob, coverKey);
       }
 
-      const ext = selectedFile.name.split('.').pop()?.toLowerCase() || 'mp3';
+      const selectedFileName = selectedFile instanceof File ? selectedFile.name : 'output.mp3';
+      const ext = selectedFileName.split('.').pop()?.toLowerCase() || 'mp3';
       const trackKey = `tracks/${uniqueId}.${ext}`;
       const fileUrl = await directUploadToS3(selectedFile, trackKey);
 
@@ -373,8 +420,8 @@ export const RequestCard = ({ request: initialRequest, currentUserId, onUpdate }
               onClick={handleUploadClick}
               className="w-full mt-2 py-3 px-4 rounded-xl flex items-center justify-center gap-2 bg-apple-red hover:bg-[#ff4057] text-white font-bold transition-all active:scale-95 shadow-lg shadow-apple-red/20"
             >
-              <Upload size={18} strokeWidth={2.5} />
-              <span>Upload Music</span>
+              {uploadProgress ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} strokeWidth={2.5} />}
+              <span>{uploadProgress || "Upload Music"}</span>
             </button>
           </>
         )}

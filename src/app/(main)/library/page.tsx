@@ -11,6 +11,8 @@ import { VirtuosoGrid } from "react-virtuoso";
 import React from "react";
 import * as musicMetadata from 'music-metadata-browser';
 import { v4 as uuidv4 } from 'uuid';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { fetchFile } from '@ffmpeg/util';
 
 type Playlist = { id: string; name: string, coverUrl: string | null };
 
@@ -18,6 +20,22 @@ export default function LibraryPage() {
   const router = useRouter();
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [ffmpeg, setFfmpeg] = useState<FFmpeg | null>(null);
+  const [isFfmpegLoaded, setIsFfmpegLoaded] = useState(false);
+
+  useEffect(() => {
+    const loadFFmpeg = async () => {
+      try {
+        const ff = new FFmpeg();
+        await ff.load();
+        setFfmpeg(ff);
+        setIsFfmpegLoaded(true);
+      } catch (err) {
+        console.error('Failed to load FFmpeg:', err);
+      }
+    };
+    loadFFmpeg();
+  }, []);
   const [uploadProgress, setUploadProgress] = useState("");
   const [error, setError] = useState("");
 
@@ -177,6 +195,33 @@ export default function LibraryPage() {
             console.warn("Could not parse ID3 tags on client:", metaErr);
           }
 
+          // 1.5 Compress Audio Client-Side
+          let uploadFile: Blob | File = file;
+          let ext = file.name.split('.').pop()?.toLowerCase() || 'mp3';
+
+          if (isFfmpegLoaded && ffmpeg) {
+            setUploadProgress(`Compressing ${i + 1} of ${files.length}: ${file.name}... this may take a moment.`);
+            try {
+              const inputName = `input_${i}.${ext}`;
+              const outputName = `output_${i}.mp3`;
+
+              await ffmpeg.writeFile(inputName, await fetchFile(file));
+              await ffmpeg.exec(['-i', inputName, '-codec:a', 'libmp3lame', '-b:a', '128k', outputName]);
+
+              const data = await ffmpeg.readFile(outputName);
+              uploadFile = new Blob([new Uint8Array(data as Iterable<number>)], { type: 'audio/mpeg' });
+              ext = 'mp3'; // Successfully compressed to mp3
+
+              // Cleanup ffmpeg memory
+              await ffmpeg.deleteFile(inputName);
+              await ffmpeg.deleteFile(outputName);
+
+              setUploadProgress(`Uploading ${i + 1} of ${files.length}: ${file.name}...`);
+            } catch (ffmpegErr) {
+              console.warn("Failed to compress file on client, falling back to original file:", ffmpegErr);
+            }
+          }
+
           // 2. Pre-flight Check for Duplicates
           const duplicateParams = new URLSearchParams({ title });
           if (artist) duplicateParams.append('artist', artist);
@@ -200,9 +245,8 @@ export default function LibraryPage() {
           }
 
           // Upload audio file
-          const ext = file.name.split('.').pop()?.toLowerCase() || 'mp3';
           const trackKey = `tracks/${uniqueId}.${ext}`;
-          const fileUrl = await directUploadToS3(file, trackKey);
+          const fileUrl = await directUploadToS3(uploadFile, trackKey);
 
           // 4. Save to Backend with Strict JSON
           const saveRes = await fetch("/api/tracks", {

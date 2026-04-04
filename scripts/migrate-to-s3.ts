@@ -7,6 +7,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import * as mime from 'mime-types';
+import ffmpeg from 'fluent-ffmpeg';
+import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+
+ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 const getContentType = (filePath: string) => {
   return mime.lookup(filePath) || 'application/octet-stream';
@@ -64,6 +68,17 @@ const uploadToS3 = async (filePath: string, key: string) => {
   return `${s3Endpoint}/${bucketName}/${key}`;
 };
 
+const compressAudio = (inputPath: string, outputPath: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .audioCodec('libmp3lame')
+      .audioBitrate('128k')
+      .on('end', () => resolve())
+      .on('error', (err) => reject(err))
+      .save(outputPath);
+  });
+};
+
 async function main() {
   console.log("Starting S3 Migration Script...");
 
@@ -81,13 +96,22 @@ async function main() {
       if (isLocalPath(track.fileUrl)) {
         const localFile = getLocalFilePath(track.fileUrl);
         if (localFile) {
+          const fileUuid = uuidv4();
+          const tmpFilePath = path.join(process.cwd(), 'public', 'uploads', `tmp_${fileUuid}.mp3`);
+
           try {
-            const ext = path.extname(localFile) || '.mp3';
-            const key = `tracks/${uuidv4()}${ext}`;
-            updatedFileUrl = await uploadToS3(localFile, key);
+            console.log(`Compressing ${localFile}...`);
+            await compressAudio(localFile, tmpFilePath);
+
+            const key = `tracks/${fileUuid}.mp3`;
+            updatedFileUrl = await uploadToS3(tmpFilePath, key);
             needsUpdate = true;
           } catch (err: any) {
-             console.error(`Failed to upload track file ${localFile}:`, err.message);
+             console.error(`Failed to compress/upload track file ${localFile}:`, err.message);
+          } finally {
+            if (fs.existsSync(tmpFilePath)) {
+               fs.unlinkSync(tmpFilePath);
+            }
           }
         } else {
           console.warn(`Local file missing for track ID ${track.id} (${track.fileUrl})`);
