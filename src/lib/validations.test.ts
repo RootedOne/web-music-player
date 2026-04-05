@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert";
-import { validateUsername } from "./validations.ts";
+import { validateUsername } from "./validations";
 
 test("Username Validation", async (t) => {
   await t.test("Valid Usernames", () => {

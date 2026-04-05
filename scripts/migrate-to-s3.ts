@@ -5,7 +5,7 @@ import { PrismaClient } from '@prisma/client';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as ffmpeg from 'fluent-ffmpeg';
+const ffmpeg = require('fluent-ffmpeg');
 import * as ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import { v4 as uuidv4 } from 'uuid';
 import * as mime from 'mime-types';
@@ -33,7 +33,7 @@ async function convertToFlac(inputPath: string, outputPath: string): Promise<voi
   return new Promise((resolve, reject) => {
     ffmpeg(inputPath)
       .audioCodec('flac')
-      .on('error', (err) => {
+      .on('error', (err: Error) => {
         reject(err);
       })
       .on('end', () => {
