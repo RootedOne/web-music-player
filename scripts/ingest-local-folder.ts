@@ -53,6 +53,17 @@ async function convertToFlac(inputPath: string, outputPath: string): Promise<voi
   });
 }
 
+function parseArtists(rawArtistString: string): string[] {
+  // Split by common delimiters (case-insensitive)
+  // Delimiters: , | & | feat | feat. | ft | ft. | featuring
+  const splitRegex = /\s*(?:,|\&|\bfeat\b\.?|\bft\b\.?|\bfeaturing\b)\s*/i;
+
+  return rawArtistString
+    .split(splitRegex)
+    .map(name => name.trim())
+    .filter(name => name.length > 0);
+}
+
 function getAudioFiles(dir: string, fileList: string[] = []): string[] {
   const files = fs.readdirSync(dir);
   for (const file of files) {
@@ -123,36 +134,48 @@ async function main() {
         const album = metadata.common.album || null;
 
         // 3. Database Deduplication & Artist Resolution
-        let artist = await prisma.artist.findUnique({
-          where: { name: artistName }
-        });
-
+        const parsedArtistNames = parseArtists(artistName);
+        const artistIds: string[] = [];
         const picture = metadata.common.picture?.[0];
 
-        if (!artist) {
-          console.log(`  Creating new Artist: ${artistName}`);
-          let artistImageUrl = null;
+        for (let i = 0; i < parsedArtistNames.length; i++) {
+          const individualName = parsedArtistNames[i];
+          const isPrimaryArtist = i === 0;
 
-          if (picture) {
-             const ext = picture.format === 'image/png' ? '.png' : '.jpg';
-             const key = `covers/artist_bulk_${uuidv4()}${ext}`;
-             console.log(`  Uploading artist cover art...`);
-             artistImageUrl = await uploadToS3(picture.data, key, picture.format);
+          let artist = await prisma.artist.findUnique({
+            where: { name: individualName }
+          });
+
+          if (!artist) {
+            console.log(`  Creating new Artist: ${individualName}`);
+            let artistImageUrl = null;
+
+            // Only assign the track's embedded cover to the primary artist
+            if (isPrimaryArtist && picture) {
+               const ext = picture.format === 'image/png' ? '.png' : '.jpg';
+               const key = `covers/artist_bulk_${uuidv4()}${ext}`;
+               console.log(`  Uploading primary artist cover art...`);
+               artistImageUrl = await uploadToS3(picture.data, key, picture.format);
+            }
+
+            artist = await prisma.artist.create({
+              data: {
+                name: individualName,
+                imageUrl: artistImageUrl
+              }
+            });
           }
 
-          artist = await prisma.artist.create({
-            data: {
-              name: artistName,
-              imageUrl: artistImageUrl
-            }
-          });
+          artistIds.push(artist.id);
         }
 
         const existingTrack = await prisma.track.findFirst({
           where: {
             title: title,
             artists: {
-              some: { id: artist.id }
+              some: {
+                id: { in: artistIds }
+              }
             }
           }
         });
@@ -204,7 +227,7 @@ async function main() {
             coverUrl: coverUrl,
             userId: adminUser.id,
             artists: {
-              connect: { id: artist.id }
+              connect: artistIds.map(id => ({ id }))
             }
           }
         });
