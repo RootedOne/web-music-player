@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "migrate:media": "tsx scripts/migrate-to-s3.ts"
+    "migrate:media": "tsx scripts/migrate-to-s3.ts",
+    "ingest:local": "tsx scripts/ingest-local-folder.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1024.0",
