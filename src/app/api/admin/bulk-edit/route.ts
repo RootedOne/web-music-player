@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { action, entity, field, searchString, replaceString, isRegex, isCaseSensitive, updates } = body;
+    const { action, entity, field, search, replace, isRegex, isCaseSensitive, updates } = body;
 
     // Validate entity and field to prevent SQL injection or bad generic access
     const allowedEntities = ["Track", "Artist", "Playlist"];
@@ -25,12 +25,12 @@ export async function POST(request: Request) {
     }
 
     if (action === "preview") {
-      if (typeof searchString !== "string" || typeof replaceString !== "string") {
+      if (typeof search !== "string" || search.length === 0 || typeof replace !== "string") {
          return NextResponse.json({ error: "Invalid search or replace strings" }, { status: 400 });
       }
 
-      const safeSearch = searchString;
-      const safeReplace = replaceString;
+      const safeSearch = search;
+      const safeReplace = replace;
 
       // Because Prisma does not support RegExp native queries in SQLite, and `contains` mode:'insensitive' is also not supported natively by Prisma for SQLite natively in a simple way, we can fetch all or a large chunk and filter.
       // We cannot use `{ not: null }` on fields that are required (like Artist.name or Track.title),

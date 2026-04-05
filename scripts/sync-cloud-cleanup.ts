@@ -95,7 +95,7 @@ async function main() {
   const allS3Objects: _Object[] = [];
 
   while (isTruncated) {
-    const command = new ListObjectsV2Command({
+    const command: ListObjectsV2Command = new ListObjectsV2Command({
       Bucket: BUCKET_NAME,
       ContinuationToken: continuationToken,
     });
